@@ -14,7 +14,7 @@ namespace LizziesMod
         {
             return "Use Jukebox";
         }
-rs
+
         public override bool OnBlockActivated(string _commandName, WorldBase _world, Vector3i _blockPos, BlockValue _blockValue, EntityPlayerLocal _player)
         {
        
