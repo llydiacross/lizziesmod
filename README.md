@@ -10,6 +10,8 @@ TODO: Liz help me here ;m;
 
 - **Physgun** - A GMod style physics gun for you to launch zombies and break blocks into the stratosphere.
 
+- **JukeBox and Wallpapers** - More additions for custom music in the jukebox and add more wallpapers to the game.
+
 - **Dynamic Backpacks** - Modify the default backpack size & configuration through the main menu mod settings.
 
 - **Dynamic Stacks** - Change the default stack size for items.
