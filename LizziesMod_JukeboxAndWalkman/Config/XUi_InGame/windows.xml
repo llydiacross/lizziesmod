@@ -1,0 +1,54 @@
+<configs>
+<append xpath="/windows">
+        <window name="windowJukebox" width="600" height="400" controller="Jukebox, LizziesMod" panel="Center" cursor_area="true">
+            
+            <panel name="header" height="43" depth="1" backgroundspritename="ui_game_panel_header">
+                <label depth="2" name="windowName" pos="15,-8" width="400" height="32" text="JUKEBOX (COST: 1 DUKE)" font_size="28" color="[white]"/>
+                
+                <rect name="btnClose" pos="556,-6" width="43" height="43">
+                    <sprite name="clickable" depth="3" sprite="ui_game_symbol_x" size="24,24" pos="9,-9" />
+                </rect>
+            </panel>
+            
+            <rect name="content" pos="0,-46" height="350" backgroundspritename="ui_game_filled_dark" backgroundcolor="0,0,0,220">
+                
+                <rect name="btnPageUp" pos="10, -10" width="40" height="40">
+                    <sprite name="clickable" depth="2" sprite="ui_game_symbol_arrow_up" size="28,28" pos="6,-6" color="[white]"/>
+                </rect>
+                
+                <rect name="btnPageDown" pos="10, -300" width="40" height="40">
+                    <sprite name="clickable" depth="2" sprite="ui_game_symbol_arrow_down" size="28,28" pos="6,-6" color="[white]"/>
+                </rect>
+
+                <grid name="trackListGrid" rows="5" cols="1" pos="60,-20" cell_width="520" cell_height="50" arrangement="vertical">
+                    
+                    <rect name="row1" controller="JukeboxTrackEntry, LizziesMod" width="520" height="40">
+                        <sprite name="clickable" depth="2" sprite="ui_game_filled_dark" color="60,60,60,255" />
+                        <label name="lblTrackInfo" depth="3" pos="10,-8" text="Track Info" font_size="24" color="[green]" />
+                    </rect>
+
+                    <rect name="row2" controller="JukeboxTrackEntry, LizziesMod" width="520" height="40">
+                        <sprite name="clickable" depth="2" sprite="ui_game_filled_dark" color="60,60,60,255" />
+                        <label name="lblTrackInfo" depth="3" pos="10,-8" text="Track Info" font_size="24" color="[green]" />
+                    </rect>
+
+                    <rect name="row3" controller="JukeboxTrackEntry, LizziesMod" width="520" height="40">
+                        <sprite name="clickable" depth="2" sprite="ui_game_filled_dark" color="60,60,60,255" />
+                        <label name="lblTrackInfo" depth="3" pos="10,-8" text="Track Info" font_size="24" color="[green]" />
+                    </rect>
+
+                    <rect name="row4" controller="JukeboxTrackEntry, LizziesMod" width="520" height="40">
+                        <sprite name="clickable" depth="2" sprite="ui_game_filled_dark" color="60,60,60,255" />
+                        <label name="lblTrackInfo" depth="3" pos="10,-8" text="Track Info" font_size="24" color="[green]" />
+                    </rect>
+
+                    <rect name="row5" controller="JukeboxTrackEntry, LizziesMod" width="520" height="40">
+                        <sprite name="clickable" depth="2" sprite="ui_game_filled_dark" color="60,60,60,255" />
+                        <label name="lblTrackInfo" depth="3" pos="10,-8" text="Track Info" font_size="24" color="[green]" />
+                    </rect>
+                    
+                </grid>
+            </rect>
+        </window>
+    </append>
+</configs>

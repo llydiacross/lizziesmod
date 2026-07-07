@@ -1,0 +1,6 @@
+<ModSettings>
+  <Setting name="BackpackGridSizeX" value="17" type="int" onlyInMainMenu="true" />
+  <Setting name="BackpackGridSizeY" value="15" type="int" onlyInMainMenu="true" />
+  <Setting name="BackpackMaxSize" value="456" type="int" onlyInMainMenu="false" />
+  <Setting name="DisableEncumbrance" value="false" type="bool" onlyInMainMenu="false" />
+</ModSettings>

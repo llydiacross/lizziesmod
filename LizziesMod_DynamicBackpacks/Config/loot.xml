@@ -1,0 +1,3 @@
+<configs>
+	<set xpath="/lootcontainers/lootcontainer[@name='playerBackpack']/@size">#LizziesMod_DynamicBackpacks.BackpackGridSizeX#,#LizziesMod_DynamicBackpacks.BackpackGridSizeY#</set>
+</configs>

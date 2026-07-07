@@ -1,0 +1,11 @@
+<configs>
+	<append xpath="/recipes">
+		<recipe name="gunPhysgun" count="1" craft_area="workbench" craft_time="60">
+			<ingredient name="resourceForgedSteel" count="15"/>
+			<ingredient name="resourceMechanicalParts" count="10"/>
+			<ingredient name="resourceElectricParts" count="15"/>
+			<ingredient name="resourceFluxCell" count="4"/>
+			<ingredient name="resourceLegendaryParts" count="1"/>
+		</recipe>
+	</append>
+</configs>

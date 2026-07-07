@@ -1,0 +1,110 @@
+<configs>
+	<remove xpath="/windows/window[@name='windowBackpack']"/>
+	<append xpath="/windows">
+		<window name="windowBackpack" width="606" height="425" panel="Center" controller="BackpackWindow" cursor_area="true">
+			
+			<!-- STANDARD HEADER -->
+			<rect name="header" height="43" depth="1">
+				<headerbg/>
+				<rect pos="225,0" width="380" controller="ContainerStandardControls" move_start_bottom_left="true" is_backpack="true">
+					<button depth="3" name="btnClearInventory" sprite="ui_game_symbol_trash" tooltip_key="lblClearInventory" pos="85,-22" style="icon32px, press, hover" pivot="center" sound="[paging_click]" visible="{creativewindowopen}"/>
+					<button depth="3" name="btnToggleLockMode" sprite="ui_game_symbol_lock" tooltip_key="xuiStashLockModeToggle" pos="0,-22" style="icon32px, press, hover" pivot="center" sound="[paging_click]" selected="{userlockmode}"/>
+					<button depth="3" name="btnSort" sprite="ui_game_symbol_sort" tooltip_key="lblSortContainer" pos="50,-22" style="icon32px, press, hover" pivot="center" sound="[paging_click]"/>
+					<rect pos="0,0" visible="{lootingorvehiclestorage}">
+						<button depth="3" name="btnMoveFillAndSmart" sprite="ui_game_symbol_store_similar_down" tooltip_key="lblStashFillAndSmart" pos="100,-22" style="icon32px, press, hover" pivot="center" sound="[paging_click]"/>
+						<button depth="3" name="btnMoveAll" sprite="ui_game_symbol_store_all_down" tooltip_key="lblStashAll" pos="150,-22" style="icon32px, press, hover" pivot="center" sound="[paging_click]"/>
+					</rect>
+				</rect>
+				<label depth="4" pos="490,-10" width="80" height="28" text="[FFFF00]{currencyamount}[-]" justify="right"/>
+				<sprite depth="4" name="costIcon" sprite="ui_game_symbol_coin" size="24,24" pos="575,-9" color="255,255,0" foregroundlayer="true"/>
+			</rect>
+
+			<!-- PAGINATION & SLOTS CONTAINER -->
+			<rect controller="TabSelector" pos="0,0" size="606,425" depth="5">
+				<rect name="tabsHeader" height="35" pos="53,-48">
+					<grid name="tabButtons" rows="1" cols="10" pos="0,0" cell_width="50" cell_height="35" arrangement="horizontal">
+						<!-- Chip 1 -->
+						<rect controller="TabSelectorButton" width="46" height="30">
+							<button name="clickable" depth="1" sprite="menu_empty" type="sliced" defaultcolor="40,40,40,255" hovercolor="255,180,0,255" selectedcolor="255,180,0,255" caption=" {tab_name_localized}" font_size="18" textcolor="255,255,255,255" />
+							<sprite depth="2" sprite="ui_game_symbol_backpack" size="18,18" pos="6,-6" color="200,200,200,255" />
+						</rect>
+						<!-- Chip 2 -->
+						<rect controller="TabSelectorButton" width="46" height="30">
+							<button name="clickable" depth="1" sprite="menu_empty" type="sliced" defaultcolor="40,40,40,255" hovercolor="255,180,0,255" selectedcolor="255,180,0,255" caption=" {tab_name_localized}" font_size="18" textcolor="255,255,255,255" />
+							<sprite depth="2" sprite="ui_game_symbol_backpack" size="18,18" pos="6,-6" color="200,200,200,255" />
+						</rect>
+						<!-- Chip 3 -->
+						<rect controller="TabSelectorButton" width="46" height="30">
+							<button name="clickable" depth="1" sprite="menu_empty" type="sliced" defaultcolor="40,40,40,255" hovercolor="255,180,0,255" selectedcolor="255,180,0,255" caption=" {tab_name_localized}" font_size="18" textcolor="255,255,255,255" />
+							<sprite depth="2" sprite="ui_game_symbol_backpack" size="18,18" pos="6,-6" color="200,200,200,255" />
+						</rect>
+						<!-- Chip 4 -->
+						<rect controller="TabSelectorButton" width="46" height="30">
+							<button name="clickable" depth="1" sprite="menu_empty" type="sliced" defaultcolor="40,40,40,255" hovercolor="255,180,0,255" selectedcolor="255,180,0,255" caption=" {tab_name_localized}" font_size="18" textcolor="255,255,255,255" />
+							<sprite depth="2" sprite="ui_game_symbol_backpack" size="18,18" pos="6,-6" color="200,200,200,255" />
+						</rect>
+						<!-- Chip 5 -->
+						<rect controller="TabSelectorButton" width="46" height="30">
+							<button name="clickable" depth="1" sprite="menu_empty" type="sliced" defaultcolor="40,40,40,255" hovercolor="255,180,0,255" selectedcolor="255,180,0,255" caption=" {tab_name_localized}" font_size="18" textcolor="255,255,255,255" />
+							<sprite depth="2" sprite="ui_game_symbol_backpack" size="18,18" pos="6,-6" color="200,200,200,255" />
+						</rect>
+						<!-- Chip 6 -->
+						<rect controller="TabSelectorButton" width="46" height="30">
+							<button name="clickable" depth="1" sprite="menu_empty" type="sliced" defaultcolor="40,40,40,255" hovercolor="255,180,0,255" selectedcolor="255,180,0,255" caption=" {tab_name_localized}" font_size="18" textcolor="255,255,255,255" />
+							<sprite depth="2" sprite="ui_game_symbol_backpack" size="18,18" pos="6,-6" color="200,200,200,255" />
+						</rect>
+						<!-- Chip 7 -->
+						<rect controller="TabSelectorButton" width="46" height="30">
+							<button name="clickable" depth="1" sprite="menu_empty" type="sliced" defaultcolor="40,40,40,255" hovercolor="255,180,0,255" selectedcolor="255,180,0,255" caption=" {tab_name_localized}" font_size="18" textcolor="255,255,255,255" />
+							<sprite depth="2" sprite="ui_game_symbol_backpack" size="18,18" pos="6,-6" color="200,200,200,255" />
+						</rect>
+						<!-- Chip 8 -->
+						<rect controller="TabSelectorButton" width="46" height="30">
+							<button name="clickable" depth="1" sprite="menu_empty" type="sliced" defaultcolor="40,40,40,255" hovercolor="255,180,0,255" selectedcolor="255,180,0,255" caption=" {tab_name_localized}" font_size="18" textcolor="255,255,255,255" />
+							<sprite depth="2" sprite="ui_game_symbol_backpack" size="18,18" pos="6,-6" color="200,200,200,255" />
+						</rect>
+						<!-- Chip 9 -->
+						<rect controller="TabSelectorButton" width="46" height="30">
+							<button name="clickable" depth="1" sprite="menu_empty" type="sliced" defaultcolor="40,40,40,255" hovercolor="255,180,0,255" selectedcolor="255,180,0,255" caption=" {tab_name_localized}" font_size="18" textcolor="255,255,255,255" />
+							<sprite depth="2" sprite="ui_game_symbol_backpack" size="18,18" pos="6,-6" color="200,200,200,255" />
+						</rect>
+						<!-- Chip 10 -->
+						<rect controller="TabSelectorButton" width="46" height="30">
+							<button name="clickable" depth="1" sprite="menu_empty" type="sliced" defaultcolor="40,40,40,255" hovercolor="255,180,0,255" selectedcolor="255,180,0,255" caption=" {tab_name_localized}" font_size="18" textcolor="255,255,255,255" />
+							<sprite depth="2" sprite="ui_game_symbol_backpack" size="18,18" pos="6,-6" color="200,200,200,255" />
+						</rect>
+					</grid>
+				</rect>
+
+				<!-- Main Inventory Grid -->
+				<panel name="slots" pos="0,0" width="606" height="425" depth="0" disableautobackground="true">
+					<rect name="content" depth="10" pos="0,0">
+						<sprite depth="1" name="backgroundMain" sprite="menu_empty3px" pos="0,-43" width="606" height="380" color="0,0,0,248" type="sliced" fillcenter="true"/>
+						<sprite depth="2" name="backgroundBorder" sprite="menu_empty3px" pos="0,-43" width="606" height="380" color="0,0,0,255" type="sliced" fillcenter="false"/>
+						
+						<rect name="tabsContents" depth="12" pos="3,-85" controller="Backpack">
+							<!-- 10 Hidden Pages to match the 10 Pagination Chips -->
+							<rect controller="TabSelectorTab" tab_key="1" pos="0,0"><grid depth="14" rows="5" cols="9" cell_width="67" cell_height="67" repeat_content="true"><item_stack name="0" cell_size="67"/></grid></rect>
+							<rect controller="TabSelectorTab" tab_key="2" pos="0,0"><grid depth="14" rows="5" cols="9" cell_width="67" cell_height="67" repeat_content="true"><item_stack name="0" cell_size="67"/></grid></rect>
+							<rect controller="TabSelectorTab" tab_key="3" pos="0,0"><grid depth="14" rows="5" cols="9" cell_width="67" cell_height="67" repeat_content="true"><item_stack name="0" cell_size="67"/></grid></rect>
+							<rect controller="TabSelectorTab" tab_key="4" pos="0,0"><grid depth="14" rows="5" cols="9" cell_width="67" cell_height="67" repeat_content="true"><item_stack name="0" cell_size="67"/></grid></rect>
+							<rect controller="TabSelectorTab" tab_key="5" pos="0,0"><grid depth="14" rows="5" cols="9" cell_width="67" cell_height="67" repeat_content="true"><item_stack name="0" cell_size="67"/></grid></rect>
+							<rect controller="TabSelectorTab" tab_key="6" pos="0,0"><grid depth="14" rows="5" cols="9" cell_width="67" cell_height="67" repeat_content="true"><item_stack name="0" cell_size="67"/></grid></rect>
+							<rect controller="TabSelectorTab" tab_key="7" pos="0,0"><grid depth="14" rows="5" cols="9" cell_width="67" cell_height="67" repeat_content="true"><item_stack name="0" cell_size="67"/></grid></rect>
+							<rect controller="TabSelectorTab" tab_key="8" pos="0,0"><grid depth="14" rows="5" cols="9" cell_width="67" cell_height="67" repeat_content="true"><item_stack name="0" cell_size="67"/></grid></rect>
+							<rect controller="TabSelectorTab" tab_key="9" pos="0,0"><grid depth="14" rows="5" cols="9" cell_width="67" cell_height="67" repeat_content="true"><item_stack name="0" cell_size="67"/></grid></rect>
+							<rect controller="TabSelectorTab" tab_key="10" pos="0,0"><grid depth="14" rows="5" cols="9" cell_width="67" cell_height="67" repeat_content="true"><item_stack name="0" cell_size="67"/></grid></rect>
+						</rect>
+					</rect>
+				</panel>
+			</rect>
+		</window>
+	</append>
+	
+	<set xpath="/windows/window[@name='windowBagStorage']/@height">865</set>
+	<set xpath="/windows/window[@name='windowBagStorage']/grid[@name='queue']/@rows">#LizziesMod_DynamicBackpacks.BackpackGridSizeY#</set>
+	<set xpath="/windows/window[@name='windowBagStorage']/grid[@name='queue']/@cols">#LizziesMod_DynamicBackpacks.BackpackGridSizeX#</set>
+	<set xpath="/windows/window[@name='windowBagStorage']/grid[@name='queue']/@cell_width">48</set>
+	<set xpath="/windows/window[@name='windowBagStorage']/grid[@name='queue']/@cell_height">48</set>
+	<set xpath="/windows/window[@name='windowBagStorage']/grid[@name='queue']/item_stack/@cell_size">48</set>
+</configs>

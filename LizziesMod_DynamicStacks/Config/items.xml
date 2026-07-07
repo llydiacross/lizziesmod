@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<configs>
+    <set xpath="/items/item/property[@name='Stacknumber']/@value">#LizziesMod_DynamicStacks.StackNumber#</set>
+    <set xpath="/items/item[starts-with(@name, 'ammo') and not(contains(@name, 'Bundle')) and not(contains(@name, 'Junk'))]/property[@name='Stacknumber']/@value">#LizziesMod_DynamicStacks.AmmoStackNumber#</set>
+    <append xpath="/items/item[starts-with(@name, 'ammo') and not(contains(@name, 'Bundle')) and not(contains(@name, 'Junk')) and not(property[@name='Stacknumber'])]">
+        <property name="Stacknumber" value="#LizziesMod_DynamicStacks.AmmoStackNumber#" />
+    </append>
+</configs>

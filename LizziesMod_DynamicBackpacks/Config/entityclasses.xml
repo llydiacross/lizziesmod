@@ -1,0 +1,3 @@
+<configs>
+	<set xpath="/entity_classes/entity_class[@name='playerMale']/effect_group/passive_effect[@name='BagSize' and @operation='base_set']/@value">#LizziesMod_DynamicBackpacks.BackpackMaxSize#</set>
+</configs>

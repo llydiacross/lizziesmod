@@ -1,0 +1,30 @@
+<configs>
+    <append xpath="/items">
+        <item name="gunPhysgun">
+                <property name="Extends" value="meleeToolRepairT3Nailgun"/> 
+                <property name="Tags" value="weapon,ranged,tool,electric"/>
+                <property name="CustomIcon" value="gunPhysgun"/>
+                <property name="CustomIconTint" value="0,255,255"/> 
+                <property name="DescriptionKey" value="gunPhysgunDesc"/>
+                
+                <!-- Progression & Battery Mechanics -->
+                <property name="ShowQuality" value="true"/>
+                <property name="DegradationBreaksAfter" value="false"/>
+                <property name="RepairTools" value="resourceFluxCell"/>
+                <property name="SoundPickup" value="battery_lead_grab"/>
+                <property name="SoundPlace" value="battery_lead_place"/>
+
+                <property class="Action0">
+                    <property name="Class" value="LizziesMod.ItemActionPhysgun, LizziesMod"/>
+                    <property name="Delay" value="0.1"/> 
+                </property>
+
+                <effect_group name="gunPhysgun">
+                    <passive_effect name="EntityDamage" operation="base_set" value="0"/>
+                    <passive_effect name="BlockDamage" operation="base_set" value="0"/>
+                    <passive_effect name="DegradationMax" operation="base_set" value="500,3000" tier="1,6"/>
+                    <passive_effect name="ModSlots" operation="base_set" value="1,5" tier="1,6"/>
+                </effect_group>
+            </item>
+        </append>
+</configs>

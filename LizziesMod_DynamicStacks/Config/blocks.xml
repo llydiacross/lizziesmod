@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<configs>
+    <set xpath="/blocks/block/property[@name='Stacknumber']/@value">#LizziesMod_DynamicStacks.StackNumber#</set>
+</configs>

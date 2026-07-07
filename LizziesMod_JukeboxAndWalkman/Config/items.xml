@@ -1,0 +1,13 @@
+<configs>
+    <append xpath="/items">
+        <item name="musicDisc_TestTrack">
+            <property name="Extends" value="resourcePaper"/> 
+            <property name="CustomIcon" value="modArmorHelmetLight"/> 
+            <property name="CustomIconTint" value="0,255,0"/> 
+            <property class="Action0">
+                <property name="class" value="Lizziesmod.ItemActionWalkman, LizziesMod"/>
+            </property>
+            <property name="TrackName" value="LizziesMusicPack:DVT - Rowantree"/>
+        </item>
+    </append>
+</configs>

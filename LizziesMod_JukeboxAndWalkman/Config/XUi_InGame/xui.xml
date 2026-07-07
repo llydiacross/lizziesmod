@@ -1,0 +1,7 @@
+<configs>
+    <append xpath="/xui">
+        <window_group name="windowJukebox">
+            <window name="windowJukebox" />
+        </window_group>
+    </append>
+</configs>

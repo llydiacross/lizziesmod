@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<xml>
+	<Name value="LizziesMod_DynamicBackpacks" />
+	<DisplayName value="Dynamic Backpacks [LizziesMod]" />
+	<Description value="Dynamically adjust the size fo your backpack!" />
+	<Author value="llydia" />
+	<Version value="0.0.1" />
+	<Website value="https://llydia.gen-sys.uk" />
+	<SkipWithAntiCheat value="true" />
+</xml>

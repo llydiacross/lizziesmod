@@ -1,0 +1,19 @@
+<configs>
+    <append xpath="/blocks">
+        <block name="blockJukebox">
+            <property name="Extends" value="cntVendingMachine2Broken" param1="CustomIcon" />
+            <property name="CreativeMode" value="Player" />
+            <property name="Model" value="@:Entities/Commercial/vendingMachineSnacksFullPrefab.prefab" />
+            <property name="Class" value="LizziesMod.BlockJukebox, LizziesMod"/> 
+
+            <property name="Material" value="Mmetal"/>
+            <property name="Shape" value="ModelEntity"/>
+
+            <property name="TileEntity" value="Powered"/> 
+            <property name="RequiredPower" value="10"/>
+            
+            <property name="Group" value="Science"/>
+            <property name="DescriptionKey" value="blockJukeboxDesc"/>
+        </block>
+    </append>
+</configs>
