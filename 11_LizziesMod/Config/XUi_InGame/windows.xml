@@ -1,0 +1,250 @@
+<config>
+    <!-- Settings Menu -->
+    <!-- Inject button into the Pause Menu -->
+    <append xpath="/windows/window[@name='ingameMenu']/grid">
+        <simplebutton name="btnModSettings" depth="3" pos="0, -310" width="250" height="40" font_size="24" caption="MOD SETTINGS" />
+    </append>
+
+    <append xpath="/windows">
+        <!-- Mod Settings Window -->
+        <window name="windowModSettings" depth="200" width="1200" height="800" anchor="Center" cursor_area="true" lock_navigation="true" controller="LizziesMod.ModSettingsUIController, LizziesMod">
+            <fullscreencollider color="0,0,0,220"/>
+            <rect depth="0" pos="-600, 400" width="1200" height="800">
+                
+                <sprite depth="1" name="background" sprite="menu_empty" type="sliced" color="30,30,30,250" />
+                <sprite depth="2" name="border" sprite="menu_empty2px" type="sliced" color="255,180,0,255" fillcenter="false" />
+
+                <rect depth="3" pos="0,0" height="50">
+                    <sprite depth="1" sprite="menu_empty" type="sliced" color="0,0,0,255" />
+                    <label depth="2" text="MOD SETTINGS" font_size="32" justify="center" pivot="center" pos="600,-25" color="255,180,0,255" upper_case="true" />
+                </rect>
+
+                <rect name="leftPanel" depth="3" pos="20, -70" width="350" height="650">
+                    <sprite depth="1" sprite="menu_empty" type="sliced" color="15,15,15,255" />
+                    <sprite depth="2" sprite="menu_empty2px" type="sliced" color="60,60,60,255" fillcenter="false" />
+                    
+               
+                    <rect depth="3" pos="5, -5" width="340" height="640" on_scroll="true">
+                        <defaultscrollbar />
+                        <scrollview width="320" clippingsoftness="0,10">
+                            <grid name="modListGrid" pos="16,0" rows="50" cols="1" cell_width="320" cell_height="50" arrangement="vertical" repeat_content="true">
+                                <rect name="modEntry" controller="LizziesMod.ModEntryController, LizziesMod">
+                                    <button name="clickable" depth="3" pos="2,-2" width="316" height="46" sprite="menu_empty" type="sliced" defaultcolor="40,40,40,255" hovercolor="80,180,255,255" sound_play_on_hover="[default_hover]" sound="[default_click]" />
+    
+                                    <texture name="imgModIcon" depth="4" pos="6,-5" width="36" height="36" visible="false" />
+                                    <label name="lblModName" depth="4" text="MOD NAME" font_size="22" justify="left" pivot="topleft" pos="50,-12" width="260" color="255,255,255,255" />
+                                </rect>
+                            </grid>
+                        </scrollview>
+                    </rect>
+                </rect>
+
+          
+                <rect name="rightPanel" depth="3" pos="390, -70" width="790" height="650">
+                    <sprite depth="1" sprite="menu_empty" type="sliced" color="15,15,15,255" />
+                    <sprite depth="2" sprite="menu_empty2px" type="sliced" color="60,60,60,255" fillcenter="false" />
+
+    
+                    <label name="lblSelectedModTitle" depth="4" pos="10, -10" width="770" height="40" font_size="32" justify="center" text="MOD TITLE" color="255,180,0,255" upper_case="true" />
+
+            
+                    <rect name="modInfoArea" depth="3" pos="10, -50" width="770" height="30">
+                        <label name="lblModAuthor" depth="4" pos="0,0" width="250" height="30" font_size="22" justify="left" text="Author: " color="200,200,200,255" />
+                        <label name="lblModVersion" depth="4" pos="260,0" width="150" height="30" font_size="22" justify="left" text="Version: " color="200,200,200,255" />
+                        <label name="lblModWebsite" depth="4" pos="420,0" width="350" height="30" font_size="22" justify="left" text="Website: " color="80,180,255,255" />
+                    </rect>
+
+        
+                    <rect name="bannerArea" depth="3" pos="10, -80" width="770" height="150">
+                        <sprite depth="1" sprite="menu_empty" type="sliced" color="10,10,10,255" />
+                        <texture name="imgBanner" depth="2" pos="0,0" width="770" height="150" visible="false" />
+                    </rect>
+
+          
+                    <rect name="settingsArea" depth="3" pos="10, -240" width="770" height="400" on_scroll="true">
+                        <defaultscrollbar />
+                        <scrollview width="750" clippingsoftness="0,10">
+                            <grid name="settingsGrid" pos="0,0" rows="50" cols="1" cell_width="750" cell_height="50" arrangement="vertical" repeat_content="true">
+                                <rect name="settingEntry" controller="LizziesMod.SettingEntryController, LizziesMod">
+                                    <sprite depth="3" pos="2,-2" width="746" height="46" sprite="menu_empty" type="sliced" color="40,40,40,255" />
+                                    <label name="lblSettingName" depth="4" text="SETTING NAME" font_size="22" justify="left" pos="15,-12" color="200,200,200,255" />
+                                    
+                                    <textfield name="txtSettingValue" depth="4" pos="450,-5" width="280" height="40" font_size="20" justify="center" backgroundcolor="20,20,20,255" textcolor="255,255,255,255" active_text_color="255,255,255,255" caret_color="255,255,255,255" max_length="50" vk_propagates_events="false" />
+                                    
+                                    <rect name="chkSettingValue" depth="4" pos="570,-5" width="40" height="40" visible="false">
+                                        <button name="clickable" depth="1" sprite="menu_empty" type="sliced" defaultcolor="20,20,20,255" hovercolor="80,180,255,255" sound_play_on_hover="[default_hover]" sound="[default_click]" />
+                                        <sprite name="sprCheck" depth="2" sprite="ui_game_symbol_check" width="30" height="30" pos="5,-5" color="0,255,0,255" visible="false" />
+                                    </rect>
+                                </rect>
+                            </grid>
+                        </scrollview>
+                    </rect>
+
+                </rect>
+
+                <simplebutton name="btnClose" depth="4" pos="20,-740" width="1160" height="40" font_size="26" caption="CLOSE &amp; SAVE" />
+            </rect>
+        </window>
+
+        <!-- Teleporter Hud Flux Timer Element -->
+        <window name="windowFluxTeleportTimer" anchor="CenterTop" pos="-200, -154" width="400" height="40" depth="50" cursor_area="false">
+            <rect depth="1">
+                <sprite depth="1" name="background" color="0,0,0,180" type="sliced" />
+                <label depth="3" name="lblTimer" text="FLUX JUMP INITIATED: 30s" justify="center" font_size="28" font_weight="bold" color="255,180,0" pos="0,-6" />
+            </rect>
+        </window>
+
+        <!-- Years -->
+        <window name="windowYearDisplay" controller="LizziesMod.YearHUDUIController, LizziesMod" pos="-33, 695" width="200" height="40" depth="50">
+            <rect>
+                <!-- Background shadow for readability -->
+                <sprite depth="0" name="background" color="0,0,0,100" type="sliced" />
+                <label depth="1" name="lblHUDYear" text="----" font_size="24" justify="left" pos="10, -5" color="255,180,0" font_weight="bold" />
+            </rect>
+        </window>
+
+        <!-- Teleporter Selection Menu  -->
+        <!-- Brass Flux Teleporter -->
+        <window name="windowBrassFluxTeleporter" width="600" height="550" anchor="Center" cursor_area="true" lock_navigation="true">
+
+            <fullscreencollider color="0,0,0,200"/>
+            
+            <rect depth="0" pos="-300, 275" width="600" height="550">
+                <!-- Main Window Background -->
+                <sprite depth="1" name="background" sprite="menu_empty" type="sliced" color="20,20,20,245" />
+                <sprite depth="2" name="border" sprite="menu_empty2px" type="sliced" color="80,180,255,255" fillcenter="false" />
+
+                <!-- Header -->
+                <rect depth="3" pos="0,0" height="50">
+                    <sprite depth="1" sprite="menu_empty" type="sliced" color="0,0,0,255" />
+                    <label depth="2" name="lblHeader" text="SIMPLE FLUX TELEPORTER" font_size="32" justify="center" pivot="center" pos="300,-25" color="80,180,255,255" upper_case="true" />
+                </rect>
+
+                <grid depth="3" pos="10,-60" rows="5" cols="1" cell_width="580" cell_height="55" arrangement="vertical">
+                    
+                    <rect name="btnTeleport1" width="580" height="50">
+                        <button name="clickable" depth="1" pos="0,0" width="580" height="50" sprite="menu_empty" defaultcolor="40,40,40,255" hovercolor="80,180,255,100" effect="none" type="sliced" />
+                        <sprite depth="2" pos="10,-5" width="40" height="40" sprite="ui_game_symbol_map_bed" color="80,180,255,255" />
+                        <label depth="2" name="btnText" pos="65,-5" width="500" height="40" font_size="26" text="" justify="left" pivot="topleft" />
+                    </rect>
+                    <rect name="btnTeleport2" width="580" height="50">
+                        <button name="clickable" depth="1" pos="0,0" width="580" height="50" sprite="menu_empty" defaultcolor="40,40,40,255" hovercolor="80,180,255,100" effect="none" type="sliced" />
+                        <sprite depth="2" pos="10,-5" width="40" height="40" sprite="ui_game_symbol_map_bed" color="80,180,255,255" />
+                        <label depth="2" name="btnText" pos="65,-5" width="500" height="40" font_size="26" text="" justify="left" pivot="topleft" />
+                    </rect>
+                    <rect name="btnTeleport3" width="580" height="50">
+                        <button name="clickable" depth="1" pos="0,0" width="580" height="50" sprite="menu_empty" defaultcolor="40,40,40,255" hovercolor="80,180,255,100" effect="none" type="sliced" />
+                        <sprite depth="2" pos="10,-5" width="40" height="40" sprite="ui_game_symbol_map_bed" color="80,180,255,255" />
+                        <label depth="2" name="btnText" pos="65,-5" width="500" height="40" font_size="26" text="" justify="left" pivot="topleft" />
+                    </rect>
+                    <rect name="btnTeleport4" width="580" height="50">
+                        <button name="clickable" depth="1" pos="0,0" width="580" height="50" sprite="menu_empty" defaultcolor="40,40,40,255" hovercolor="80,180,255,100" effect="none" type="sliced" />
+                        <sprite depth="2" pos="10,-5" width="40" height="40" sprite="ui_game_symbol_map_bed" color="80,180,255,255" />
+                        <label depth="2" name="btnText" pos="65,-5" width="500" height="40" font_size="26" text="" justify="left" pivot="topleft" />
+                    </rect>
+                    <rect name="btnTeleport5" width="580" height="50">
+                        <button name="clickable" depth="1" pos="0,0" width="580" height="50" sprite="menu_empty" defaultcolor="40,40,40,255" hovercolor="80,180,255,100" effect="none" type="sliced" />
+                        <sprite depth="2" pos="10,-5" width="40" height="40" sprite="ui_game_symbol_map_bed" color="80,180,255,255" />
+                        <label depth="2" name="btnText" pos="65,-5" width="500" height="40" font_size="26" text="" justify="left" pivot="topleft" />
+                    </rect>
+
+                </grid>
+
+                <rect depth="3" pos="10, -325" width="580" height="110">
+                    <sprite depth="1" sprite="menu_empty" type="sliced" color="30,30,30,255" />
+                    <sprite depth="2" sprite="menu_empty2px" type="sliced" color="60,60,60,255" fillcenter="false" />
+                    
+                    <label depth="3" text="TIME INPUT" font_size="22" justify="center" pos="0, -5" color="120,120,120,255" />
+                    <label depth="3" name="lblUpgradeText" text="UPGRADE REQUIRED" font_size="14" justify="center" pos="0, -26" color="200,50,50,255" />
+
+                    <grid depth="3" pos="25,-60" rows="1" cols="3" cell_width="180" cell_height="40" arrangement="horizontal">          
+                        <!-- Day Input -->
+                        <rect width="170" height="35">
+                            <rect name="btnDayUp" depth="4" pos="125, 20" width="20" height="20">
+                                <button name="clickable" depth="1" sprite="menu_empty" type="sliced" defaultcolor="60,60,60,255" hovercolor="80,180,255,255" />
+                                <label depth="2" text="+" font_size="20" justify="center" pivot="center" pos="10,-10" color="255,255,255,255" />
+                            </rect>
+                            
+                            <sprite depth="1" sprite="menu_empty" type="sliced" color="15,15,15,255" />
+                            <sprite depth="2" sprite="menu_empty2px" type="sliced" color="60,60,60,255" fillcenter="false" />
+                            <label depth="3" text="DAY" font_size="18" justify="left" pos="5, -8" color="100,100,100,255" />
+                            <label depth="3" name="lblDay" text="---" font_size="24" justify="right" pos="-35, -5" color="80,80,80,255" />
+          
+                            <rect name="btnDayDown" depth="4" pos="150, 20" width="20" height="20">
+                                <button name="clickable" depth="1" sprite="menu_empty" type="sliced" defaultcolor="60,60,60,255" hovercolor="80,180,255,255" />
+                                <label depth="2" text="-" font_size="20" justify="center" pivot="center" pos="10,-12" color="255,255,255,255" />
+                            </rect>
+                        </rect>
+
+                        <!-- Time Input -->
+                        <rect width="170" height="35">
+                            <rect name="btnTimeUp" depth="4" pos="125, 20" width="20" height="20">
+                                <button name="clickable" depth="1" sprite="menu_empty" type="sliced" defaultcolor="60,60,60,255" hovercolor="80,180,255,255" />
+                                <label depth="2" text="+" font_size="20" justify="center" pivot="center" pos="10,-10" color="255,255,255,255" />
+                            </rect>
+                            
+                            <sprite depth="1" sprite="menu_empty" type="sliced" color="15,15,15,255" />
+                            <sprite depth="2" sprite="menu_empty2px" type="sliced" color="60,60,60,255" fillcenter="false" />
+                            <label depth="3" text="TIME" font_size="18" justify="left" pos="5, -8" color="100,100,100,255" />
+                            <label depth="3" name="lblTime" text="--:--" font_size="24" justify="right" pos="-35, -5" color="80,80,80,255" />
+                            
+                            <rect name="btnTimeDown" depth="4" pos="150, 20" width="20" height="20">
+                                <button name="clickable" depth="1" sprite="menu_empty" type="sliced" defaultcolor="60,60,60,255" hovercolor="80,180,255,255" />
+                                <label depth="2" text="-" font_size="20" justify="center" pivot="center" pos="10,-12" color="255,255,255,255" />
+                            </rect>
+                        </rect>
+
+                        <!-- Year Input -->
+                        <rect width="170" height="35">
+                            <rect name="btnYearUp" depth="4" pos="125, 20" width="20" height="20">
+                                <button name="clickable" depth="1" sprite="menu_empty" type="sliced" defaultcolor="60,60,60,255" hovercolor="80,180,255,255" />
+                                <label depth="2" text="+" font_size="20" justify="center" pivot="center" pos="10,-10" color="255,255,255,255" />
+                            </rect>
+                            
+                            <sprite depth="1" sprite="menu_empty" type="sliced" color="15,15,15,255" />
+                            <sprite depth="2" sprite="menu_empty2px" type="sliced" color="60,60,60,255" fillcenter="false" />
+                            <label depth="3" text="YEAR" font_size="18" justify="left" pos="5, -8" color="100,100,100,255" />
+                            <label depth="3" name="lblYear" text="----" font_size="24" justify="right" pos="-35, -5" color="80,80,80,255" />
+                            
+                            <rect name="btnYearDown" depth="4" pos="150, 20" width="20" height="20">
+                                <button name="clickable" depth="1" sprite="menu_empty" type="sliced" defaultcolor="60,60,60,255" hovercolor="80,180,255,255" />
+                                <label depth="2" text="-" font_size="20" justify="center" pivot="center" pos="10,-12" color="255,255,255,255" />
+                            </rect>
+                        </rect>
+                    </grid>
+                </rect>
+
+                <sprite depth="3" pos="10, -440" width="580" height="2" sprite="menu_empty" color="60,60,60,255" type="sliced" />
+
+                <rect depth="3" pos="0, -450" height="40">
+                    <simplebutton name="btnPreviousTeleport" depth="4" pos="10,0" width="285" height="40" font_size="26" caption="JUMP BACK" />
+                    <simplebutton name="btnCancelTeleport" depth="4" pos="305,0" width="285" height="40" font_size="26" caption="ABORT JUMP" />
+                </rect>
+                
+                <simplebutton name="btnClose" depth="4" pos="10,-495" width="580" height="40" font_size="26" caption="CLOSE" />
+            </rect>
+	    </window>
+
+        <!-- Mechanical Press -->
+        <!-- Queue -->
+        <window name="windowMechanicalPressCraftingQueue" width="400" height="16" panel="Left" cursor_area="true" always_update="true">
+          		<rect depth="0" pos="96,0" width="303" controller="CraftingQueue" always_update="true">
+                    <!-- <sprite name="background" color="[black]" type="sliced" pos="0,-10" /> -->
+                    <grid name="queue" rows="3" cols="4" pos="3,-13" cell_width="75" cell_height="75" repeat_content="true" always_update="true">
+                        <recipe_stack name="0"/>
+                    </grid>
+                </rect>
+	    </window>
+        
+        <!-- Output -->
+        <window name="windowMechanicalPressOutput" width="285" height="150" depth="1" backgroundcolor="40,40,40,255" border="true" bordercolor="255,180,0,255" anchor="Top" panel="Right" cursor_area="true" 
+        controller="WorkstationOutputWindow">
+            <rect>
+                <label depth="2" name="outputLabel" pos="10,5" width="285" height="64" text="OUTPUT" font_size="48" color="255,180,0,255" justify="left"/>
+                <grid name="outputGrid" pos="10,-50" rows="6" cols="3" cell_width="95" cell_height="95" repeat_content="true" controller="WorkstationOutputGrid">
+                    <item_stack name="item_stack" />
+                </grid>
+            </rect>
+        </window>
+    </append>
+</config>

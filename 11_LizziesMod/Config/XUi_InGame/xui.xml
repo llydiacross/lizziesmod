@@ -1,0 +1,30 @@
+<configs>
+    <append xpath="/xui">
+        <!-- Teleport Selector-->
+        <window_group name="windowTeleportSelector" controller="LizziesMod.TeleportUIController, LizziesMod">
+            <window name="windowBrassFluxTeleporter"/>
+        </window_group>
+        <!-- Mechnical Press Window Group -->
+        <window_group name="workstation_MechanicalPress" controller="XUiC_WorkstationWindowGroup" close_compass_on_open="true" defaultselected="bp.content">
+            <window name="windowCraftingList"/>
+            <window name="craftingInfoPanel"/>
+            <window name="windowMechanicalPressCraftingQueue"/>
+            <window name="windowMechanicalPressOutput" />
+            <window name="windowNonPagingHeader" />
+        </window_group>			
+
+        <!-- Mod Settings Window Group -->
+        <window_group name="windowModSettings">
+            <window name="windowModSettings"/>
+        </window_group>
+
+        <!-- Flux Teleport Timer -->
+        <window_group name="windowFluxTeleportTimer" actionset="false">
+            <window name="windowFluxTeleportTimer" />
+        </window_group>
+    </append>
+
+    <append xpath="/xui/window_group[@name='compass']">
+        <window name="windowYearDisplay"/>
+    </append>
+</configs>

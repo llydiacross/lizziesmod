@@ -1,0 +1,49 @@
+<configs>
+    <append xpath="/buffs">
+
+        <!-- Steam Pressure-->
+        <buff name="buffSteamPressure" 
+            name_key="buffSteamPressure" 
+            description_key="buffSteamPressureDesc" 
+            icon="ui_game_symbol_power" 
+            icon_color="255,215,0">
+            <stack_type value="replace"/>
+            <update_rate value="0.1"/>
+            <display_type value="buffBar"/> 
+            
+            <effect_group>
+                <passive_effect name="BuffProcChance" operation="base_set" value="0"/>
+            </effect_group>
+        </buff>
+
+        <!-- Flux Teleporting -->
+        <buff name="buffFluxTeleporting" 
+        name_key="buffFluxTeleporting" 
+        description_key="buffFluxTeleportingDesc" 
+        icon="ui_game_symbol_map" 
+        icon_color="255,180,0">
+            <stack_type value="ignore"/>
+                <duration value="30"/>
+            <display_type value="buffBar"/>
+            
+            <effect_group>
+                <triggered_effect trigger="onOtherDamagedSelf" action="RemoveBuff" buff="buffFluxTeleporting"/>
+            </effect_group>
+        </buff>
+
+        <!-- Immediately ragdolls an enemy, runs for 5 seconds -->
+        <buff name="buffRagdoll" hidden="true">
+            <stack_type value="replace"/>
+            <duration value="5"/> 
+            <update_rate value="0.5"/> 
+            
+            <effect_group>
+                <passive_effect name="WalkSpeed" operation="base_set" value="0"/>
+                <passive_effect name="RunSpeed" operation="base_set" value="0"/>
+                <passive_effect name="JumpStrength" operation="base_set" value="0"/>
+                <triggered_effect trigger="onSelfBuffStart" action="Ragdoll" duration="5"/>
+                <triggered_effect trigger="onSelfBuffUpdate" action="Ragdoll" duration="5"/>
+            </effect_group>
+        </buff>
+    </append>
+</configs>

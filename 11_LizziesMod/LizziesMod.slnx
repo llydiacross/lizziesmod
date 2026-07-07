@@ -1,0 +1,7 @@
+<Solution>
+  <Configurations>
+    <BuildType Name="Debug" />
+    <BuildType Name="Main" />
+  </Configurations>
+  <Project Path="LizziesMod.csproj" Id="90a1b09c-9b78-4c0b-88b1-4928f311d376" />
+</Solution>

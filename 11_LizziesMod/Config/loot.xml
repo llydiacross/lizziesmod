@@ -1,0 +1,35 @@
+<configs>
+    <!-- Hydralic Sledge -->
+    <append xpath="/lootcontainers/lootgroup[@name='groupWeaponsT2_Melee']">
+        <item name="meleeWeaponHydraulicSledge" prob="0.05" />
+    </append>
+    <append xpath="/lootcontainers/lootgroup[@name='groupToolsT1']">
+        <item name="meleeWeaponHydraulicSledge" prob="0.05" />
+    </append>
+
+     <!-- Flux Seed -->
+    <append xpath="/lootcontainers/lootgroup[@name='seeds']">
+        <item name="plantedFlux1"/>
+    </append>
+    <append xpath="/lootcontainers/lootgroup[@name='groupIngredientsUncommon']">
+         <item name="plantedFlux1" prob="0.05" />
+    </append>
+
+    <!-- Flux Cell -->
+    <append xpath="/lootcontainers/lootgroup[@name='groupCraftingUncommon']">
+        <item name="resourceFluxCell" count="1,2" prob="0.042" />
+    </append>
+
+    <!-- Refined Flux -->
+    <append xpath="/lootcontainers/lootgroup[@name='groupCraftingUncommon']">
+        <item name="resourceFlux" count="1,4" prob="0.055" />
+    </append>
+
+    <!-- Forged Brass -->
+    <append xpath="/lootcontainers/lootgroup[@name='groupCraftingUncommon']">
+        <item name="resourceForgedBrass" count="4,16" prob="0.075" />
+    </append>
+    <append xpath="/lootcontainers/lootgroup[@name='groupQuestResourcesT1']">
+        <item name="resourceForgedBrass" count="8,32" prob="0.05" />
+    </append>
+</configs>

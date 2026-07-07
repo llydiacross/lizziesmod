@@ -1,0 +1,185 @@
+<configs>
+	<append xpath="/blocks">
+
+		<!-- Scrap metal Pile -->
+		<block name="scrapBrassPile">
+			<property name="Material" value="Mbrass"/>
+			<property name="Shape" value="New" />
+			<property name="Model" value="@:Shapes/broken_girder_beam.fbx" />
+			<property name="Texture" value="446" />
+			<property name="UseGlobalUV" value="Local" />
+			<property name="WaterFlow" value="permitted" />
+			<property name="Collide" value="movement,melee,bullet,arrow,rocket" />
+			<property name="IsDecoration" value="true" />
+			<property name="IsTerrainDecoration" value="true" />
+			<property name="StabilitySupport" value="false" />
+			<property name="MaxDamage" value="75" />
+			<property name="SortOrder1" value="B113" />
+			<property name="SortOrder2" value="0300" />
+			<property name="Tags" value="twitchReplace" />
+			<property name="FilterTags" value="MC_building,SC_construction,SC_destruction" />
+			<drop event="Harvest" name="resourceScrapBrass" count="1" tag="allHarvest,perkJunkMiner" />
+			<drop event="Destroy" count="0" />
+		</block>
+	
+		<!-- Brass Shapes -->
+		<block name="brassShapes" shapes="All">
+			<property name="DescriptionKey" value="brassGroupDesc" />
+			<property name="Material" value="Mbrass_scrap"/>
+			<property name="Shape" value="New" />
+			<property name="Texture" value="429" />
+			<property name="CustomIcon" value="brassShapes"/>
+			<property name="UiBackgroundTexture" value="429" />
+			<property name="Weight" value="60" />
+			<property name="EconomicValue" value="16" />
+			<property name="EconomicBundleSize" value="32" />
+			<property class="RepairItems">
+			  	<property name="resourceScrapBrass" value="8" />
+			</property>		
+			<property name="SortOrder1" value="S020" />
+			<property name="Group" value="Building,advBuilding" />
+			<property name="FilterTags" value="MC_Shapes" />
+			<property name="SoundPickup" value="steelblock_grab" />
+			<property name="SoundPlace" value="steelblock_place" />
+			<drop event="Harvest" name="resourceScrapBrass" count="1" tag="allHarvest" />
+			<drop event="Destroy" count="0" />
+			<drop event="Fall" name="scrapBrassPile" count="1" prob="0.75" stick_chance="1" />
+		  </block>
+		  
+		  <!-- Mechanical Press -->
+		  <block name="mechanicalPress">
+			<property name="Class" value="Workstation" />
+			<property name="UnlockedBy" value="craftingWorkstations" />
+			<property class="Workstation">
+				<property name="Modules" value="output,input" />
+				<property name="CraftingAreaRecipes" value="mechanicalPress" />
+			</property>
+			<property name="WorkstationWindow" value="workstation_MechanicalPress" />
+			<!-- UI_Info -->
+			<property name="CreativeMode" value="Player" />
+			<property name="DescriptionKey" value="mechanicalPressDesc" />
+			<property name="DisplayType" value="blockMulti" />
+			<property name="WorkstationIcon" value="ui_game_symbol_hand" />
+			<property name="Stacknumber" value="1" />
+			<!-- Visual -->
+			<property name="Material" value="Mbrass_scrap"/>
+			<property name="Shape" value="ModelEntity" />
+			<property name="CustomIcon" value="mechanicalPress"/>
+			<property name="CustomIconTint" value="255, 180, 0"/>
+			<property name="Model" value="@:Entities/Industrial/gasPumpFullPrefab.prefab" />
+			<property name="ModelOffset" value="0,.5,0" />
+			<property name="MultiBlockDim" value="2,2,1" />
+			<property name="ImposterDontBlock" value="true" />
+			<property name="WaterFlow" value="permitted" />
+			<property name="ParticleName" value="chemistryStation" />
+			<property name="ParticleOffset" value="0.5,0.5,0.5" />
+			<!-- Placement -->
+			<property name="Place" value="TowardsPlacerInverted" />
+			<property name="OnlySimpleRotations" value="true" />
+			<property name="Collide" value="movement,melee,bullet,arrow,rocket" />
+			<property name="Path" value="solid" />
+			<property name="IsTerrainDecoration" value="true" />
+			<property name="StabilitySupport" value="false" />
+			<!-- Value -->
+			<property name="Weight" value="0" />
+			<property name="EconomicValue" value="200" />
+			<property name="TraderStageTemplate" value="midTier1" /><!-- workbench -->
+			<!-- Interaction -->
+			<property name="MaxDamage" value="800" />
+			<property name="HeatMapStrength" value=".8" />
+			<property name="HeatMapTime" value="5000" />
+			<property name="HeatMapFrequency" value="1000" />
+			<property name="OpenSound" value="open_workbench" />
+			<property name="CloseSound" value="close_workbench" />
+			<property name="TakeDelay" value="15" />
+			<property class="RepairItems">
+				<property name="resourceForgedIron" value="25" />
+				<property name="resourceMechanicalParts" value="20" />
+				<property name="resourceWood" value="50" />
+			</property>
+			<!-- Sorting -->
+			<property name="SortOrder1" value="B281" />
+			<property name="SortOrder2" value="0300" />
+			<property name="Group" value="Limited,Building,TCScience,advBuilding" />
+			<property name="Tags" value="workstationSkill,twitch_workstation" />
+			<property name="FilterTags" value="MC_playerBlocks,SC_decor" />
+			<property name="SoundPickup" value="workbench_grab" />
+			<property name="SoundPlace" value="workbench_place" />
+			<!-- Drop -->
+			<drop event="Harvest" name="resourceScrapIron" count="200" tag="allHarvest,perkJunkMiner" />
+			<drop event="Harvest" name="resourceWood" count="20" tag="allHarvest,lumberjackHarvest,perkJunkMiner" />
+			<drop event="Harvest" name="terrStone" count="0" tool_category="Disassemble" />
+			<drop event="Harvest" name="resourceForgedIron" count="10" tag="salvageHarvest" />
+			<drop event="Harvest" name="resourceForgedBrass" count="10" tag="salvageHarvest" />
+			<drop event="Harvest" name="resourceMechanicalParts" count="8" tag="salvageHarvest" />
+			<drop event="Harvest" name="resourceWood" count="20" tag="salvageHarvest" />
+			<drop event="Harvest" name="resourceDamagedHydraulic" count="1" prob="0.12" tag="salvageHarvest" />
+			<drop event="Destroy" count="0" />
+			<drop event="Fall" name="terrDestroyedWoodDebris" count="1" prob="0.75" stick_chance="1" />
+		</block>
+
+		<!-- Flux Plants -->
+		<block name="plantedFlux1">
+			<property name="Extends" value="cropsGrowingMaster" param1="CustomIcon" />
+			<property name="DescriptionKey" value="plantedFlux1Desc" />
+			<property name="CreativeMode" value="Player" />
+			<property name="CustomIcon" value="plantedCotton1" />
+			<property name="CustomIconTint" value="80,180,255" />
+			<property name="TintColor" value="50B4FF" />
+			<property name="DescriptionKey" value="plantedFlux1Desc" />
+			<property name="Model" value="@:Entities/Plants/cottonSproutPrefab.prefab" />
+			<property name="UnlockedBy" value="craftingSeeds" />
+			<property name="PlaceAsRandomRotation" value="true" />
+			<property class="PlantGrowing">
+				<property name="Next" value="plantedFlux2" />
+			</property>
+		</block>
+
+		<block name="plantedFlux1Wild">
+			<property name="Extends" value="cropsGrowingMaster" param1="CustomIcon" />
+			<property name="DescriptionKey" value="plantedFlux1Desc" />
+			<property name="CreativeMode" value="Player" />
+			<property name="CustomIcon" value="plantedCotton1" />
+			<property name="CustomIconTint" value="80,180,255" />
+			<property name="TintColor" value="50B4FF" />
+			<property name="IsTerrainDecoration" value="true" />
+			<property name="DescriptionKey" value="plantedFlux1Desc" />
+			<property name="Model" value="@:Entities/Plants/cottonSproutPrefab.prefab" />
+			<property name="PlaceAsRandomRotation" value="true" />
+			<!-- Goes directly to harvest in wild-->
+			<property class="PlantGrowing">
+				<property name="Next" value="plantedFlux3HarvestPlayer" />
+			</property>
+			<drop event="Harvest" name="resourceFluxFibre" count="1,3" tag="cropHarvest" />
+			<drop event="Destroy" count="0" />
+		</block>
+
+		<!-- Flux growing stage -->
+		<block name="plantedFlux2">
+			<property name="Extends" value="cropsGrowingMaster" />
+			<property name="CreativeMode" value="None" />
+			<property name="CustomIcon" value="plantedCotton1" />
+			<property name="CustomIconTint" value="80,180,255" />
+			<property name="TintColor" value="50B4FF" />
+			<property name="Model" value="@:Entities/Plants/cottonGrowingPrefab.prefab" />
+			<property class="PlantGrowing">
+				<property name="Next" value="plantedFlux3HarvestPlayer" />
+			</property>
+		</block>
+
+		<block name="plantedFlux3HarvestPlayer">
+			<property name="Extends" value="cropsHarvestableMaster" />
+			<property name="DescriptionKey" value="plantedFlux3HarvestPlayerDesc" />
+			<property name="CreativeMode" value="None" />
+			<property name="CustomIcon" value="plantedCotton1" />
+			<property name="CustomIconTint" value="80,180,255" />
+			<property name="TintColor" value="50B4FF" />
+			<property name="IsTerrainDecoration" value="true" />
+			<property name="Model" value="@:Entities/Plants/cotton_plant_harvestPrefab.prefab" />
+			<!-- Downgrades cleanly back to Stage 1 when harvested, representing a perpetual crop! -->
+			<property name="DowngradeBlock" value="plantedFlux1" />
+			<drop event="Harvest" name="resourceFluxFibre" count="4,8" tag="cropHarvest" />
+			<drop event="Destroy" count="0" />
+		</block>
+	</append>
+</configs>

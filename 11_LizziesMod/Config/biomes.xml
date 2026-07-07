@@ -1,0 +1,10 @@
+<configs>
+
+    <!-- Make Flux Plants spawn randomly in the world, more common in snow biome -->
+    <append xpath="/worldgeneration/biomes/biome[@name='pine_forest' or @name='desert']/decorations">
+        <decoration type="block" blockname="plantedFlux1Wild" prob="0.00125"/>
+    </append>
+    <append xpath="/worldgeneration/biomes/biome[@name='snow']/decorations">
+        <decoration type="block" blockname="plantedFlux1Wild" prob="0.005"/>
+    </append>
+</configs>

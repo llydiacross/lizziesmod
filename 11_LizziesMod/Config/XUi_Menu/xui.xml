@@ -1,0 +1,10 @@
+<configs>
+    <append xpath="/xui">
+        <window_group name="windowModSettings">
+            <window name="windowModSettings" />
+        </window_group>
+    </append>
+    <append xpath="/xui/window_group[@name='mainMenu']">
+        <window name="windowMenuIconDrawer" />
+    </append>
+</configs>

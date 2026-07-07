@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<xml>
+	<Name value="LizziesMod" />
+	<DisplayName value="LizziesMod" />
+	<Description value="Pain and Suffering" />
+	<Author value="llydia" />
+	<Version value="0.0.1" />
+	<Website value="https://llydia.gen-sys.uk" />
+	<SkipWithAntiCheat value="true" />
+</xml>

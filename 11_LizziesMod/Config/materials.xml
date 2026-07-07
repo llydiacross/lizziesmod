@@ -1,0 +1,7 @@
+<configs>
+
+    <!-- Make brass scrap a more powerful and stable material-->
+	<set xpath="/materials/material[@id='Mbrass_scrap']/property[@name='MaxDamage']/@value">#LizziesMod.BrassScrapMaxDamage#</set>
+    <set xpath="/materials/material[@id='Mbrass_scrap']/property[@name='stability_glue']/@value">#LizziesMod.BrassScrapStabilityGlue#</set>
+    <set xpath="/materials/material[@id='Mbrass_scrap']/property[@name='StabilitySupport']/@value">true</set>
+</configs>

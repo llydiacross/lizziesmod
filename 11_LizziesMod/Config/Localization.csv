@@ -1,0 +1,43 @@
+Key,File,Type,UsedInMainMenu,NoTranslate,English
+scrapBrassPile,blocks,Block,,,Scrap Brass Pile
+brassShapes,blocks,Block,,,Brass Shapes
+brassShapes:VariantHelper,blocks,Block,,,Brass Shapes
+materialMbrass_scrap,materials,Material,,,Brass
+materialMbrass_scrap:VariantHelper,blocks,Block,,,Brass Shapes
+brassGroupDesc,blocks,Desc,,,"A collection of building shapes made from reinforced brass. Highly durable, dense, and resistant."
+mechanicalPress,blocks,Block,,,Mechanical Press
+mechanicalPressDesc,blocks,Desc,,,"An industrial-grade hydraulic press. Highly efficient for mass-producing ammunition casings, weapon parts, and heavy armor plates. Requires raw materials."
+buffSteamPressure,buffs,Buff,,,Steam Pressure
+buffSteamPressureDesc,buffs,Desc,,,"Internal steam pressure is accumulating. Release it with a heavy attack!"
+buffFluxTeleporting,buffs,Buff,,,Flux Charge
+buffFluxTeleportingDesc,buffs,Desc,,,"Beam me up scotty!"
+resourceForgedBrass,items,Item,,,Forged Brass
+resourceForgedBrassDesc,items,Desc,,,"Melted and forged brass, hardened for industrial applications and heavy ammunition."
+resourceStampedBrassCasing,items,Item,,,Stamped Brass Casing
+resourceStampedBrassCasingDesc,items,Desc,,,"A heavy-duty ammunition casing stamped in a mechanical press. Withstands higher pressure and packs a bigger punch!"
+brassArmorParts,items,Item,,,Brass Armor Plate
+brassArmorPartsDesc,items,Desc,,,"A thick, heavy armor plate stamped from forged brass. Just like the romans used to make!"
+resourceDamagedHydraulic,items,Item,,,Damaged Hydraulic Ram
+resourceDamagedHydraulicDesc,items,Desc,,,"A broken hydraulic ram salvaged from an old press. With a little forged steel and ingenuity, it could be repurposed into something devastating."
+gunPhysgun,items,Item,,,"Physgun"
+gunPhysgunDesc,items,Item,,,"Just like garrysmod! Custom laser not included..."
+meleeWeaponHydraulicSledge,items,Item,,,Hydraulic Kinetic Sledge
+meleeWeaponHydraulicSledgeDesc,items,Desc,,,"A monstrous sledgehammer retrofitted with a salvaged hydraulic ram. Holding down the heavy attack charges steam pressure; releasing it unleashes a massive kinetic shockwave."
+brassFluxTeleporter,items,Item,,,Brass Flux Teleporter
+brassFluxTeleporterDesc,items,Desc,,,"A high-tech device that allows instant travel to your bedroll. Teleport time scales with item quality (30s at T1, 15s at T6). Recharge with Flux Cells..."
+crystalFluxTeleporter,items,Item,,,Crystal Flux Teleporter
+crystalFluxTeleporterDesc,items,Desc,,,"A high-tech device that allows instant travel to any waypoint/bedroll and also through time! Teleport time scales with item quality (30s at T1, 15s at T6). Recharge with Flux Cells..."
+plantedFlux1,blocks,Farming,,,Flux Seed
+plantedFlux1Wild,blocks,Farming,,,Flux Plant
+plantedFlux1Desc,blocks,Farming,,,"Plant these seeds in a Farm Plot to cultivate highly reactive, glowing Flux Crops."
+plantedFlux2,blocks,Farming,,,Flux Plant (Growing)
+plantedFlux3HarvestPlayer,blocks,Farming,,,Flux Plant
+plantedFlux3HarvestPlayerDesc,blocks,Farming,,,"A mature, energy-dense plant that hums with static charge. Harvest to extract Flux Fibres."
+resourceFluxFibre,items,Item,,,Flux Fibre
+resourceFluxFibreDesc,items,Desc,,,"Raw, static-charged crop fibers harvested from matured Flux Plants. Can be processed into refined Flux."
+resourceFlux,items,Item,,,Refined Flux
+resourceFluxDesc,items,Desc,,,"A highly concentrated elemental fluid extracted from raw Flux Fibres. Essential for high-tech item fabrication and charging batteries."
+resourceFluxCell,items,Item,,,Flux Cell,
+resourceFluxCellDesc,items,Desc,,,"How the fuck do batteries even work?"
+txGroupCustom,,,,,Custom Paints
+xuiModSettings,UI,XUI,,,"Mod Settings"

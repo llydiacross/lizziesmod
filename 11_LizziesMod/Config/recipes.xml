@@ -1,0 +1,119 @@
+<configs>
+	<append xpath="/recipes">
+	
+		<!-- Acid in chemistryStation -->
+		<recipe name="resourceAcid" count="1" craft_area="chemistryStation">
+			<ingredient name="drinkJarBoiledWater" count="2" />
+			<ingredient name="resourcePotassiumNitratePowder" count="2" />
+			<ingredient name="resourceScrapBrass" count="2" />
+		</recipe>
+
+		<!-- Mechnical Press Recipies -->
+		<recipe name="mechanicalPress" count="1" craft_area="workbench">
+			<ingredient name="resourceForgedIron" count="20" />
+			<ingredient name="resourceForgedBrass" count="15" />
+			<ingredient name="resourceSpring" count="5" />
+			<ingredient name="resourceMetalPipe" count="5"/>
+		</recipe>
+
+		<recipe name="resourceStampedBrassCasing" count="10" craft_area="mechanicalPress" craft_time="3">
+			<ingredient name="resourceForgedBrass" count="2"/>
+		</recipe>
+
+		<recipe name="ammo762mmBulletHP" count="6" craft_area="mechanicalPress" craft_time="4">
+			<ingredient name="resourceStampedBrassCasing" count="6"/>
+			<ingredient name="resourceBulletTip" count="6"/>
+			<ingredient name="resourceGunPowder" count="3"/> 
+		</recipe>
+
+		<recipe name="ammo9mmBulletHP" count="12" craft_area="mechanicalPress" craft_time="3">
+			<ingredient name="resourceStampedBrassCasing" count="12"/>
+			<ingredient name="resourceBulletTip" count="12"/>
+			<ingredient name="resourceGunPowder" count="6"/>
+		</recipe>
+
+		<!-- Armor Crafting-->
+		<recipe name="armorParts" count="1" craft_area="mechanicalPress" craft_time="45">
+			<ingredient name="brassArmorParts" count="12"/>
+			<ingredient name="resourceForgedSteel" count="4"/>
+			<ingredient name="resourceLeather" count="2"/>
+		</recipe>
+
+		<recipe name="brassArmorParts" count="1" craft_area="mechanicalPress" craft_time="8">
+			<ingredient name="resourceForgedBrass" count="4"/>
+			<ingredient name="resourceCoal" count="1"/> 
+		</recipe>
+	
+		<!-- Parts Crafting in the Mechanical Press -->
+		<recipe name="gunHandgunT1PistolParts" craft_area="mechanicalPress">
+			<ingredient name="resourceForgedSteel" count="20" />
+			<ingredient name="resourceOil" count="16" />
+			<ingredient name="resourceSpring" count="2" />
+			<ingredient name="resourceForgedBrass" count="16" />
+		</recipe>
+
+		<recipe name="gunRifleT1HuntingRifleParts" craft_area="mechanicalPress">
+			<ingredient name="resourceForgedSteel" count="20" />
+			<ingredient name="resourceOil" count="16" />
+			<ingredient name="resourceSpring" count="2" />
+			<ingredient name="resourceForgedBrass" count="16" />
+		</recipe>
+
+		<recipe name="gunMGT1AK47Parts" craft_area="mechanicalPress">
+			<ingredient name="resourceForgedSteel" count="26" />
+			<ingredient name="resourceWood" count="16" />
+			<ingredient name="resourceOil" count="16" />
+			<ingredient name="resourceSpring" count="2" />
+			<ingredient name="resourceForgedBrass" count="16" />
+		</recipe>
+
+		<!-- Weapons  -->
+		<!--Hydraulic Sledge-->
+		<recipe name="meleeWeaponHydraulicSledge" count="1" craft_area="workbench" craft_time="30" tags="learnable,weapon,craftingMeleeWeapons">
+			<ingredient name="resourceDamagedHydraulic" count="1"/>
+			<ingredient name="resourceForgedSteel" count="15"/>
+			<ingredient name="brassArmorParts" count="5"/>
+			<ingredient name="resourceMechanicalParts" count="12"/>
+			<ingredient name="resourceLeather" count="4"/>
+		</recipe>
+
+		<!-- Allows Forged Brass to be smelted in the forge -->
+		<recipe name="resourceForgedBrass" count="1" material_based="true" craft_area="forge" is_trackable="false" tags="perkAdvancedEngineering">
+			<ingredient name="unit_brass" count="2"/>
+			<ingredient name="unit_clay" count="1"/>
+			<effect_group>
+				<passive_effect name="CraftingIngredientCount" operation="perc_add" level="0,1,2,3,4" value=".25,.25,.25,.12,.06" tags="unit_clay,unit_brass"/>
+			</effect_group>
+		</recipe>
+		
+		<!-- New Brass Block Shape Helper -->
+		<recipe name="brassShapes:VariantHelper" count="1" craft_time="1">
+			<ingredient name="resourceForgedBrass" count="2"/>
+		</recipe>
+
+		<!-- Brass Flux Teleporter -->
+		<recipe name="brassFluxTeleporter" count="1" craft_area="mechanicalPress" craft_time="40">
+			<ingredient name="resourceForgedBrass" count="20"/>
+			<ingredient name="resourceMechanicalParts" count="5"/>
+			<ingredient name="resourceLegendaryParts" count="2" />
+			<ingredient name="resourceFlux" count="5"/>
+		</recipe>
+
+		<!-- Flux Crafting -->
+		<recipe name="resourceFlux" count="1" craft_area="mechanicalPress" craft_time="2">
+			<ingredient name="resourceFluxFibre" count="10"/>
+		</recipe>
+
+		<recipe name="plantedFlux1" count="1" craft_time="2">
+			<ingredient name="resourceFluxFibre" count="5"/>
+			<ingredient name="plantedCotton1" count="1"/>
+		</recipe>
+
+		<!-- Flux Cell -->
+		<recipe name="resourceFluxCell" count="1" craft_area="mechanicalPress" craft_time="4">
+			<ingredient name="resourceFlux" count="4"/>
+			<ingredient name="resourceForgedSteel" count="4"/>
+			<ingredient name="resourceElectricParts" count="4"/>
+		</recipe>
+	</append>
+</configs>

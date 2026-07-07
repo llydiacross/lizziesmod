@@ -1,0 +1,37 @@
+# v1.0.0
+
+- Added menu icon drawer for mods in the main menu
+    - Add a `atlas.png (256x256)` or a icon `icon.png (128x128)` to your mod folder for it to appear in the main menu.
+- Added custom audio system
+    - Other mods can implement custom audio as simply as dropping an audio file into the CustomAudio folder
+    - Implemented an addon called JukeboxeAndWalkman which adds a jukebox and a walkman. A jukebox will emit sound to near by players
+- Added "gmod like" physgun
+    - Note: You will need to also install the Physgun addon in order to spawn/craft it. You can also change if it is usable only by admins in the settings for the addon
+- Added settings system
+    - Other mods can easily configure settings through the use of a `ModSettings.xml` file
+    - You can also use these settings in xml by wrapping value in #, for example `<parameter name="example">#MODNAME.SettingName#</parameter>`
+- Added two addons, DynamicBackpacks and DynamicStacks
+- Added the concept of a years into the time mechanics of game
+    - Note: Your current/older saves will migrate absoultely fine
+    - Year is drawn on the hud just above the compass
+    - Notes (and the new books) now have a year they are written
+    - Modders can trigger items/recipes to be unlocked at certain years
+    - Cars have a year of manufactury. After a few years, cars will need more repairing.
+    - You can change the starting year in the mod settings, by default, the game is set in 1993. This is only for lore purposes and does not effect anything.
+- Added "Time Travel" (for singleplayer)
+- Added Brass Building Shapes
+    - Crafted anywhere using Forged Brass. A bit more powerful than cobblestone blocks and supports more weight in constructions.
+- Added Flux Farming
+    - Can harvest Flux Fibres which can be pressed in the Mechnical Press into Refined Flux which is used in many of the mods recipies
+    - Flux plants also spawn randomly in the world. They spawn in forest and desert rarely, but are more likely in the snow biome.
+- Added Mechanical Press
+    - Crafted at a normal workstation but requires Forged Brass which can be made at a forge from melted brass scrap
+- Added Flux Teleporters (which need Flux Cells)
+    - Left click to teleport while holding a flux teleporter. You will need to wait a few seconds for it to charge. This can be cancelled by left clicking again and hitting the cancel button
+    - You can also teleport back to where you were before by left clicking while holding a flux teleporter (after teleporting to your bedroll or trader)
+    - The Crystal Flux Teleporter will telport to any waypoint you set on the map and can also traverse through time.
+- Added Hydralic Sledge (powered by Steam Pressure)
+    - Right click to activate steam blast! A stanima free heavy swing that packs a punch
+- Implemented fundmental basic blocks & resources & recipies (Forged Brass, Flux Cells, etc...)
+- Integrated fundmental items into loot tables
+- Updated Localization

@@ -1,0 +1,202 @@
+<configs>
+
+	<!-- Adds Forged Brass bars into the game -->
+	<append xpath="/items">
+
+		<!-- Resources -->
+		<item name="resourceForgedBrass">
+			<property name="CustomIconTint" value="ffA500"/>
+			<property name="HoldType" value="45"/>
+			<property name="DescriptionKey" value="resourceForgedBrassDesc"/>
+			<property name="Meshfile" value="@:Other/Items/Misc/sackPrefab.prefab"/>
+			<property name="DropMeshfile" value="@:Other/Items/Misc/sack_droppedPrefab.prefab"/>
+			<property name="Material" value="Mbrass_scrap"/>
+			<property name="CustomIcon" value="resourceForgedBrass"/>
+			<property name="Stacknumber" value="500"/>
+			<property name="EconomicValue" value="8"/>
+			<property name="CraftingIngredientTime" value="8"/>
+			<property name="RepairTime" value=".25"/>
+			<property name="RepairAmount" value="300"/>
+			<property name="Group" value="Resources"/>
+			<property name="SoundPickup" value="forgedmetal_grab"/>
+			<property name="SoundPlace" value="forgedmetal_place"/>
+		</item>
+
+		<item name="resourceStampedBrassCasing">
+			<property name="HoldType" value="45"/>
+			<property name="DescriptionKey" value="resourceStampedBrassCasingDesc"/>
+			<property name="Meshfile" value="@:Other/Items/Misc/sackPrefab.prefab"/>
+			<property name="DropMeshfile" value="@:Other/Items/Misc/sack_droppedPrefab.prefab"/>
+			<property name="Material" value="Mbrass"/>
+			<property name="Stacknumber" value="1000"/> 
+			<property name="Weight" value="1"/>
+			<property name="EconomicValue" value="6"/>
+			<property name="Group" value="Resources"/>
+			<property name="CustomIcon" value="resourceBulletCasing"/>
+			<property name="CustomIconTint" value="FFD700"/> 
+		</item>
+
+		<item name="resourceFluxCell">
+			<property name="HoldType" value="45"/>
+			<property name="DescriptionKey" value="resourceFluxCellDesc"/>
+			<property name="Meshfile" value="@:Other/Items/Misc/sackPrefab.prefab"/>
+			<property name="DropMeshfile" value="@:Other/Items/Misc/sack_droppedPrefab.prefab"/>
+			<property name="Material" value="Mmetal"/>
+			<property name="Stacknumber" value="32"/>
+			<property name="Weight" value="15"/>
+			<property name="NoScrapping" value="true" />
+			<property name="EconomicValue" value="300"/>
+			<property name="RepairTime" value="3"/>
+			<property name="RepairAmount" value="100"/>
+			<property name="Group" value="Resources"/>
+			<property name="CustomIcon" value="resourceFluxCell"/>
+			<property name="CustomIconTint" value="FF5555"/> 
+		</item>
+
+		<item name="resourceDamagedHydraulic">
+			<property name="HoldType" value="45"/>
+			<property name="DescriptionKey" value="resourceDamagedHydraulicDesc"/>
+			<property name="Meshfile" value="@:Other/Items/Misc/sackPrefab.prefab"/>
+			<property name="DropMeshfile" value="@:Other/Items/Misc/sack_droppedPrefab.prefab"/>
+			<property name="Material" value="Mmetal"/>
+			<property name="NoScrapping" value="true" />
+			<property name="Stacknumber" value="25"/>
+			<property name="Weight" value="15"/>
+			<property name="EconomicValue" value="300"/>
+			<property name="Group" value="Resources"/>
+			<property name="CustomIcon" value="resourceDamagedHydraulic"/>
+			<property name="CustomIconTint" value="FF5555"/> 
+		</item>
+
+		<item name="resourceFluxFibre">
+			<property name="HoldType" value="45"/>
+			<property name="DescriptionKey" value="resourceFluxFibreDesc"/>
+			<property name="Meshfile" value="@:Other/Items/Misc/sackPrefab.prefab"/>
+			<property name="DropMeshfile" value="@:Other/Items/Misc/sack_droppedPrefab.prefab"/>
+			<property name="Material" value="Morganic"/>
+			<property name="Stacknumber" value="1000"/>
+			<property name="NoScrapping" value="true" />
+			<property name="Weight" value="1"/>
+			<property name="EconomicValue" value="5"/>
+			<property name="Group" value="Resources"/>
+			<property name="CustomIcon" value="resourceYuccaFibers"/>
+			<property name="CustomIconTint" value="80,180,255"/>
+		</item>
+
+		<item name="resourceFlux">
+			<property name="HoldType" value="45"/>
+			<property name="DescriptionKey" value="resourceFluxDesc"/>
+			<property name="Meshfile" value="@:Other/Items/Misc/sackPrefab.prefab"/>
+			<property name="DropMeshfile" value="@:Other/Items/Misc/sack_droppedPrefab.prefab"/>
+			<property name="Material" value="Mmetal"/>
+			<property name="Stacknumber" value="250"/>
+			<property name="Weight" value="5"/>
+			<property name="NoScrapping" value="true" />
+			<property name="EconomicValue" value="50"/>
+			<property name="Group" value="Resources"/>
+			<property name="CustomIcon" value="resourceAcid"/>
+			<property name="CustomIconTint" value="80,180,255"/>
+		</item>
+		
+		<!-- Parts -->
+		<item name="brassArmorParts">
+			<property name="HoldType" value="45"/>
+			<property name="DescriptionKey" value="brassArmorPartsDesc"/>
+			<property name="Meshfile" value="@:Other/Items/Misc/sackPrefab.prefab"/>
+			<property name="DropMeshfile" value="@:Other/Items/Misc/sack_droppedPrefab.prefab"/>
+			<property name="Material" value="Mbrass"/>
+			<property name="Stacknumber" value="250"/>
+			<property name="Weight" value="4"/>
+			<property name="EconomicValue" value="35"/>
+			<property name="Group" value="Resources"/>
+			<property name="CustomIcon" value="brassArmorParts"/>
+			<property name="CustomIconTint" value="E6B800"/>
+		</item>
+
+		<!--Items-->
+		<!-- Teleporters -->
+		<item name="brassFluxTeleporter">
+			<property name="DescriptionKey" value="brassFluxTeleporterDesc"/>
+			<property name="HoldType" value="31"/>
+			<property name="Meshfile" value="@:Other/Items/Food/parcelGenericPrefab.prefab"/>
+			<property name="Material" value="Mbrass"/>
+			<property name="Stacknumber" value="1"/>
+			<property name="EconomicValue" value="1000"/>
+			<property name="Group" value="Resources"/>
+			<property name="DisplayType" value="generic" />
+			<property name="Tags" value="tool" />
+			<property name="RepairTools" value="resourceFluxCell"/>
+			<property name="CustomIcon" value="brassFluxTeleporter"/>
+			<property name="CustomIconTint" value="E6B800"/> 
+			<property name="DegradationBreaksAfter" value="false" />
+			<property name="ShowQuality" value="true"/>
+			<property name="SoundPickup" value="battery_lead_grab"/>
+			<property name="SoundPlace" value="battery_lead_place"/>
+			<property class="Action0">
+				<property name="Class" value="LizziesMod.ItemActionTeleport, LizziesMod"/>
+				<property name="Sound_start" value="electric_fence_impact"/>
+			</property>
+			<effect_group name="brassFluxTeleporter">
+				<passive_effect name="StaminaLoss" operation="base_set" value="10" tags="primary"/>
+				<passive_effect name="DegradationMax" operation="base_set" value="200,2000" tier="1,6" />
+				<passive_effect name="DegradationPerUse" operation="base_set" value="75" />
+				<passive_effect name="MaxRange" operation="base_set" value="0" />
+				<passive_effect name="BlockRange" operation="base_set" value="0" />
+				<passive_effect name="ModSlots" operation="base_set" value="0" tier="0"/>
+				<passive_effect name="MagazineSize" operation="base_set" value="30,25,20,18,16,15" tier="1,2,3,4,5,6" tags="teleportTime"/>
+			</effect_group>
+		</item>
+
+		<item name="crystalFluxTeleporter">
+			<property name="Extends" value="brassFluxTeleporter"/>
+			<property name="DescriptionKey" value="crystalFluxTeleporterDesc"/>
+			<property name="CustomIconTint" value="255,100,255"/> 
+			<property name="EconomicValue" value="5000"/>
+			
+			<effect_group name="crystalFluxTeleporter">
+				<passive_effect name="StaminaLoss" operation="base_set" value="5" tags="primary"/>
+				<passive_effect name="DegradationMax" operation="base_set" value="1000,5000" tier="1,6" />
+				<passive_effect name="DegradationPerUse" operation="base_set" value="75" />
+				<passive_effect name="MagazineSize" operation="base_set" value="15,10,8,6,5,3" tier="1,2,3,4,5,6" tags="teleportTime"/>
+			</effect_group>
+		</item>
+
+		<!-- Weapons -->
+		<!--Hydralic Sledge-->
+		<item name="meleeWeaponHydraulicSledge">
+			<property name="DescriptionKey" value="meleeWeaponHydraulicSledgeDesc"/>
+			<property name="Extends" value="meleeWpnSledgeT3SteelSledgehammer"/> 
+			<property name="CustomIcon" value="meleeWpnSledgeT3SteelSledgehammer"/>
+			<property name="CustomIconTint" value="E6B800"/>
+
+			<property class="Action0">
+				<property name="Class" value="DynamicMelee"/>
+				<property name="Damage_type" value="Bashing"/>
+				<property name="Sphere" value="0.15"/>
+				<property name="Sound_start" value="sledge_swinglight"/>
+			</property>
+
+			<property class="Action1">
+				<property name="Class" value="LizziesMod.ItemActionHydraulicBlast, LizziesMod"/>
+				<property name="Damage_type" value="Bashing"/>
+				<property name="Sphere" value="0.5"/> 
+				<property name="UsageDelay" value="0.6"/>
+				<property name="Delay" value="0.5"/>
+				<property name="Sound_start" value="sledge_swingheavy"/>
+			</property>
+
+			<effect_group name="meleeWeaponHydraulicSledge">
+				<passive_effect name="EntityDamage" operation="base_set" value="65" tags="perkSkullCrusher"/>
+				<passive_effect name="BlockDamage" operation="base_set" value="130" tags="perkSkullCrusher"/>
+				<passive_effect name="AttacksPerMinute" operation="base_set" value="30" tags="perkSkullCrusher"/>
+				<passive_effect name="StaminaLoss" operation="base_set" value="40" tags="primary"/>
+				<passive_effect name="StaminaLoss" operation="base_set" value="40" tags="secondary"/>
+				<passive_effect name="MaxRange" operation="base_set" value="2.6" tags="perkSkullCrusher"/>
+				<passive_effect name="DegradationMax" operation="base_set" value="100,1000" tier="1,6" tags="perkSkullCrusher"/>
+				<passive_effect name="DegradationPerUse" operation="base_set" value="0.5" tags="perkSkullCrusher"/>		
+				<passive_effect name="EntityDamage" operation="perc_add" value=".1,.5" tier="2,6" tags="perkSkullCrusher"/>
+				<passive_effect name="BlockDamage" operation="perc_add" value=".1,.5" tier="2,6" tags="perkSkullCrusher"/>
+			</effect_group>
+		</item>
+	</append>
+</configs>
