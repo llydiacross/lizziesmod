@@ -6,8 +6,6 @@ Newtonsoft.Json.dll
 UnityEngine.*
 System.*
 netstandard.dll
-LizziesMod.dll
-LizziesMod.pdb
 Newtonsoft.Json.dll
 .vs/LizziesMod.slnx/v18/.suo
 obj/Debug/.NETFramework,Version=v4.8.AssemblyAttributes.cs
