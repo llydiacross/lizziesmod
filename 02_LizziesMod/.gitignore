@@ -1,5 +1,11 @@
-obj
+# Editor files
+.idea
+.vscode
+.zed
 .vs
+
+# Developer build stuff
+obj
 Assembly-CSharp-firstpass.dll
 Newtonsoft.Json.dll
 UnityEngine.*
