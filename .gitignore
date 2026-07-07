@@ -15,5 +15,3 @@
 obj
 .vs
 /package*.json*
-NGUI.dll
-InControl.dll
