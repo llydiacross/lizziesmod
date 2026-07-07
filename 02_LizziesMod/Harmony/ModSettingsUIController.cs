@@ -307,7 +307,7 @@ namespace LizziesMod
             {
                 clickable.OnPress += (s, e) =>
                 {
-                    if (CurrentSetting != null && CurrentSetting.OnlyInMainMenu && Main.IsPlayerInGame())
+                    if (CurrentSetting != null && CurrentSetting.requiresRestart && Main.IsPlayerInGame())
                     {
                         xui.mPlayerUI?.localPlayer?.entityPlayerLocal?.PlayOneShot("ui_denied");
                         return;
@@ -327,11 +327,11 @@ namespace LizziesMod
         {
             CurrentSetting = setting;
 
-            bool isLocked = setting.OnlyInMainMenu && Main.IsPlayerInGame();
+            bool isLocked = setting.requiresRestart && Main.IsPlayerInGame();
 
             if (lblSettingName != null)
             {
-                lblSettingName.Text = isLocked ? $"{setting.Name} (Main Menu Only)" : setting.Name;
+                lblSettingName.Text = isLocked ? $"{setting.Name} (Requires World Restart)" : setting.Name;
                 lblSettingName.Color = isLocked ? new UnityEngine.Color(0.5f, 0.5f, 0.5f, 1f) : UnityEngine.Color.white;
             }
 
@@ -366,7 +366,7 @@ namespace LizziesMod
 
         public string GetValue()
         {
-            if (CurrentSetting != null && CurrentSetting.OnlyInMainMenu && Main.IsPlayerInGame())
+            if (CurrentSetting != null && CurrentSetting.requiresRestart && Main.IsPlayerInGame())
             {
                 return CurrentSetting.Value;
             }

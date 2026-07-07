@@ -14,7 +14,7 @@ namespace LizziesMod
         public string Value;
         public string Type;
         public Action<string> OnValueChanged;
-        public bool OnlyInMainMenu;
+        public bool requiresRestart;
         public bool Hidden; 
 
         public void SetValue(string newValue)
@@ -67,10 +67,10 @@ namespace LizziesMod
                                 string sValue = node.Attributes["value"]?.Value ?? "";
                                 string sType = node.Attributes["type"]?.Value ?? "string";
 
-                                bool bOnlyInMainMenu = false;
-                                if (node.Attributes["onlyInMainMenu"] != null)
+                                bool bRequiresRestart = false;
+                                if (node.Attributes["requiresRestart"] != null)
                                 {
-                                    bool.TryParse(node.Attributes["onlyInMainMenu"].Value, out bOnlyInMainMenu);
+                                    bool.TryParse(node.Attributes["requiresRestart"].Value, out bRequiresRestart);
                                 }
 
                                 bool bHidden = false;
@@ -85,7 +85,7 @@ namespace LizziesMod
                                 {
                                     existingSetting.Value = sValue;
                                     existingSetting.Type = sType;
-                                    existingSetting.OnlyInMainMenu = bOnlyInMainMenu;
+                                    existingSetting.requiresRestart = bRequiresRestart;
                                     existingSetting.Hidden = bHidden;
                                     updatedSettings.Add(existingSetting);
                                 }
@@ -97,7 +97,7 @@ namespace LizziesMod
                                         Name = sName,
                                         Value = sValue,
                                         Type = sType,
-                                        OnlyInMainMenu = bOnlyInMainMenu,
+                                        requiresRestart = bRequiresRestart,
                                         Hidden = bHidden
                                     });
                                 }
@@ -185,7 +185,7 @@ namespace LizziesMod
                 node.SetAttribute("name", setting.Name);
                 node.SetAttribute("value", setting.Value);
                 node.SetAttribute("type", setting.Type);
-                node.SetAttribute("onlyInMainMenu", setting.OnlyInMainMenu.ToString().ToLower());
+                node.SetAttribute("requiresRestart", setting.requiresRestart.ToString().ToLower());
                 root.AppendChild(node);
             }
 

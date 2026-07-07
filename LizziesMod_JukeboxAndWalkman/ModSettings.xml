@@ -1,5 +1,5 @@
 <ModSettings>
-  <Setting name="VolumeLevel" value="10" type="int" onlyInMainMenu="false" />
-  <Setting name="MinJukeboxDistance" value="10" type="int" onlyInMainMenu="false" />
-  <Setting name="MaxJukeboxDistance" value="30" type="int" onlyInMainMenu="false" />
+  <Setting name="VolumeLevel" value="10" type="int" requiresRestart="false" />
+  <Setting name="MinJukeboxDistance" value="10" type="int" requiresRestart="false" />
+  <Setting name="MaxJukeboxDistance" value="30" type="int" requiresRestart="false" />
 </ModSettings>

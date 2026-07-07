@@ -1,4 +1,4 @@
 <ModSettings>
-  <Setting name="StackNumber" value="16000" type="int" onlyInMainMenu="true" />
-  <Setting name="AmmoStackNumber" value="600" type="int" onlyInMainMenu="true" />
+  <Setting name="StackNumber" value="16000" type="int" requiresRestart="true" />
+  <Setting name="AmmoStackNumber" value="600" type="int" requiresRestart="true" />
 </ModSettings>
