@@ -19,8 +19,8 @@ brassArmorParts,items,Item,,,Brass Armor Plate
 brassArmorPartsDesc,items,Desc,,,"A thick, heavy armor plate stamped from forged brass. Just like the romans used to make!"
 resourceDamagedHydraulic,items,Item,,,Damaged Hydraulic Ram
 resourceDamagedHydraulicDesc,items,Desc,,,"A broken hydraulic ram salvaged from an old press. With a little forged steel and ingenuity, it could be repurposed into something devastating."
-gunPhysgun,items,Item,,,"Physgun"
-gunPhysgunDesc,items,Item,,,"Just like garrysmod! Custom laser not included..."
+gunPhysgun,items,Item,,,Physgun
+gunPhysgunDesc,items,Desc,,,"Just like garrysmod! Custom laser not included..."
 meleeWeaponHydraulicSledge,items,Item,,,Hydraulic Kinetic Sledge
 meleeWeaponHydraulicSledgeDesc,items,Desc,,,"A monstrous sledgehammer retrofitted with a salvaged hydraulic ram. Holding down the heavy attack charges steam pressure; releasing it unleashes a massive kinetic shockwave."
 brassFluxTeleporter,items,Item,,,Brass Flux Teleporter
@@ -37,7 +37,7 @@ resourceFluxFibre,items,Item,,,Flux Fibre
 resourceFluxFibreDesc,items,Desc,,,"Raw, static-charged crop fibers harvested from matured Flux Plants. Can be processed into refined Flux."
 resourceFlux,items,Item,,,Refined Flux
 resourceFluxDesc,items,Desc,,,"A highly concentrated elemental fluid extracted from raw Flux Fibres. Essential for high-tech item fabrication and charging batteries."
-resourceFluxCell,items,Item,,,Flux Cell,
+resourceFluxCell,items,Item,,,Flux Cell
 resourceFluxCellDesc,items,Desc,,,"How the fuck do batteries even work?"
 txGroupCustom,,,,,Custom Paints
 xuiModSettings,UI,XUI,,,"Mod Settings"

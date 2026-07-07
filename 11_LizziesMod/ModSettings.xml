@@ -1,5 +1,5 @@
 <ModSettings>
-  <Setting name="StartingYear" value="1985" type="int" onlyInMainMenu="false" />
+  <Setting name="StartingYear" value="1986" type="int" onlyInMainMenu="false" />
   <Setting name="EnableMechanicalPress" value="true" type="bool" onlyInMainMenu="false" />
   <Setting name="EnableTimeParadox" value="true" type="bool" onlyInMainMenu="false" />
   <Setting name="BrassScrapMaxDamage" value="1650" type="int" onlyInMainMenu="true" />

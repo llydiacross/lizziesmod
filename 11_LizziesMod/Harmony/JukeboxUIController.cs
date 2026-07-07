@@ -114,7 +114,7 @@ namespace LizziesMod
         }
     }
 
-    public class JukeboxTrackUIEntryController : XUiController
+    public class JukeboxUITrackEntryController : XUiController
     {
         private string trackKey;
         private JukeboxUIController mainController;

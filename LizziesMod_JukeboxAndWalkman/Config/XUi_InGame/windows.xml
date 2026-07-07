@@ -1,5 +1,5 @@
 <configs>
-<append xpath="/windows">
+    <append xpath="/windows">
         <window name="windowJukebox" width="600" height="400" controller="LizziesMod.JukeboxUIController, LizziesMod" panel="Center" cursor_area="true">
             
             <panel name="header" height="43" depth="1" backgroundspritename="ui_game_panel_header">

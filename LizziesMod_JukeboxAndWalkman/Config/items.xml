@@ -4,10 +4,12 @@
             <property name="Extends" value="resourcePaper"/> 
             <property name="CustomIcon" value="modArmorHelmetLight"/> 
             <property name="CustomIconTint" value="0,255,0"/> 
-            <property class="Action0">
-                <property name="class" value="Lizziesmod.ItemActionWalkman, LizziesMod"/>
+            
+            <property class="Action1">
+                <property name="Class" value="LizziesMod.ItemActionWalkman, LizziesMod"/>
             </property>
-            <property name="TrackName" value="LizziesMusicPack:DVT - Rowantree"/>
+            
+            <property name="TrackName" value="LizziesMod_JukeboxAndWalkman:LLYDIA - EXPLANATION OF AN ENTITY.ogg"/>
         </item>
     </append>
 </configs>
