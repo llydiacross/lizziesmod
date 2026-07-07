@@ -7,14 +7,12 @@ Included in LizziesMod is a collection of features and patches for 7 Days to Die
 <!--
 TODO: Liz help me here ;m;
 -->
-[//]: <> (This is also a comment.)
-
 
 - **Physgun** - A GMod style physics gun for you to launch zombies and break blocks into the stratosphere.
 
-- **Dynamic Backpacks** - A one-use teleport system to alleviate your pain of constantly walking back and forth between missions.
+- **Dynamic Backpacks** - Modify the default backpack size & configuration through the main menu mod settings.
 
-- **Dynamic Stacks** - Systems to  asfjsldfj liz pls explain
+- **Dynamic Stacks** - Change the default stack size for items.
 
 ## Installation
 
@@ -35,7 +33,7 @@ C:\Program Files (x86)\Steam\steamapps\common\7 Days To Die\Mods\
 
 ### OSX / MacOS
 
-```
+```sh
 ~/Library/steam/steamapps/common/7 Days To Die/Mods
  ```
 
