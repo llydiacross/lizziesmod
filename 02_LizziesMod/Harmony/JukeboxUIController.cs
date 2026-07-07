@@ -57,7 +57,7 @@ namespace LizziesMod
 
             for (int i = 0; i < trackListGrid.Children.Count; i++)
             {
-                if (trackListGrid.Children[i] is JukeboxTrackUIEntryController entry)
+                if (trackListGrid.Children[i] is JukeboxUITrackEntryController entry)
                 {
                     int trackIndex = (currentPage * itemsPerPage) + i;
                     if (trackIndex < trackKeys.Count)

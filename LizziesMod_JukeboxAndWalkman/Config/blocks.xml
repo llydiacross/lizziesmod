@@ -1,7 +1,8 @@
 <configs>
     <append xpath="/blocks">
         <block name="blockJukebox">
-            <property name="Extends" value="cntVendingMachine2Broken" param1="CustomIcon" />
+            <property name="Extends" value="cntVendingMachine2Broken"/>
+            <property name="CustomIcon" value="blockJukebox" />
             <property name="CreativeMode" value="Player" />
             <property name="Model" value="@:Entities/Commercial/vendingMachineSnacksFullPrefab.prefab" />
             <property name="Class" value="LizziesMod.BlockJukebox, LizziesMod"/> 
