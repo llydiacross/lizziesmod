@@ -1,3 +1,16 @@
+# Ignore EVERYTHING
+
+*
+
+# But keep the mods
+
+!11_LizziesMod
+!LizziesMod_DynamicBackpacks
+!LizziesMod_DynamicStacks
+!LizziesMod_JukeboxAndWallpapers
+!LizziesMod_Physgun
+
+# Developer build stuff
 /0_TFP_Harmony
 obj
 .vs
@@ -24,3 +37,4 @@ obj/Debug/LizziesMod.pdb
 /package*.json*
 NGUI.dll
 InControl.dll
+
