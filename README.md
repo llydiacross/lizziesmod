@@ -44,4 +44,3 @@ C:\Program Files (x86)\Steam\steamapps\common\7 Days To Die\Mods\
 On opening the mod, you should be able to find the new "Mod Settings" page, as well as the icons for whichever mods you have installed on your system.
 If you can click into the menu, then you have successfully installed the mod! :D
 
-
