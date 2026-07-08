@@ -50,7 +50,7 @@ namespace LizziesMod
 
 
                 // ADD THIS: Hijack the rest of the game's mods
-                AddonManager.Initialize(harmony);
+                ModBlocker.Initialize(harmony);
 
                 Logger.Info("Success");
             }

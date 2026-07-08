@@ -46,13 +46,13 @@ namespace LizziesMod
         public override void OnOpen()
         {
         
-            AddonManager.BypassingFilter = true;
+            ModBlocker.BypassingFilter = true;
 
             base.OnOpen();
             PopulateModList(); 
 
    
-            AddonManager.BypassingFilter = false;
+            ModBlocker.BypassingFilter = false;
 
             List<string> modNames = new List<string>(ModSettingsManager.AllModSettings.Keys);
             selectedMod = "";
@@ -187,7 +187,7 @@ namespace LizziesMod
 
         private void HandleClose(XUiController _sender, int _mouseButton)
         {
-            AddonManager.BypassingFilter = true;
+            ModBlocker.BypassingFilter = true;
             SaveCurrentSettingsUI();
             foreach (var mod in ModSettingsManager.AllModSettings.Keys)
             {
@@ -195,7 +195,7 @@ namespace LizziesMod
             }
 
             xui.playerUI.windowManager.Close("windowModSettings");
-            AddonManager.BypassingFilter = false;
+            ModBlocker.BypassingFilter = false;
 
             if (ModSettingsManager.PendingRestart)
             {

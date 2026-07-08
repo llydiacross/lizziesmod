@@ -6,16 +6,15 @@ using System.Reflection;
 
 namespace LizziesMod
 {
-    public static class AddonManager
+    public static class ModBlocker
     {
         public static bool BypassingFilter = false;
 
         public static void Initialize(HarmonyLib.Harmony harmony)
         {
-            Logger.Info("[AddonManager] Initializing Universal Mod Blocker...");
-
+            
             MethodInfo getLoadedMods = typeof(ModManager).GetMethod("GetLoadedMods", BindingFlags.Public | BindingFlags.Static);
-            MethodInfo getLoadedModsPostfix = typeof(AddonManager).GetMethod(nameof(GetLoadedMods_Postfix), BindingFlags.Public | BindingFlags.Static);
+            MethodInfo getLoadedModsPostfix = typeof(ModBlocker).GetMethod(nameof(GetLoadedMods_Postfix), BindingFlags.Public | BindingFlags.Static);
 
             if (getLoadedMods != null && getLoadedModsPostfix != null)
             {
@@ -23,7 +22,7 @@ namespace LizziesMod
             }
 
             Type modApiInterface = typeof(IModApi);
-            MethodInfo initModPrefix = typeof(AddonManager).GetMethod(nameof(InitMod_Prefix), BindingFlags.Public | BindingFlags.Static);
+            MethodInfo initModPrefix = typeof(ModBlocker).GetMethod(nameof(InitMod_Prefix), BindingFlags.Public | BindingFlags.Static);
 
             foreach (Assembly assembly in AppDomain.CurrentDomain.GetAssemblies())
             {
@@ -54,7 +53,7 @@ namespace LizziesMod
         {
             if (!IsModEnabled(_modInstance.Name))
             {
-                Logger.Info($"[AddonManager] Blocked: {_modInstance.Name}");
+                Logger.Info($"[ModBlocker] Blocked: {_modInstance.Name}");
                 return false;
             }
             return true;
