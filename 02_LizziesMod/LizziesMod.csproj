@@ -33,7 +33,8 @@
     <DefineConstants>TRACE</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Harmony\ModManager.cs" />
+    <Compile Include="Harmony\ItemActionOpenModManual.cs" />
+    <Compile Include="Harmony\ModController.cs" />
     <Compile Include="Harmony\BlockJukebox.cs" />
     <Compile Include="Harmony\CustomAudioManager.cs" />
     <Compile Include="Harmony\DynamicBackpacksUIPatch.cs" />
@@ -46,6 +47,9 @@
     <Compile Include="Harmony\Logger.cs" />
     <Compile Include="Harmony\Main.cs" />
     <Compile Include="Harmony\MainMenuIconController.cs" />
+    <Compile Include="Harmony\ModLibraryUIController.cs" />
+    <Compile Include="Harmony\ModManualManager.cs" />
+    <Compile Include="Harmony\ModManualUIController.cs" />
     <Compile Include="Harmony\ModSettingsManager.cs" />
     <Compile Include="Harmony\ModSettingsUIController.cs" />
     <Compile Include="Harmony\NetPackageJukeboxPlay.cs" />

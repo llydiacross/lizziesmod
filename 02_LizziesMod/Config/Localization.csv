@@ -41,3 +41,4 @@ resourceFluxCell,items,Item,,,Flux Cell
 resourceFluxCellDesc,items,Desc,,,"How the fuck do batteries even work?"
 txGroupCustom,,,,,Custom Paints
 xuiModSettings,UI,XUI,,,"Mod Settings"
+xuiModLibrary,UI,XUI,,,"Mod Help"

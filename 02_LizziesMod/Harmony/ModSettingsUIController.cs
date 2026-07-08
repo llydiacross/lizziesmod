@@ -278,7 +278,7 @@ namespace LizziesMod
                 lblModName.Color = hasSettings ? UnityEngine.Color.white : new UnityEngine.Color(0.5f, 0.5f, 0.5f, 1f);
             }
 
-            bool isProtectedMod = name.Equals("TFP_Harmony", System.StringComparison.OrdinalIgnoreCase);
+            bool isProtectedMod = name.Equals("TFP_Harmony", System.StringComparison.OrdinalIgnoreCase) || name.Equals("LizziesMod", System.StringComparison.OrdinalIgnoreCase);
 
             if (sprEnableCheck != null)
             {
@@ -340,7 +340,7 @@ namespace LizziesMod
         private void HandleBtnEnableTogglePress(XUiController _sender, int _mouseButton)
         {
 
-            if (this.modName.Equals("TFP_Harmony", System.StringComparison.OrdinalIgnoreCase)) return;
+            if (this.modName.Equals("TFP_Harmony", System.StringComparison.OrdinalIgnoreCase) || this.modName.Equals("LizziesMod", System.StringComparison.OrdinalIgnoreCase)) return;
 
             bool currentState = ModSettingsManager.GetSetting(this.modName, "Enabled", true);
             bool newState = !currentState;
@@ -483,15 +483,29 @@ namespace LizziesMod
     {
         public static void Postfix(XUiC_MainMenuButtons __instance)
         {
-            XUiController btn = __instance.GetChildById("btnModSettings");
-            if (btn != null)
+
+            XUiController btnSettings = __instance.GetChildById("btnModSettings");
+            if (btnSettings != null)
             {
-                XUiController clickable = btn.GetChildById("clickable") ?? btn;
+                XUiController clickable = btnSettings.GetChildById("clickable") ?? btnSettings;
                 clickable.OnPress += (s, e) =>
                 {
                     ModSettingsUIController.PreviousMenu = "mainMenu";
                     __instance.xui.playerUI.windowManager.Close("mainMenu");
                     __instance.xui.playerUI.windowManager.Open("windowModSettings", true);
+                };
+            }
+
+            XUiController btnLibrary = __instance.GetChildById("btnModLibrary");
+            if (btnLibrary != null)
+            {
+                XUiController clickable = btnLibrary.GetChildById("clickable") ?? btnLibrary;
+                clickable.OnPress += (s, e) =>
+                {
+     
+                    ModSettingsUIController.PreviousMenu = "mainMenu";
+                    __instance.xui.playerUI.windowManager.Close("mainMenu");
+                    __instance.xui.playerUI.windowManager.Open("windowModLibrary", true);
                 };
             }
         }

@@ -1,5 +1,66 @@
 <configs>
     <append xpath="/windows">
+        <!-- Menu Readme Library -->
+        <window name="windowModLibrary" depth="200" width="1200" height="800" anchor="Center" cursor_area="true" lock_navigation="true" controller="LizziesMod.ModLibraryUIController, LizziesMod">
+            <fullscreencollider color="0,0,0,220"/>
+            <rect depth="0" pos="-600, 400" width="1200" height="800">
+                
+                <sprite depth="1" name="background" sprite="menu_empty" type="sliced" color="30,30,30,250" />
+                <sprite depth="2" name="border" sprite="menu_empty2px" type="sliced" color="255,180,0,255" fillcenter="false" />
+
+                <rect depth="3" pos="0,0" height="50">
+                    <sprite depth="1" sprite="menu_empty" type="sliced" color="0,0,0,255" />
+                    <label depth="2" text="MOD LIBRARY" font_size="32" justify="center" pivot="center" pos="600,-25" color="255,180,0,255" upper_case="true" />
+                </rect>
+
+                <rect name="leftPanel" depth="3" pos="20, -70" width="350" height="650">
+                    <sprite depth="1" sprite="menu_empty" type="sliced" color="15,15,15,255" />
+                    <sprite depth="2" sprite="menu_empty2px" type="sliced" color="60,60,60,255" fillcenter="false" />
+                    
+                    <rect depth="3" pos="5, -5" width="340" height="640" on_scroll="true">
+                        <defaultscrollbar />
+                        <scrollview width="320" clippingsoftness="0,10">
+                            <grid name="bookListGrid" pos="16,0" rows="50" cols="1" cell_width="320" cell_height="60" arrangement="vertical" repeat_content="true">
+                                <rect name="bookEntry" controller="LizziesMod.ModLibraryBookEntryController, LizziesMod">
+                                    <button name="clickable" depth="3" pos="2,-2" width="316" height="56" sprite="menu_empty" type="sliced" defaultcolor="40,40,40,255" hovercolor="80,180,255,255" sound_play_on_hover="[default_hover]" sound="[default_click]" />
+                                    <label name="lblBookName" depth="4" text="BOOK TITLE" font_size="22" justify="left" pivot="topleft" pos="15,-10" width="290" color="255,255,255,255" />
+                                    <label name="lblAuthor" depth="4" text="By: Author" font_size="18" justify="left" pivot="topleft" pos="15,-34" width="290" color="180,180,180,255" />
+                                </rect>
+                            </grid>
+                        </scrollview>
+                    </rect>
+                </rect>
+
+   
+                <rect name="rightPanel" depth="3" pos="390, -70" width="790" height="650">
+                    
+                    <sprite name="readingBackground" depth="1" sprite="menu_empty" type="sliced" color="20,20,20,255" />
+                    <sprite depth="2" sprite="menu_empty2px" type="sliced" color="60,60,60,255" fillcenter="false" />
+
+                    <label name="lblBookTitle" depth="4" pos="10, -10" width="770" height="40" font_size="32" justify="center" text="BOOK TITLE" color="255,180,0,255" upper_case="true" />
+                    <sprite depth="3" sprite="menu_empty1px" type="sliced" color="100,100,100,255" pos="20,-50" width="750" height="2" />
+
+                    <label name="lblPageTitle" depth="4" pos="20, -60" width="750" height="35" font_size="28" justify="center" text="PAGE TITLE" color="200,200,200,255" />
+
+                    <rect name="textArea" depth="4" pos="20, -110" width="750" height="470" on_scroll="true">
+                        <defaultscrollbar />
+                        <scrollview width="730" clippingsoftness="0,10">
+                            <label name="lblPageText" depth="5" pos="0,0" width="720" text="Loading..." font_size="24" color="255,255,255,255" justify="left" pivot="topleft" />
+                        </scrollview>
+                    </rect>
+
+                    <rect name="paginationArea" depth="4" pos="20, -590" width="750" height="50">
+                        <simplebutton name="btnPrevPage" depth="5" pos="0,0" width="150" height="40" font_size="22" caption="&lt; PREV" />
+                        <label name="lblPageNumber" depth="5" pos="150, -5" width="450" height="30" font_size="22" justify="center" text="Page 1 of X" color="200,200,200,255" />
+                        <simplebutton name="btnNextPage" depth="5" pos="600,0" width="150" height="40" font_size="22" caption="NEXT &gt;" />
+                    </rect>
+
+                </rect>
+
+                <simplebutton name="btnClose" depth="4" pos="20,-740" width="1160" height="40" font_size="26" caption="CLOSE LIBRARY" />
+            </rect>
+        </window>
+        
         <!-- Restart Prompt-->
         <window name="windowModSettingsRestartPrompt" width="600" height="260" panel="Center" cursor_area="true" controller="LizziesMod.RestartPromptUIController, LizziesMod">
             
@@ -48,7 +109,7 @@
                     <label depth="2" text="MOD SETTINGS" font_size="32" justify="center" pivot="center" pos="600,-25" color="255,180,0,255" upper_case="true" />
                 </rect>
 
-                <!-- LEFT PANEL: MOD LIST -->
+                
                 <rect name="leftPanel" depth="3" pos="20, -70" width="350" height="650">
                     <sprite depth="1" sprite="menu_empty" type="sliced" color="15,15,15,255" />
                     <sprite depth="2" sprite="menu_empty2px" type="sliced" color="60,60,60,255" fillcenter="false" />
@@ -120,5 +181,6 @@
     
     <append xpath="/windows/window[@name='mainMenu']/grid">
         <mainmenubutton name="btnModSettings" depth="3" pos="0, -310" width="250" height="40" font_size="24" caption_key="xuiModSettings" />
+        <mainmenubutton name="btnModLibrary" depth="3" pos="0, -350" width="250" height="40" font_size="24" caption_key="xuiModLibrary" />
     </append>
 </configs>

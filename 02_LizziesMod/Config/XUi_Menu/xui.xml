@@ -6,6 +6,9 @@
         <window_group name="windowModSettings">
             <window name="windowModSettings" />
         </window_group>
+        <window_group name="windowModLibrary">
+            <window name="windowModLibrary" />
+        </window_group>
     </append>
     <append xpath="/xui/window_group[@name='mainMenu']">
         <window name="windowMenuIconDrawer" />
