@@ -10,7 +10,7 @@
 
                 <rect depth="3" pos="0,0" height="50">
                     <sprite depth="1" sprite="menu_empty" type="sliced" color="0,0,0,255" />
-                    <label depth="2" text="MOD LIBRARY" font_size="32" justify="center" pivot="center" pos="600,-25" color="255,180,0,255" upper_case="true" />
+                    <label depth="2" text="MOD HELP" font_size="32" justify="center" pivot="center" pos="600,-25" color="255,180,0,255" upper_case="true" />
                 </rect>
 
                 <rect name="leftPanel" depth="3" pos="20, -70" width="350" height="650">
@@ -31,7 +31,7 @@
                     </rect>
                 </rect>
 
-   
+
                 <rect name="rightPanel" depth="3" pos="390, -70" width="790" height="650">
                     
                     <sprite name="readingBackground" depth="1" sprite="menu_empty" type="sliced" color="20,20,20,255" />
@@ -41,6 +41,8 @@
                     <sprite depth="3" sprite="menu_empty1px" type="sliced" color="100,100,100,255" pos="20,-50" width="750" height="2" />
 
                     <label name="lblPageTitle" depth="4" pos="20, -60" width="750" height="35" font_size="28" justify="center" text="PAGE TITLE" color="200,200,200,255" />
+                    
+                    <texture name="imgPageDiagram" depth="4" pos="20, -105" width="750" height="200" visible="false" />
 
                     <rect name="textArea" depth="4" pos="20, -110" width="750" height="470" on_scroll="true">
                         <defaultscrollbar />

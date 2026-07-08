@@ -92,7 +92,6 @@ namespace LizziesMod
             SaveCurrentSettingsUI();
             selectedMod = modName;
 
- 
             Mod targetMod = null;
             foreach (var m in global::ModManager.GetLoadedMods())
             {
@@ -357,6 +356,12 @@ namespace LizziesMod
         {
             if (!string.IsNullOrEmpty(modName) && mainController != null)
             {
+
+                if (!ModController.IsModEnabled(modName))
+                    mainController.GetChildById("settingsGrid").viewComponent.isVisible = false;
+                 else
+                    mainController.GetChildById("settingsGrid").viewComponent.isVisible = true;
+
                 mainController.SelectMod(modName);
             }
         }
@@ -502,8 +507,8 @@ namespace LizziesMod
                 XUiController clickable = btnLibrary.GetChildById("clickable") ?? btnLibrary;
                 clickable.OnPress += (s, e) =>
                 {
-     
-                    ModSettingsUIController.PreviousMenu = "mainMenu";
+
+                    ModLibraryUIController.PreviousMenu = "mainMenu";
                     __instance.xui.playerUI.windowManager.Close("mainMenu");
                     __instance.xui.playerUI.windowManager.Open("windowModLibrary", true);
                 };

@@ -1,17 +1,18 @@
 <ModManual>
   
-    <Book id="readme_lizziesmod" is_readme="true" title="Lizzies Mod: Ultimate Guide" author="Lizzie" icon="ui_game_symbol_book" 
+    <Book id="readme_lizziesmod" is_readme="true" title="Lizzies Mod" author="Lizzie" icon="ui_game_symbol_book" 
           default_background="menu_empty" default_font="UIFontSmall" default_text_color="255,255,255,255">
         
-        <Page title="Welcome!">
-            <![CDATA[Welcome to LizziesMod! 
+        <Page title="Intro">
+            <![CDATA[Welcome! 
 
-Because XUi natively supports bracketed hex codes, modders can just type [FF0000]Red Text[-] directly into these CDATA blocks and the game will color it automatically!]]>
+Thank you for installing Lizzies mod. This mod is an experiment. Please post any bugs to our github. Peace and love!
+]]>
         </Page>
 
-        <Page title="A Scribbled Note" background="ui_game_filled_dark" font="HandwrittenFont" text_color="200,200,200,255" image="lore_sketch_01">
-            <![CDATA[Day 45... The custom UI is finally working... I think?]]>
+       <Page title="Deer" 
+              image="Deer">
+            <![CDATA[Here is a deer!]]>
         </Page>
-        
     </Book>
 </ModManual>

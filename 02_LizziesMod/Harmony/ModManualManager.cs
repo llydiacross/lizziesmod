@@ -1,44 +1,47 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Xml;
 using System.IO;
+using System.Xml;
+using UnityEngine;
 
 namespace LizziesMod
 {
-    // Represents a single page inside a book
     public class ModPage
     {
         public string Title;
         public string Text;
         public string ImageName;
 
-        // Optional styling overrides
         public string Background;
         public string Font;
         public string TextColor;
+
+        public Vector2i? ImagePos;
+        public Vector2i? ImageSize;
+        public Vector2i? TextPos;
+        public Vector2i? TextSize;
     }
 
     public class ModBook
     {
         public string ID;
-        public string ModSource; 
+        public string ModSource;
         public string Title;
         public string Author;
         public string Icon;
         public int StartPage;
         public bool IsReadme;
+
         public string DefaultBackground;
         public string DefaultFont;
         public string DefaultTextColor;
 
         public List<ModPage> Pages = new List<ModPage>();
 
-
         public ModPage GetPage(int pageIndex)
         {
             if (pageIndex >= 0 && pageIndex < Pages.Count)
                 return Pages[pageIndex];
-
             return null;
         }
 
@@ -49,12 +52,25 @@ namespace LizziesMod
     {
         public static Dictionary<string, ModBook> AllBooks = new Dictionary<string, ModBook>(StringComparer.OrdinalIgnoreCase);
 
+        public static Vector2i? ParseVector2i(string val)
+        {
+            if (string.IsNullOrEmpty(val)) return null;
+            string[] parts = val.Split(',');
+            if (parts.Length == 2 &&
+                int.TryParse(parts[0].Trim(), out int x) &&
+                int.TryParse(parts[1].Trim(), out int y))
+            {
+                return new Vector2i(x, y);
+            }
+            return null;
+        }
+
         public static void LoadAllManuals()
         {
             AllBooks.Clear();
 
             ModController.ShowDisabledMods = true;
-            List<Mod> allMods = ModManager.GetLoadedMods();
+            List<Mod> allMods = global::ModManager.GetLoadedMods();
             ModController.ShowDisabledMods = false;
 
             if (allMods == null) return;
@@ -76,7 +92,6 @@ namespace LizziesMod
                         string id = bookNode.Attributes["id"]?.Value;
                         if (string.IsNullOrEmpty(id)) continue;
 
-                        // Parse Book-level defaults
                         ModBook book = new ModBook
                         {
                             ID = id,
@@ -84,16 +99,13 @@ namespace LizziesMod
                             Title = bookNode.Attributes["title"]?.Value ?? "Untitled Guide",
                             Author = bookNode.Attributes["author"]?.Value ?? "Unknown",
                             Icon = bookNode.Attributes["icon"]?.Value ?? "ui_game_symbol_book",
-
                             IsReadme = (bookNode.Attributes["is_readme"] != null) && bookNode.Attributes["is_readme"].Value.Equals("true", StringComparison.OrdinalIgnoreCase),
 
-                            // Grab defaults, or fall back to standard 7D2D styles
                             DefaultBackground = bookNode.Attributes["default_background"]?.Value ?? "menu_empty",
                             DefaultFont = bookNode.Attributes["default_font"]?.Value ?? "UIFontSmall",
-                            DefaultTextColor = bookNode.Attributes["default_text_color"]?.Value ?? "255,255,255,255"
+                            DefaultTextColor = bookNode.Attributes["default_text_color"]?.Value ?? "255,255,255,255",
                         };
 
-                        // Parse individual pages
                         foreach (XmlNode pageNode in bookNode.ChildNodes)
                         {
                             if (pageNode.Name != "Page") continue;
@@ -104,10 +116,14 @@ namespace LizziesMod
                                 ImageName = pageNode.Attributes["image"]?.Value ?? "",
                                 Text = pageNode.InnerText?.Trim() ?? "",
 
-                                // If the page doesn't specify a style, inherit the Book's default!
                                 Background = pageNode.Attributes["background"]?.Value ?? book.DefaultBackground,
                                 Font = pageNode.Attributes["font"]?.Value ?? book.DefaultFont,
-                                TextColor = pageNode.Attributes["text_color"]?.Value ?? book.DefaultTextColor
+                                TextColor = pageNode.Attributes["text_color"]?.Value ?? book.DefaultTextColor,
+
+                                ImagePos = ParseVector2i(pageNode.Attributes["image_pos"]?.Value),
+                                ImageSize = ParseVector2i(pageNode.Attributes["image_size"]?.Value),
+                                TextPos = ParseVector2i(pageNode.Attributes["text_pos"]?.Value),
+                                TextSize = ParseVector2i(pageNode.Attributes["text_size"]?.Value)
                             };
 
                             book.Pages.Add(page);

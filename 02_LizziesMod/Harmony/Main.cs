@@ -22,6 +22,9 @@ namespace LizziesMod
                 // Load Mod Settings Manager so we get our settings first
                 ModSettingsManager.LoadAllModSettings();
 
+                // Load the manuals for mods
+                ModManualManager.LoadAllManuals();
+
                 // Register Callbacks for mod manager (must be after we load settings)
                 ModSettingsManager.RegisterCallback("LizziesMod", "StartingYear", (newValue) =>
                 {

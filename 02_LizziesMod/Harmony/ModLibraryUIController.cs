@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
@@ -11,39 +12,169 @@ namespace LizziesMod
         private XUiController bookListGrid;
         private string selectedBookId = "";
         private int currentPageIndex = 0;
-
         private XUiV_Label lblBookTitle;
         private XUiV_Label lblPageTitle;
         private XUiV_Label lblPageText;
         private XUiV_Texture imgPageDiagram;
         private XUiV_Sprite sprBackground;
-
         private XUiController btnPrevPage;
         private XUiController btnNextPage;
         private XUiV_Label lblPageNumber;
+        private XUiController textArea;
+
+        private readonly Vector2i defaultImgPos = new Vector2i(20, -105);
+        private readonly Vector2i defaultImgSize = new Vector2i(750, 150);
+
+        private readonly Vector2i defaultTextPosNoImg = new Vector2i(20, -110);
+        private readonly Vector2i defaultTextSizeNoImg = new Vector2i(750, 245);
+
+        private readonly Vector2i defaultTextPosWithImg = new Vector2i(20, -315);
+        private readonly Vector2i defaultTextSizeWithImg = new Vector2i(750, 195);
 
         public override void Init()
         {
             base.Init();
+
             bookListGrid = GetChildById("bookListGrid");
+            textArea = GetChildById("textArea");
 
             lblBookTitle = GetChildById("lblBookTitle")?.viewComponent as XUiV_Label;
             lblPageTitle = GetChildById("lblPageTitle")?.viewComponent as XUiV_Label;
             lblPageText = GetChildById("lblPageText")?.viewComponent as XUiV_Label;
             imgPageDiagram = GetChildById("imgPageDiagram")?.viewComponent as XUiV_Texture;
-
             sprBackground = GetChildById("readingBackground")?.viewComponent as XUiV_Sprite;
 
             btnPrevPage = GetChildById("btnPrevPage");
-            if (btnPrevPage != null) btnPrevPage.OnPress += (s, e) => TurnPage(-1);
+            if (btnPrevPage != null)
+            {
+                XUiController clickablePrev = btnPrevPage.GetChildById("clickable") ?? btnPrevPage;
+                clickablePrev.OnPress += (s, e) => TurnPage(-1);
+            }
 
             btnNextPage = GetChildById("btnNextPage");
-            if (btnNextPage != null) btnNextPage.OnPress += (s, e) => TurnPage(1);
+            if (btnNextPage != null)
+            {
+                XUiController clickableNext = btnNextPage.GetChildById("clickable") ?? btnNextPage;
+                clickableNext.OnPress += (s, e) => TurnPage(1);
+            }
 
             lblPageNumber = GetChildById("lblPageNumber")?.viewComponent as XUiV_Label;
 
             XUiController btnClose = GetChildById("btnClose")?.GetChildById("clickable") ?? GetChildById("btnClose");
             if (btnClose != null) btnClose.OnPress += HandleClose;
+        }
+
+        public void SelectBook(string bookId)
+        {
+            selectedBookId = bookId;
+            if (ModManualManager.AllBooks.TryGetValue(bookId, out ModBook book))
+            {
+                if (lblBookTitle != null) lblBookTitle.Text = book.Title;
+
+                currentPageIndex = book.StartPage;
+                UpdateReadingPane();
+            }
+        }
+
+        private void UpdateReadingPane()
+        {
+            if (string.IsNullOrEmpty(selectedBookId) || !ModManualManager.AllBooks.TryGetValue(selectedBookId, out ModBook book)) return;
+
+            ModPage page = book.GetPage(currentPageIndex);
+            if (page == null) return;
+
+            if (lblPageTitle != null) lblPageTitle.Text = page.Title;
+
+            if (lblPageText != null)
+            {
+                lblPageText.Text = page.Text;
+                string[] rgba = page.TextColor.Split(',');
+                if (rgba.Length == 4 &&
+                    float.TryParse(rgba[0], out float r) &&
+                    float.TryParse(rgba[1], out float g) &&
+                    float.TryParse(rgba[2], out float b) &&
+                    float.TryParse(rgba[3], out float a))
+                {
+                    lblPageText.Color = new Color(r / 255f, g / 255f, b / 255f, a / 255f);
+                }
+            }
+
+            if (sprBackground != null)
+            {
+                sprBackground.SpriteName = !string.IsNullOrEmpty(page.Background) ? page.Background : book.DefaultBackground;
+            }
+
+            bool hasImage = false;
+            if (imgPageDiagram != null)
+            {
+                if (!string.IsNullOrEmpty(page.ImageName))
+                {
+                    Mod targetMod = null;
+                    foreach (var m in global::ModManager.GetLoadedMods())
+                    {
+                        if (m.Name == book.ModSource) { targetMod = m; break; }
+                    }
+
+                    if (targetMod != null)
+                    {
+                        string imagePath = System.IO.Path.Combine(targetMod.Path, "ManualResources", page.ImageName);
+                        if (!imagePath.EndsWith(".png", StringComparison.OrdinalIgnoreCase) &&
+                            !imagePath.EndsWith(".jpg", StringComparison.OrdinalIgnoreCase))
+                        {
+                            imagePath += ".png";
+                        }
+
+                        if (System.IO.File.Exists(imagePath))
+                        {
+                            try
+                            {
+                                byte[] fileData = System.IO.File.ReadAllBytes(imagePath);
+                                Texture2D tex = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+                                UnityEngine.ImageConversion.LoadImage(tex, fileData);
+
+                                imgPageDiagram.Texture = tex;
+                                imgPageDiagram.IsVisible = true;
+                                hasImage = true;
+                            }
+                            catch (Exception ex)
+                            {
+                                Logger.Error($"[ModLibrary] Failed to load image '{page.ImageName}': {ex.Message}");
+                                imgPageDiagram.IsVisible = false;
+                            }
+                        }
+                        else imgPageDiagram.IsVisible = false;
+                    }
+                    else imgPageDiagram.IsVisible = false;
+                }
+                else imgPageDiagram.IsVisible = false;
+            }
+
+            if (imgPageDiagram != null && imgPageDiagram.IsVisible)
+            {
+
+                imgPageDiagram.Position = page.ImagePos ?? defaultImgPos;
+                imgPageDiagram.Size = page.ImageSize ?? defaultImgSize;
+            }
+
+            if (textArea != null && textArea.viewComponent != null)
+            {
+  
+                if (page.TextPos.HasValue || page.TextSize.HasValue)
+                {
+                    textArea.viewComponent.Position = page.TextPos ?? (hasImage ? defaultTextPosWithImg : defaultTextPosNoImg);
+                    textArea.viewComponent.Size = page.TextSize ?? (hasImage ? defaultTextSizeWithImg : defaultTextSizeNoImg);
+                }
+                else
+                {
+
+                    textArea.viewComponent.Position = hasImage ? defaultTextPosWithImg : defaultTextPosNoImg;
+                    textArea.viewComponent.Size = hasImage ? defaultTextSizeWithImg : defaultTextSizeNoImg;
+                }
+            }
+
+            if (btnPrevPage != null) btnPrevPage.viewComponent.IsVisible = (currentPageIndex > 0);
+            if (btnNextPage != null) btnNextPage.viewComponent.IsVisible = (currentPageIndex < book.TotalPages - 1);
+            if (lblPageNumber != null) lblPageNumber.Text = $"Page {currentPageIndex + 1} of {book.TotalPages}";
         }
 
         public override void OnOpen()
@@ -83,16 +214,7 @@ namespace LizziesMod
             }
         }
 
-        public void SelectBook(string bookId)
-        {
-            selectedBookId = bookId;
-            if (ModManualManager.AllBooks.TryGetValue(bookId, out ModBook book))
-            {
-                if (lblBookTitle != null) lblBookTitle.Text = book.Title;
-                currentPageIndex = book.StartPage;
-                UpdateReadingPane();
-            }
-        }
+     
 
         private void TurnPage(int direction)
         {
@@ -104,42 +226,6 @@ namespace LizziesMod
                 currentPageIndex = newPage;
                 UpdateReadingPane();
             }
-        }
-
-        private void UpdateReadingPane()
-        {
-            if (string.IsNullOrEmpty(selectedBookId) || !ModManualManager.AllBooks.TryGetValue(selectedBookId, out ModBook book)) return;
-
-            ModPage page = book.GetPage(currentPageIndex);
-            if (page == null) return;
-
-            if (lblPageTitle != null) lblPageTitle.Text = page.Title;
-
-            if (lblPageText != null)
-            {
-                lblPageText.Text = page.Text;
-
-
-                string[] rgba = page.TextColor.Split(',');
-                if (rgba.Length == 4 &&
-                    float.TryParse(rgba[0], out float r) &&
-                    float.TryParse(rgba[1], out float g) &&
-                    float.TryParse(rgba[2], out float b) &&
-                    float.TryParse(rgba[3], out float a))
-                {
-                    lblPageText.Color = new Color(r / 255f, g / 255f, b / 255f, a / 255f);
-                }
-            }
-
-
-            if (sprBackground != null)
-            {
-                sprBackground.SpriteName = !string.IsNullOrEmpty(page.Background) ? page.Background : book.DefaultBackground;
-            }
-
-            if (btnPrevPage != null) btnPrevPage.viewComponent.IsVisible = (currentPageIndex > 0);
-            if (btnNextPage != null) btnNextPage.viewComponent.IsVisible = (currentPageIndex < book.TotalPages - 1);
-            if (lblPageNumber != null) lblPageNumber.Text = $"Page {currentPageIndex + 1} of {book.TotalPages}";
         }
 
         private void ClearReadingPane()
