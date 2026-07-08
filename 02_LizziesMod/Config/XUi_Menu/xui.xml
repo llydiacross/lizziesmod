@@ -1,5 +1,9 @@
 <configs>
     <append xpath="/xui">
+        
+        <window_group name="windowModSettingsRestartPrompt" controller="XUiC_WindowGroup" actionset="true" close_comp_on_escape="true">
+            <window name="windowModSettingsRestartPrompt" />
+        </window_group>
         <window_group name="windowModSettings">
             <window name="windowModSettings" />
         </window_group>

@@ -23,6 +23,12 @@ namespace LizziesMod
             {
                 Value = newValue;
                 Logger.Info($"Setting '{Name}' for mod '{ModName}' changed to: {newValue} {(OnValueChanged != null ? "INVOKABLE" : "NON-INVOKABLE") }");
+ 
+                if (requiresRestart || Name.Equals("Enabled", StringComparison.OrdinalIgnoreCase))
+                {
+                    ModSettingsManager.PendingRestart = true;
+                }
+
                 OnValueChanged?.Invoke(newValue);
             }
         }
@@ -32,7 +38,7 @@ namespace LizziesMod
     {
 
         public static Dictionary<string, List<ModSetting>> AllModSettings = new Dictionary<string, List<ModSetting>>();
-
+        public static bool PendingRestart = false;
         public static void LoadAllModSettings()
         {
             Logger.Info("Scanning for ModSettings.xml across all loaded mods...");
@@ -113,6 +119,68 @@ namespace LizziesMod
                 }
             }
         }
+
+        public static void SetSetting<T>(string modName, string settingName, T value)
+        {
+       
+            if (!AllModSettings.ContainsKey(modName))
+            {
+                AllModSettings[modName] = new List<ModSetting>();
+            }
+
+            List<ModSetting> settings = AllModSettings[modName];
+            ModSetting setting = settings.Find(s => s.Name.Equals(settingName, StringComparison.OrdinalIgnoreCase));
+
+            string newValueString;
+            if (typeof(T) == typeof(bool))
+            {
+                newValueString = value.ToString().ToLower();
+            }
+            else
+            {
+                newValueString = value?.ToString() ?? "";
+            }
+
+    
+            if (setting != null)
+            {
+                setting.SetValue(newValueString);
+            }
+            else
+            {
+           
+                string inferredType = "string";
+                if (typeof(T) == typeof(bool)) inferredType = "bool";
+                else if (typeof(T) == typeof(int)) inferredType = "int";
+                else if (typeof(T) == typeof(float)) inferredType = "float";
+
+
+                bool bHidden = false;
+                if (settingName.Equals("Enabled", StringComparison.OrdinalIgnoreCase) && newValueString == "false")
+                {
+                    PendingRestart = true;
+                    bHidden = true;
+                }
+
+
+                ModSetting newSetting = new ModSetting
+                {
+                    ModName = modName,
+                    Name = settingName,
+                    Value = newValueString,
+                    Type = inferredType,
+                    requiresRestart = PendingRestart,
+                    Hidden = bHidden
+                };
+
+ 
+           
+                settings.Add(newSetting);
+                Logger.Info($"[ModSettingsManager] Created setting '{settingName}' ({inferredType}) for mod '{modName}' initialized to: {newValueString}");
+
+                newSetting.OnValueChanged?.Invoke(newValueString);
+            }
+        }
         public static T GetSetting<T>(string modName, string settingName, T defaultValue = default)
         {
             if (AllModSettings.TryGetValue(modName, out List<ModSetting> settings))
@@ -165,8 +233,13 @@ namespace LizziesMod
 
         public static void SaveModSettings(string modName)
         {
+
+            AddonManager.BypassingFilter = true;
+            List<Mod> allMods = ModManager.GetLoadedMods();
+            AddonManager.BypassingFilter = false;
+
             Mod targetMod = null;
-            foreach (var m in ModManager.GetLoadedMods())
+            foreach (var m in allMods)
             {
                 if (m.Name == modName) { targetMod = m; break; }
             }
@@ -186,6 +259,8 @@ namespace LizziesMod
                 node.SetAttribute("value", setting.Value);
                 node.SetAttribute("type", setting.Type);
                 node.SetAttribute("requiresRestart", setting.requiresRestart.ToString().ToLower());
+                if (setting.Hidden) node.SetAttribute("hidden", "true");
+
                 root.AppendChild(node);
             }
 

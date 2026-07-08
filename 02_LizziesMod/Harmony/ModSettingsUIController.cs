@@ -45,9 +45,14 @@ namespace LizziesMod
 
         public override void OnOpen()
         {
+        
+            AddonManager.BypassingFilter = true;
+
             base.OnOpen();
-            ModSettingsManager.LoadAllModSettings();
-            PopulateModList();
+            PopulateModList(); 
+
+   
+            AddonManager.BypassingFilter = false;
 
             List<string> modNames = new List<string>(ModSettingsManager.AllModSettings.Keys);
             selectedMod = "";
@@ -182,7 +187,7 @@ namespace LizziesMod
 
         private void HandleClose(XUiController _sender, int _mouseButton)
         {
-
+            AddonManager.BypassingFilter = true;
             SaveCurrentSettingsUI();
             foreach (var mod in ModSettingsManager.AllModSettings.Keys)
             {
@@ -190,9 +195,50 @@ namespace LizziesMod
             }
 
             xui.playerUI.windowManager.Close("windowModSettings");
+            AddonManager.BypassingFilter = false;
 
-            if (!string.IsNullOrEmpty(PreviousMenu))
-                xui.playerUI.windowManager.Open(PreviousMenu, true);
+            if (ModSettingsManager.PendingRestart)
+            {
+                xui.playerUI.windowManager.Open("windowModSettingsRestartPrompt", true);
+            }
+            else
+            {
+                if (!string.IsNullOrEmpty(PreviousMenu))
+                    xui.playerUI.windowManager.Open(PreviousMenu, true);
+            }
+        }
+    }
+
+    public class RestartPromptUIController : XUiController
+    {
+        public override void Init()
+        {
+            base.Init();
+
+            XUiController btnYes = GetChildById("btnYes");
+            if (btnYes != null)
+            {
+                XUiController clickable = btnYes.GetChildById("clickable") ?? btnYes;
+                clickable.OnPress += (s, e) =>
+                {
+                    UnityEngine.Application.Quit();
+                };
+            }
+
+            XUiController btnNo = GetChildById("btnNo");
+            if (btnNo != null)
+            {
+                XUiController clickable = btnNo.GetChildById("clickable") ?? btnNo;
+                clickable.OnPress += (s, e) =>
+                {
+                    ModSettingsManager.PendingRestart = false;
+
+                    xui.playerUI.windowManager.Close("windowModSettingsRestartPrompt");
+
+                    if (!string.IsNullOrEmpty(ModSettingsUIController.PreviousMenu))
+                        xui.playerUI.windowManager.Open(ModSettingsUIController.PreviousMenu, true);
+                };
+            }
         }
     }
 
@@ -216,7 +262,7 @@ namespace LizziesMod
 
             if (btnEnableToggle != null)
             {
-                btnEnableToggle.OnPress += HandleEnablePress;
+                btnEnableToggle.OnPress += HandleBtnEnableTogglePress;
             }
 
             XUiController clickable = GetChildById("clickable");
@@ -235,6 +281,15 @@ namespace LizziesMod
                 lblModName.Color = hasSettings ? UnityEngine.Color.white : new UnityEngine.Color(0.5f, 0.5f, 0.5f, 1f);
             }
 
+            bool isProtectedMod = name.Equals("TFP_Harmony", System.StringComparison.OrdinalIgnoreCase);
+
+            if (sprEnableCheck != null)
+            {
+                sprEnableCheck.IsVisible = ModSettingsManager.GetSetting(this.modName, "Enabled", true);
+            }
+
+            btnEnableToggle.viewComponent.IsVisible = !isProtectedMod; // hide the toggle button
+            
             if (imgModIcon != null)
             {
                 Mod targetMod = null;
@@ -278,17 +333,24 @@ namespace LizziesMod
             viewComponent.IsVisible = true;
         }
 
+
         public void Clear()
         {
             modName = "";
             viewComponent.IsVisible = false;
         }
 
-        private void HandleEnablePress(XUiController _sender, int _mouseButton)
+        private void HandleBtnEnableTogglePress(XUiController _sender, int _mouseButton)
         {
-            if (!string.IsNullOrEmpty(modName) && mainController != null)
+
+            bool currentState = ModSettingsManager.GetSetting(this.modName, "Enabled", true);
+            bool newState = !currentState;
+            ModSettingsManager.SetSetting(this.modName, "Enabled", newState);
+            ModSettingsManager.SaveModSettings(this.modName);
+
+            if (sprEnableCheck != null)
             {
-                
+                sprEnableCheck.IsVisible = newState;
             }
         }
 

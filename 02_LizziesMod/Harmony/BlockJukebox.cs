@@ -5,7 +5,7 @@ namespace LizziesMod
     public class BlockJukebox : Block
     {
 
-        private BlockActivationCommand[] cmds = new BlockActivationCommand[]
+        private new BlockActivationCommand[] cmds = new BlockActivationCommand[]
         {
 
             new BlockActivationCommand("use", "electric_switch", true)
