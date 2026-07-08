@@ -6,6 +6,53 @@
     </append>
 
     <append xpath="/windows">
+    
+        <!-- Mod Manual -->
+        <window name="windowModManual" width="1000" height="650" panel="Center" cursor_area="true" controller="LizziesMod.ModManualUIController, LizziesMod">
+            <fullscreencollider color="0,0,0,200"/>
+            
+            <sprite depth="0" name="background" sprite="menu_empty" type="sliced" color="30,30,30,255" pos="0,0" width="1000" height="650" />
+            <sprite depth="1" name="border" sprite="menu_empty2px" type="sliced" color="255,180,0,255" pos="0,0" width="1000" height="650" fillcenter="false" />
+
+            <panel name="header" pos="0,0" height="50" depth="2">
+                <sprite depth="1" sprite="ui_game_panel_header" type="sliced" width="1000" height="50" />
+                <label depth="2" name="lblBookTitle" pos="20,-10" width="800" height="30" text="BOOK TITLE" font_size="28" color="[white]"/>
+                <simplebutton name="btnClose" depth="3" pos="950,-8" width="34" height="34" caption="X" font_size="22" />
+            </panel>
+
+            <rect name="leftPane" pos="10,-60" width="300" height="580" depth="2">
+                <sprite depth="1" sprite="menu_empty" type="sliced" color="15,15,15,255" />
+                
+                <rect pos="5,-5" width="290" height="570" on_scroll="true">
+                    <defaultscrollbar />
+                    <scrollview width="270" clippingsoftness="0,10">
+                        <grid name="pageListGrid" pos="0,0" rows="20" cols="1" cell_width="270" cell_height="40" arrangement="vertical" repeat_content="true">
+                            <rect name="pageEntry" controller="LizziesMod.ModManualPageEntryController, LizziesMod" width="270" height="38">
+                                <button name="clickable" depth="2" sprite="menu_empty" type="sliced" defaultcolor="40,40,40,255" hovercolor="80,180,255,255" width="270" height="38" />
+                                <label name="lblTitle" depth="3" pos="10,-8" text="Page Title" font_size="20" color="[white]" />
+                            </rect>
+                        </grid>
+                    </scrollview>
+                </rect>
+            </rect>
+
+            <rect name="rightPane" pos="320,-60" width="670" height="580" depth="2">
+                <sprite depth="1" sprite="menu_empty" type="sliced" color="20,20,20,255" />
+                
+                <label name="lblPageTitle" depth="2" pos="20,-15" width="630" height="35" text="PAGE TITLE" font_size="26" color="255,180,0,255" />
+                <sprite depth="2" sprite="menu_empty1px" type="sliced" color="100,100,100,255" pos="20,-55" width="630" height="2" />
+
+                <texture name="imgPageDiagram" depth="2" pos="20,-65" width="630" height="180" visible="false" />
+
+                <rect pos="20,-70" width="630" height="490" on_scroll="true">
+                    <defaultscrollbar />
+                    <scrollview width="610" clippingsoftness="0,10">
+                        <label name="lblPageText" depth="2" pos="0,0" width="600" text="Page text goes here..." font_size="22" color="[white]" justify="left" pivot="topleft" />
+                    </scrollview>
+                </rect>
+            </rect>
+        </window>
+
         <!-- Mod Settings Window -->
         <window name="windowModSettings" depth="200" width="1200" height="800" anchor="Center" cursor_area="true" lock_navigation="true" controller="LizziesMod.ModSettingsUIController, LizziesMod">
             <fullscreencollider color="0,0,0,220"/>

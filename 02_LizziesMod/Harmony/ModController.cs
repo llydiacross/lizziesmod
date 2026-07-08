@@ -6,15 +6,16 @@ using System.Reflection;
 
 namespace LizziesMod
 {
-    public static class ModManager
+    public static class ModController
     {
-        public static bool BypassingFilter = false;
+
+        public static bool ShowDisabledMods = false;
 
         public static void Initialize(HarmonyLib.Harmony harmony)
         {
 
             MethodInfo getLoadedMods = typeof(global::ModManager).GetMethod("GetLoadedMods", BindingFlags.Public | BindingFlags.Static);
-            MethodInfo getLoadedModsPostfix = typeof(ModManager).GetMethod(nameof(GetLoadedMods_Postfix), BindingFlags.Public | BindingFlags.Static);
+            MethodInfo getLoadedModsPostfix = typeof(ModController).GetMethod(nameof(GetLoadedMods_Postfix), BindingFlags.Public | BindingFlags.Static);
 
             if (getLoadedMods != null && getLoadedModsPostfix != null)
             {
@@ -22,7 +23,7 @@ namespace LizziesMod
             }
 
             Type modApiInterface = typeof(IModApi);
-            MethodInfo initModPrefix = typeof(ModManager).GetMethod(nameof(InitMod_Prefix), BindingFlags.Public | BindingFlags.Static);
+            MethodInfo initModPrefix = typeof(ModController).GetMethod(nameof(InitMod_Prefix), BindingFlags.Public | BindingFlags.Static);
 
             foreach (Assembly assembly in AppDomain.CurrentDomain.GetAssemblies())
             {
@@ -61,7 +62,7 @@ namespace LizziesMod
 
         public static void GetLoadedMods_Postfix(ref List<Mod> __result)
         {
-            if (BypassingFilter) return;
+            if (ShowDisabledMods) return;
 
             __result = __result.Where(mod => IsModEnabled(mod.Name)).ToList();
         }

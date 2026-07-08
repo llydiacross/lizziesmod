@@ -46,13 +46,10 @@ namespace LizziesMod
         public override void OnOpen()
         {
         
-            ModManager.BypassingFilter = true;
-
+            ModController.ShowDisabledMods = true;
             base.OnOpen();
             PopulateModList(); 
-
-   
-            ModManager.BypassingFilter = false;
+            ModController.ShowDisabledMods = false;
 
             List<string> modNames = new List<string>(ModSettingsManager.AllModSettings.Keys);
             selectedMod = "";
@@ -187,7 +184,7 @@ namespace LizziesMod
 
         private void HandleClose(XUiController _sender, int _mouseButton)
         {
-            ModManager.BypassingFilter = true;
+            ModController.ShowDisabledMods = true;
             SaveCurrentSettingsUI();
             foreach (var mod in ModSettingsManager.AllModSettings.Keys)
             {
@@ -195,7 +192,7 @@ namespace LizziesMod
             }
 
             xui.playerUI.windowManager.Close("windowModSettings");
-            ModManager.BypassingFilter = false;
+            ModController.ShowDisabledMods = false;
 
             if (ModSettingsManager.PendingRestart)
             {
@@ -342,6 +339,8 @@ namespace LizziesMod
 
         private void HandleBtnEnableTogglePress(XUiController _sender, int _mouseButton)
         {
+
+            if (this.modName.Equals("TFP_Harmony", System.StringComparison.OrdinalIgnoreCase)) return;
 
             bool currentState = ModSettingsManager.GetSetting(this.modName, "Enabled", true);
             bool newState = !currentState;

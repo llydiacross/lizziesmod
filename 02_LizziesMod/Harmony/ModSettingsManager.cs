@@ -234,9 +234,9 @@ namespace LizziesMod
         public static void SaveModSettings(string modName)
         {
 
-            ModManager.BypassingFilter = true;
+            ModController.ShowDisabledMods = true;
             List<Mod> allMods = global::ModManager.GetLoadedMods();
-            ModManager.BypassingFilter = false;
+            ModController.ShowDisabledMods = false;
 
             Mod targetMod = null;
             foreach (var m in allMods)
