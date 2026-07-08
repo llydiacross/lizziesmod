@@ -202,12 +202,22 @@ namespace LizziesMod
         private ModSettingsUIController mainController;
         private XUiV_Label lblModName;
         private XUiV_Texture imgModIcon;
+        private XUiController btnEnableToggle;
+        private XUiV_Sprite sprEnableCheck;
 
         public override void Init()
         {
             base.Init();
             lblModName = GetChildById("lblModName")?.viewComponent as XUiV_Label;
             imgModIcon = GetChildById("imgModIcon")?.viewComponent as XUiV_Texture;
+
+            btnEnableToggle = GetChildById("btnEnableToggle");
+            sprEnableCheck = GetChildById("sprEnableCheck")?.viewComponent as XUiV_Sprite;
+
+            if (btnEnableToggle != null)
+            {
+                btnEnableToggle.OnPress += HandleEnablePress;
+            }
 
             XUiController clickable = GetChildById("clickable");
             if (clickable != null) clickable.OnPress += HandlePress;
@@ -272,6 +282,14 @@ namespace LizziesMod
         {
             modName = "";
             viewComponent.IsVisible = false;
+        }
+
+        private void HandleEnablePress(XUiController _sender, int _mouseButton)
+        {
+            if (!string.IsNullOrEmpty(modName) && mainController != null)
+            {
+                
+            }
         }
 
         private void HandlePress(XUiController _sender, int _mouseButton)
