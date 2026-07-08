@@ -22,7 +22,7 @@ namespace LizziesMod
             if (grid == null) return;
 
             List<Mod> modsWithIcons = new List<Mod>();
-            foreach (Mod mod in ModManager.GetLoadedMods())
+            foreach (Mod mod in global::ModManager.GetLoadedMods())
             {
                 if (File.Exists(Path.Combine(mod.Path, "atlas.png")) ||
                     File.Exists(Path.Combine(mod.Path, "icon.png")))

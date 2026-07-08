@@ -29,7 +29,7 @@ namespace LizziesMod
         {
             if (modInstance == null) return -1;
 
-            int modIndex = ModManager.GetLoadedMods().IndexOf(modInstance);
+            int modIndex = global::ModManager.GetLoadedMods().IndexOf(modInstance);
             if (modIndex == -1) modIndex = 99; 
 
             string modName = modInstance.Name;

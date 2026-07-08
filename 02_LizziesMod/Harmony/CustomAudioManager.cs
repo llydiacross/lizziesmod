@@ -45,7 +45,7 @@ namespace LizziesMod
         {
             availableAudio.Clear();
 
-            foreach (Mod mod in ModManager.GetLoadedMods())
+            foreach (Mod mod in global::ModManager.GetLoadedMods())
             {
                 string audioDir = Path.Combine(mod.Path, "CustomAudio");
                 if (Directory.Exists(audioDir))
