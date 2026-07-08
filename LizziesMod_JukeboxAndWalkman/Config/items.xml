@@ -1,9 +1,10 @@
 <configs>
     <append xpath="/items">
 		<!-- Manual for the item -->
-        <item name="itemJukeboxManual">
+        <item name="manualJukebox">
             <property name="Extends" value="itemGeneralMaster"/>
             <property name="CustomIcon" value="Manual"/>
+            <property name="DescriptionKey" value="manualJukeboxDesc"/>
             <property name="CustomIconTint" value="255,180,0"/>
             <property name="HoldType" value="21"/> 
             <property name="Meshfile" value="@:Other/Items/Misc/bookPrefab.prefab"/>

@@ -1,0 +1,16 @@
+<ModManual>
+    <Book id="guide_jukebox" title="The Jukebox Masterclass" author="Lizzie" icon="ui_game_symbol_music" 
+          default_background="ui_game_filled_dark" default_font="UIFontSmall" default_text_color="255,255,255,255">
+        
+        <Page title="Introduction">
+            <![CDATA[Welcome to the Jukebox Mod! 
+
+This guide will teach you everything you need to know. Make sure you have [FF0000]10 Watts[-] of power!]]>
+        </Page>
+
+        <Page title="A Scribbled Note" background="lore_paper_sprite" font="HandwrittenFont" text_color="0,0,0,255">
+            <![CDATA[Day 45... The music keeps the zombies away... I think?]]>
+        </Page>
+        
+    </Book>
+</ModManual>

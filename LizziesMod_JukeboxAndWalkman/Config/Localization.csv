@@ -1,3 +1,5 @@
 Key,File,Type,UsedInMainMenu,NoTranslate,English
 blockJukebox,blocks,Block,,,Jukebox
 blockJukeboxDesc,blocks,Desc,,,A jukebox so you can listen to music with your friends...
+manualJukebox,blocks,Block,,,How To Use: Jukebox & Walkman
+manualukeboxDesc,blocks,Desc,,,"README"
