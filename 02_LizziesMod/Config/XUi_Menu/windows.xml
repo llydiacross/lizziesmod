@@ -10,7 +10,7 @@
 
                 <rect depth="3" pos="0,0" height="50">
                     <sprite depth="1" sprite="menu_empty" type="sliced" color="0,0,0,255" />
-                    <label depth="2" text="MOD HELP" font_size="32" justify="center" pivot="center" pos="600,-25" color="255,180,0,255" upper_case="true" />
+                    <label depth="2" text="MOD README" font_size="32" justify="center" pivot="center" pos="600,-25" color="255,180,0,255" upper_case="true" />
                 </rect>
 
                 <rect name="leftPanel" depth="3" pos="20, -70" width="350" height="650">
@@ -59,7 +59,7 @@
 
                 </rect>
 
-                <simplebutton name="btnClose" depth="4" pos="20,-740" width="1160" height="40" font_size="26" caption="CLOSE LIBRARY" />
+                <simplebutton name="btnClose" depth="4" pos="20,-740" width="1160" height="40" font_size="26" caption="RETURN TO MAIN MENU" />
             </rect>
         </window>
         

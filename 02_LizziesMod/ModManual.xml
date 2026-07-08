@@ -1,5 +1,4 @@
 <ModManual>
-  
     <Book id="readme_lizziesmod" is_readme="true" title="Lizzies Mod" author="Lizzie" icon="ui_game_symbol_book" 
           default_background="menu_empty" default_font="UIFontSmall" default_text_color="255,255,255,255">
         
