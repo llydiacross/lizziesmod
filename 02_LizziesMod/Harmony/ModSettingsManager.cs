@@ -43,7 +43,7 @@ namespace LizziesMod
         {
             Logger.Info("Scanning for ModSettings.xml across all loaded mods...");
 
-            foreach (Mod mod in ModManager.GetLoadedMods())
+            foreach (Mod mod in global::ModManager.GetLoadedMods())
             {
 
                 if (!AllModSettings.ContainsKey(mod.Name))
@@ -234,9 +234,9 @@ namespace LizziesMod
         public static void SaveModSettings(string modName)
         {
 
-            ModBlocker.BypassingFilter = true;
-            List<Mod> allMods = ModManager.GetLoadedMods();
-            ModBlocker.BypassingFilter = false;
+            ModManager.BypassingFilter = true;
+            List<Mod> allMods = global::ModManager.GetLoadedMods();
+            ModManager.BypassingFilter = false;
 
             Mod targetMod = null;
             foreach (var m in allMods)

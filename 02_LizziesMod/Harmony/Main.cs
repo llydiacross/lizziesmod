@@ -48,9 +48,8 @@ namespace LizziesMod
                 var harmony = new HarmonyLib.Harmony(id);
                 harmony.PatchAll();
 
-
-                // ADD THIS: Hijack the rest of the game's mods
-                ModBlocker.Initialize(harmony);
+                // Initialize ModManager to block other mods based on settings
+                ModManager.Initialize(harmony);
 
                 Logger.Info("Success");
             }

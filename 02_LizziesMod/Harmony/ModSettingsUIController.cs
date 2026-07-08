@@ -46,13 +46,13 @@ namespace LizziesMod
         public override void OnOpen()
         {
         
-            ModBlocker.BypassingFilter = true;
+            ModManager.BypassingFilter = true;
 
             base.OnOpen();
             PopulateModList(); 
 
    
-            ModBlocker.BypassingFilter = false;
+            ModManager.BypassingFilter = false;
 
             List<string> modNames = new List<string>(ModSettingsManager.AllModSettings.Keys);
             selectedMod = "";
@@ -97,7 +97,7 @@ namespace LizziesMod
 
  
             Mod targetMod = null;
-            foreach (var m in ModManager.GetLoadedMods())
+            foreach (var m in global::ModManager.GetLoadedMods())
             {
                 if (m.Name == modName) { targetMod = m; break; }
             }
@@ -187,7 +187,7 @@ namespace LizziesMod
 
         private void HandleClose(XUiController _sender, int _mouseButton)
         {
-            ModBlocker.BypassingFilter = true;
+            ModManager.BypassingFilter = true;
             SaveCurrentSettingsUI();
             foreach (var mod in ModSettingsManager.AllModSettings.Keys)
             {
@@ -195,7 +195,7 @@ namespace LizziesMod
             }
 
             xui.playerUI.windowManager.Close("windowModSettings");
-            ModBlocker.BypassingFilter = false;
+            ModManager.BypassingFilter = false;
 
             if (ModSettingsManager.PendingRestart)
             {
@@ -293,7 +293,7 @@ namespace LizziesMod
             if (imgModIcon != null)
             {
                 Mod targetMod = null;
-                foreach (var m in ModManager.GetLoadedMods())
+                foreach (var m in global::ModManager.GetLoadedMods())
                 {
                     if (m.Name == name) { targetMod = m; break; }
                 }

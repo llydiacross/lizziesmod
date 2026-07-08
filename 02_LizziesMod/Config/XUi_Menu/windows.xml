@@ -59,26 +59,22 @@
                             <grid name="modListGrid" pos="16,0" rows="50" cols="1" cell_width="320" cell_height="50" arrangement="vertical" repeat_content="true">
                                 <rect name="modEntry" controller="LizziesMod.ModEntryController, LizziesMod">
                                     
-                                    <!-- Main row button (selects the mod to show info on the right) -->
+                           
                                     <button name="clickable" depth="3" pos="2,-2" width="316" height="46" sprite="menu_empty" type="sliced" defaultcolor="40,40,40,255" hovercolor="80,180,255,255" sound_play_on_hover="[default_hover]" sound="[default_click]" />
 
-                                    <!-- NEW: Enabled/Disabled Checkbox Toggle -->
                                     <rect name="chkEnabled" depth="4" pos="6,-5" width="36" height="36">
                                         <button name="btnEnableToggle" depth="1" sprite="menu_empty" type="sliced" defaultcolor="20,20,20,255" hovercolor="80,180,255,255" sound_play_on_hover="[default_hover]" sound="[default_click]" />
                                         <sprite name="sprEnableCheck" depth="2" sprite="ui_game_symbol_check" width="28" height="28" pos="4,-4" color="0,255,0,255" visible="true" />
                                     </rect>
 
-                                    <!-- SHIFTED: Icon and Label pushed right (+40px) to make room for checkbox -->
                                     <texture name="imgModIcon" depth="4" pos="46,-5" width="36" height="36" visible="false" />
-                                    <label name="lblModName" depth="4" text="MOD NAME" font_size="22" justify="left" pivot="topleft" pos="90,-12" width="220" color="255,255,255,255" />
-                                
+                                    <label name="lblModName" depth="4" text="MOD NAME" font_size="22" justify="left" pivot="topleft" pos="90,-12" width="220" color="255,255,255,255" />    
                                 </rect>
                             </grid>
                         </scrollview>
                     </rect>
                 </rect>
 
-                <!-- RIGHT PANEL: SETTINGS -->
                 <rect name="rightPanel" depth="3" pos="390, -70" width="790" height="650">
                     <sprite depth="1" sprite="menu_empty" type="sliced" color="15,15,15,255" />
                     <sprite depth="2" sprite="menu_empty2px" type="sliced" color="60,60,60,255" fillcenter="false" />

@@ -33,7 +33,7 @@
     <DefineConstants>TRACE</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Harmony\AddonManager.cs" />
+    <Compile Include="Harmony\ModManager.cs" />
     <Compile Include="Harmony\BlockJukebox.cs" />
     <Compile Include="Harmony\CustomAudioManager.cs" />
     <Compile Include="Harmony\DynamicBackpacksUIPatch.cs" />
