@@ -27,8 +27,6 @@ namespace LizziesMod
 
             foreach (Assembly assembly in AppDomain.CurrentDomain.GetAssemblies())
             {
-                if (assembly.FullName.StartsWith("System") || assembly.FullName.StartsWith("Unity") || assembly.FullName.StartsWith("mscorlib") || assembly.FullName.StartsWith("Assembly-CSharp"))
-                    continue;
 
                 try
                 {
@@ -41,7 +39,18 @@ namespace LizziesMod
                             MethodInfo initModMethod = type.GetMethod("InitMod", BindingFlags.Public | BindingFlags.Instance);
                             if (initModMethod != null)
                             {
-                                harmony.Patch(initModMethod, prefix: new HarmonyMethod(initModPrefix));
+                                try
+                                {
+                                    harmony.Patch(initModMethod, prefix: new HarmonyMethod(initModPrefix));
+                                }
+                                catch (Exception ex)
+                                {
+                                    Logger.Warning($"[ModManager] Harmony failed to patch InitMod for {type.Name} in '{assembly.GetName().Name}'. Error: {ex.Message}");
+                                }
+                            }
+                            else
+                            {
+                                Logger.Warning($"[ModManager] Warning: '{type.Name}' in '{assembly.GetName().Name}' implements IModApi but lacks a standard public InitMod method. This mod might still be enabled");
                             }
                         }
                     }

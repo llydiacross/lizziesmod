@@ -54,7 +54,7 @@
         </window>
 
         <!-- Mod Settings Window -->
-        <window name="windowModSettings" depth="200" width="1200" height="800" anchor="Center" cursor_area="true" lock_navigation="true" controller="LizziesMod.ModSettingsUIController, LizziesMod">
+         <window name="windowModSettings" depth="200" width="1200" height="800" anchor="Center" cursor_area="true" lock_navigation="true" controller="LizziesMod.ModSettingsUIController, LizziesMod">
             <fullscreencollider color="0,0,0,220"/>
             <rect depth="0" pos="-600, 400" width="1200" height="800">
                 
@@ -66,48 +66,50 @@
                     <label depth="2" text="MOD SETTINGS" font_size="32" justify="center" pivot="center" pos="600,-25" color="255,180,0,255" upper_case="true" />
                 </rect>
 
+                
                 <rect name="leftPanel" depth="3" pos="20, -70" width="350" height="650">
                     <sprite depth="1" sprite="menu_empty" type="sliced" color="15,15,15,255" />
                     <sprite depth="2" sprite="menu_empty2px" type="sliced" color="60,60,60,255" fillcenter="false" />
                     
-               
                     <rect depth="3" pos="5, -5" width="340" height="640" on_scroll="true">
                         <defaultscrollbar />
                         <scrollview width="320" clippingsoftness="0,10">
                             <grid name="modListGrid" pos="16,0" rows="50" cols="1" cell_width="320" cell_height="50" arrangement="vertical" repeat_content="true">
                                 <rect name="modEntry" controller="LizziesMod.ModEntryController, LizziesMod">
+                                    
+                           
                                     <button name="clickable" depth="3" pos="2,-2" width="316" height="46" sprite="menu_empty" type="sliced" defaultcolor="40,40,40,255" hovercolor="80,180,255,255" sound_play_on_hover="[default_hover]" sound="[default_click]" />
-    
-                                    <texture name="imgModIcon" depth="4" pos="6,-5" width="36" height="36" visible="false" />
-                                    <label name="lblModName" depth="4" text="MOD NAME" font_size="22" justify="left" pivot="topleft" pos="50,-12" width="260" color="255,255,255,255" />
+
+                                    <rect name="chkEnabled" depth="4" pos="6,-5" width="36" height="36">
+                                        <button name="btnEnableToggle" depth="1" sprite="menu_empty" type="sliced" defaultcolor="20,20,20,255" hovercolor="80,180,255,255" sound_play_on_hover="[default_hover]" sound="[default_click]" />
+                                        <sprite name="sprEnableCheck" depth="2" sprite="ui_game_symbol_check" width="28" height="28" pos="4,-4" color="0,255,0,255" visible="true" />
+                                    </rect>
+
+                                    <texture name="imgModIcon" depth="4" pos="46,-5" width="36" height="36" visible="false" />
+                                    <label name="lblModName" depth="4" text="MOD NAME" font_size="22" justify="left" pivot="topleft" pos="90,-12" width="220" color="255,255,255,255" />    
                                 </rect>
                             </grid>
                         </scrollview>
                     </rect>
                 </rect>
 
-          
                 <rect name="rightPanel" depth="3" pos="390, -70" width="790" height="650">
                     <sprite depth="1" sprite="menu_empty" type="sliced" color="15,15,15,255" />
                     <sprite depth="2" sprite="menu_empty2px" type="sliced" color="60,60,60,255" fillcenter="false" />
 
-    
                     <label name="lblSelectedModTitle" depth="4" pos="10, -10" width="770" height="40" font_size="32" justify="center" text="MOD TITLE" color="255,180,0,255" upper_case="true" />
 
-            
                     <rect name="modInfoArea" depth="3" pos="10, -50" width="770" height="30">
                         <label name="lblModAuthor" depth="4" pos="0,0" width="250" height="30" font_size="22" justify="left" text="Author: " color="200,200,200,255" />
                         <label name="lblModVersion" depth="4" pos="260,0" width="150" height="30" font_size="22" justify="left" text="Version: " color="200,200,200,255" />
                         <label name="lblModWebsite" depth="4" pos="420,0" width="350" height="30" font_size="22" justify="left" text="Website: " color="80,180,255,255" />
                     </rect>
 
-        
                     <rect name="bannerArea" depth="3" pos="10, -80" width="770" height="150">
                         <sprite depth="1" sprite="menu_empty" type="sliced" color="10,10,10,255" />
                         <texture name="imgBanner" depth="2" pos="0,0" width="770" height="150" visible="false" />
                     </rect>
 
-          
                     <rect name="settingsArea" depth="3" pos="10, -240" width="770" height="400" on_scroll="true">
                         <defaultscrollbar />
                         <scrollview width="750" clippingsoftness="0,10">
