@@ -87,7 +87,7 @@ namespace LizziesMod
                 return;
             }
 
-            ModController.ShowDisabledMods = true;
+            ModPatcher.ShowDisabledMods = true;
             SaveCurrentSettingsUI();
 
             if (txtProfileName != null && !string.IsNullOrEmpty(txtProfileName.Text))
@@ -99,7 +99,7 @@ namespace LizziesMod
             {
                 ModSettingsManager.SaveModSettings(mod);
             }
-            ModController.ShowDisabledMods = false;
+            ModPatcher.ShowDisabledMods = false;
 
             if (ModSettingsManager.PendingRestart)
             {
@@ -115,10 +115,10 @@ namespace LizziesMod
         public override void OnOpen()
         {
         
-            ModController.ShowDisabledMods = true;
+            ModPatcher.ShowDisabledMods = true;
             base.OnOpen();
             PopulateModList(); 
-            ModController.ShowDisabledMods = false;
+            ModPatcher.ShowDisabledMods = false;
 
 
             string savedProfile = ModSettingsManager.GetSetting("LizziesMod", "LastProfileName", "");
@@ -427,7 +427,7 @@ namespace LizziesMod
             if (!string.IsNullOrEmpty(modName) && mainController != null)
             {
 
-                if (!ModController.IsModEnabled(modName))
+                if (!ModPatcher.IsModEnabled(modName))
                     mainController.GetChildById("settingsGrid").viewComponent.isVisible = false;
                  else
                     mainController.GetChildById("settingsGrid").viewComponent.isVisible = true;

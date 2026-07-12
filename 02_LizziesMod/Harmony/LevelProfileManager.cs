@@ -30,7 +30,7 @@ namespace LizziesMod
                 modNode.SetAttribute("name", mod.Name);
                 modNode.SetAttribute("version", mod.VersionString ?? "Unknown");
 
-                bool isEnabled = ModController.IsModEnabled(mod.Name);
+                bool isEnabled = ModPatcher.IsModEnabled(mod.Name);
                 modNode.SetAttribute("enabled", isEnabled.ToString().ToLower());
 
                 root.AppendChild(modNode);
@@ -261,7 +261,7 @@ namespace LizziesMod
 
                 foreach (Mod mod in global::ModManager.GetLoadedMods())
                 {
-                    if (ModController.IsModEnabled(mod.Name))
+                    if (ModPatcher.IsModEnabled(mod.Name))
                     {
                         SyncModInfo info = new SyncModInfo();
                         info.Version = mod.VersionString ?? "Unknown";

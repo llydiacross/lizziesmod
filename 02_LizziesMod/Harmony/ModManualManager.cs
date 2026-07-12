@@ -69,9 +69,9 @@ namespace LizziesMod
         {
             AllBooks.Clear();
 
-            ModController.ShowDisabledMods = true;
+            ModPatcher.ShowDisabledMods = true;
             List<Mod> allMods = global::ModManager.GetLoadedMods();
-            ModController.ShowDisabledMods = false;
+            ModPatcher.ShowDisabledMods = false;
 
             if (allMods == null) return;
 

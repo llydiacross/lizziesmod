@@ -52,7 +52,7 @@ namespace LizziesMod
                 harmony.PatchAll();
 
                 // Initialize ModManager to block other mods based on settings
-                ModController.Initialize(harmony);
+                ModPatcher.Initialize(harmony);
 
                 Logger.Info("Success");
             }

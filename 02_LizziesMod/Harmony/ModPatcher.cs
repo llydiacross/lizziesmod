@@ -6,16 +6,15 @@ using System.Reflection;
 
 namespace LizziesMod
 {
-    public static class ModController
+    public static class ModPatcher
     {
-
         public static bool ShowDisabledMods = false;
 
         public static void Initialize(HarmonyLib.Harmony harmony)
         {
 
             MethodInfo getLoadedMods = typeof(global::ModManager).GetMethod("GetLoadedMods", BindingFlags.Public | BindingFlags.Static);
-            MethodInfo getLoadedModsPostfix = typeof(ModController).GetMethod(nameof(GetLoadedMods_Postfix), BindingFlags.Public | BindingFlags.Static);
+            MethodInfo getLoadedModsPostfix = typeof(ModPatcher).GetMethod(nameof(GetLoadedMods_Postfix), BindingFlags.Public | BindingFlags.Static);
 
             if (getLoadedMods != null && getLoadedModsPostfix != null)
             {
@@ -23,34 +22,36 @@ namespace LizziesMod
             }
 
             Type modApiInterface = typeof(IModApi);
-            MethodInfo initModPrefix = typeof(ModController).GetMethod(nameof(InitMod_Prefix), BindingFlags.Public | BindingFlags.Static);
+            MethodInfo initModPrefix = typeof(ModPatcher).GetMethod(nameof(InitMod_Prefix), BindingFlags.Public | BindingFlags.Static);
 
             foreach (Assembly assembly in AppDomain.CurrentDomain.GetAssemblies())
             {
-
                 try
                 {
                     foreach (Type type in assembly.GetTypes())
                     {
+           
                         if (modApiInterface.IsAssignableFrom(type) && !type.IsInterface && !type.IsAbstract)
                         {
                             if (type == typeof(LizziesMod.Main.Init)) continue;
 
-                            MethodInfo initModMethod = type.GetMethod("InitMod", BindingFlags.Public | BindingFlags.Instance);
+   
+                            MethodInfo initModMethod = type.GetMethods(BindingFlags.Public | BindingFlags.Instance)
+                                .FirstOrDefault(m => m.Name == "InitMod" &&
+                                                     m.GetParameters().Length == 1 &&
+                                                     m.GetParameters()[0].ParameterType == typeof(Mod));
+
                             if (initModMethod != null)
                             {
                                 try
                                 {
                                     harmony.Patch(initModMethod, prefix: new HarmonyMethod(initModPrefix));
+                                    Logger.Info($"[ModManager] Successfully patched InitMod for {type.Name}");
                                 }
                                 catch (Exception ex)
                                 {
-                                    Logger.Warning($"[ModManager] Harmony failed to patch InitMod for {type.Name} in '{assembly.GetName().Name}'. Error: {ex.Message}");
+                                    Logger.Warning($"[ModManager] Harmony failed to patch InitMod for {type.Name}. Error: {ex.Message}");
                                 }
-                            }
-                            else
-                            {
-                                Logger.Warning($"[ModManager] Warning: '{type.Name}' in '{assembly.GetName().Name}' implements IModApi but lacks a standard public InitMod method. This mod might still be enabled");
                             }
                         }
                     }
@@ -59,11 +60,13 @@ namespace LizziesMod
             }
         }
 
-        public static bool InitMod_Prefix(Mod _modInstance)
+        public static bool InitMod_Prefix([HarmonyArgument(0)] Mod modInstance)
         {
-            if (!IsModEnabled(_modInstance.Name))
+            if (modInstance == null) return true;
+
+            if (!IsModEnabled(modInstance.Name))
             {
-                Logger.Info($"[ModManager] Blocked: {_modInstance.Name}");
+                Logger.Info($"[ModManager] Blocked: {modInstance.Name}");
                 return false;
             }
             return true;

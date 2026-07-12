@@ -35,7 +35,7 @@
   <ItemGroup>
     <Compile Include="Harmony\ItemActionOpenModManual.cs" />
     <Compile Include="Harmony\LevelProfileManager.cs" />
-    <Compile Include="Harmony\ModController.cs" />
+    <Compile Include="Harmony\ModPatcher.cs" />
     <Compile Include="Harmony\BlockJukebox.cs" />
     <Compile Include="Harmony\CustomAudioManager.cs" />
     <Compile Include="Harmony\DynamicBackpacksUIPatch.cs" />
