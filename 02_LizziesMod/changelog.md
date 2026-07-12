@@ -8,6 +8,7 @@
 - Added "gmod like" physgun
     - Note: You will need to also install the Physgun addon in order to spawn/craft it. You can also change if it is usable only by admins in the settings for the addon
 - Added settings system
+    - Presets can be created through the mod settings menu
     - Other mods can easily configure settings through the use of a `ModSettings.xml` file
     - You can also use these settings in xml by wrapping value in #, for example `<parameter name="example">#MODNAME.SettingName#</parameter>`
 - Added two addons, DynamicBackpacks and DynamicStacks
