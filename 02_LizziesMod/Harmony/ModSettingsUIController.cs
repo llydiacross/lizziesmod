@@ -5,14 +5,13 @@ using System.Collections.Generic;
 
 namespace LizziesMod
 {
- 
-
     public class ModSettingsUIController : XUiController
     {
-
- 
         public static string PreviousMenu = "";
+
         private string selectedMod = "";
+        public string SelectedMod => selectedMod;
+
         private XUiController modListGrid;
         private XUiController settingsGrid;
         private XUiV_Label lblSelectedModTitle;
@@ -23,26 +22,22 @@ namespace LizziesMod
         private XUiC_TextInput txtProfileName;
         private XUiController btnLoadProfile;
         private XUiController btnSaveProfile;
-
         public static string LastLoadedProfile = "";
         private bool isTransitioning = false;
-  
+
         public override void Init()
         {
             base.Init();
-
             modListGrid = GetChildById("modListGrid");
             settingsGrid = GetChildById("settingsGrid");
-
             lblModAuthor = GetChildById("lblModAuthor")?.viewComponent as XUiV_Label;
             lblModVersion = GetChildById("lblModVersion")?.viewComponent as XUiV_Label;
             lblSelectedModTitle = GetChildById("lblSelectedModTitle")?.viewComponent as XUiV_Label;
             lblModWebsite = GetChildById("lblModWebsite")?.viewComponent as XUiV_Label;
-
             imgBanner = GetChildById("imgBanner")?.viewComponent as XUiV_Texture;
             txtProfileName = GetChildById("txtProfileName") as XUiC_TextInput;
-
             btnLoadProfile = GetChildById("btnLoadProfile");
+
             if (btnLoadProfile != null)
             {
                 XUiController clickable = btnLoadProfile.GetChildById("clickable") ?? btnLoadProfile;
@@ -62,13 +57,11 @@ namespace LizziesMod
                 {
                     if (txtProfileName != null && !string.IsNullOrEmpty(txtProfileName.Text))
                     {
-
                         SaveCurrentSettingsUI();
                         ModSettingsManager.SaveProfile(txtProfileName.Text);
                     }
                 };
             }
-
             XUiController closeBtn = GetChildById("btnClose");
             if (closeBtn != null)
             {
@@ -80,7 +73,6 @@ namespace LizziesMod
         public override void OnClose()
         {
             base.OnClose();
-
             if (isTransitioning)
             {
                 isTransitioning = false;
@@ -99,6 +91,7 @@ namespace LizziesMod
             {
                 ModSettingsManager.SaveModSettings(mod);
             }
+
             ModPatcher.ShowDisabledMods = false;
 
             if (ModSettingsManager.PendingRestart)
@@ -114,18 +107,14 @@ namespace LizziesMod
 
         public override void OnOpen()
         {
-        
             ModPatcher.ShowDisabledMods = true;
             base.OnOpen();
-            PopulateModList(); 
+            PopulateModList();
             ModPatcher.ShowDisabledMods = false;
 
-
             string savedProfile = ModSettingsManager.GetSetting("LizziesMod", "LastProfileName", "");
-
             if (txtProfileName != null)
             {
-
                 if (!string.IsNullOrEmpty(LastLoadedProfile))
                     txtProfileName.Text = LastLoadedProfile;
                 else if (!string.IsNullOrEmpty(savedProfile))
@@ -133,7 +122,7 @@ namespace LizziesMod
                 else
                     txtProfileName.Text = "Custom";
             }
-                
+
             List<string> modNames = new List<string>(ModSettingsManager.AllModSettings.Keys);
             selectedMod = "";
 
@@ -146,7 +135,6 @@ namespace LizziesMod
             {
                 SelectMod("LizziesMod");
             }
-
             else if (modNames.Count > 0)
             {
                 SelectMod(modNames[0]);
@@ -161,7 +149,6 @@ namespace LizziesMod
         {
             List<string> modNames = new List<string>(ModSettingsManager.AllModSettings.Keys);
             int i = 0;
-
             foreach (var child in modListGrid.Children)
             {
                 if (child is ModEntryController entry)
@@ -180,16 +167,26 @@ namespace LizziesMod
             SaveCurrentSettingsUI();
             selectedMod = modName;
 
-            Mod targetMod = null;
-            foreach (var m in global::ModManager.GetLoadedMods())
-            {
-                if (m.Name == modName) { targetMod = m; break; }
-            }
+            ModPatcher.ShowDisabledMods = true;
+            Mod targetMod = global::ModManager.GetLoadedMods().Find(m => m.Name == modName);
+            ModPatcher.ShowDisabledMods = false;
 
             if (targetMod != null)
             {
-
                 string title = targetMod.DisplayName ?? targetMod.Name;
+
+
+                if (title == targetMod.Name)
+                {
+                    int separatorIdx = title.IndexOfAny(new char[] { '_', '-' });
+                    if (separatorIdx > 0 && separatorIdx < title.Length - 1)
+                    {
+                        string extensionKey = title.Substring(0, separatorIdx);
+                        string actualModName = title.Substring(separatorIdx + 1);
+                        title = $"{actualModName} [a252ff]({extensionKey})[-]";
+                    }
+                }
+
                 string author = targetMod.Author ?? "Unknown";
                 string version = targetMod.VersionString ?? "Unknown";
                 string website = targetMod.Website ?? "None";
@@ -209,7 +206,6 @@ namespace LizziesMod
                             byte[] fileData = System.IO.File.ReadAllBytes(bannerPath);
                             UnityEngine.Texture2D tex = new UnityEngine.Texture2D(2, 2, UnityEngine.TextureFormat.RGBA32, false);
                             UnityEngine.ImageConversion.LoadImage(tex, fileData);
-
                             imgBanner.Texture = tex;
                             imgBanner.IsVisible = true;
                         }
@@ -223,6 +219,24 @@ namespace LizziesMod
                         imgBanner.IsVisible = false;
                     }
                 }
+            }
+            else
+            {
+                string titleFallback = modName;
+                int separatorIdx = titleFallback.IndexOfAny(new char[] { '_', '-' });
+                if (separatorIdx > 0 && separatorIdx < titleFallback.Length - 1)
+                {
+                    string extensionKey = titleFallback.Substring(0, separatorIdx);
+                    string actualModName = titleFallback.Substring(separatorIdx + 1);
+                    titleFallback = $"{actualModName} [a252ff]({extensionKey})[-]";
+                }
+
+
+                if (lblSelectedModTitle != null) lblSelectedModTitle.Text = titleFallback;
+                if (lblModAuthor != null) lblModAuthor.Text = "Author: Unknown";
+                if (lblModVersion != null) lblModVersion.Text = "Version: Unknown";
+                if (lblModWebsite != null) lblModWebsite.Text = "Website: None";
+                if (imgBanner != null) imgBanner.IsVisible = false;
             }
 
             PopulateSettingsList();
@@ -239,8 +253,12 @@ namespace LizziesMod
                 return;
             }
 
-            var visibleSettings = ModSettingsManager.AllModSettings[selectedMod]
-                                    .FindAll(s => !s.Hidden);
+            var visibleSettings = ModSettingsManager.AllModSettings[selectedMod].FindAll(s => !s.Hidden);
+
+            if (!ModPatcher.IsModEnabled(selectedMod))
+            {
+                visibleSettings.Clear();
+            }
 
             int i = 0;
             foreach (var child in settingsGrid.Children)
@@ -259,7 +277,6 @@ namespace LizziesMod
         private void SaveCurrentSettingsUI()
         {
             if (string.IsNullOrEmpty(selectedMod)) return;
-
             foreach (var child in settingsGrid.Children)
             {
                 if (child is SettingEntryController entry && entry.CurrentSetting != null)
@@ -277,7 +294,6 @@ namespace LizziesMod
         public override void Init()
         {
             base.Init();
-
             XUiController btnYes = GetChildById("btnYes");
             if (btnYes != null)
             {
@@ -287,7 +303,6 @@ namespace LizziesMod
                     UnityEngine.Application.Quit();
                 };
             }
-
             XUiController btnNo = GetChildById("btnNo");
             if (btnNo != null)
             {
@@ -299,10 +314,9 @@ namespace LizziesMod
         public override void OnClose()
         {
             base.OnClose();
-            if (isQuitting) return; 
+            if (isQuitting) return;
 
             ModSettingsManager.PendingRestart = false;
-
             if (!string.IsNullOrEmpty(ModSettingsUIController.PreviousMenu))
                 xui.playerUI.windowManager.Open(ModSettingsUIController.PreviousMenu, false);
         }
@@ -322,7 +336,6 @@ namespace LizziesMod
             base.Init();
             lblModName = GetChildById("lblModName")?.viewComponent as XUiV_Label;
             imgModIcon = GetChildById("imgModIcon")?.viewComponent as XUiV_Texture;
-
             btnEnableToggle = GetChildById("btnEnableToggle");
             sprEnableCheck = GetChildById("sprEnableCheck")?.viewComponent as XUiV_Sprite;
 
@@ -342,7 +355,16 @@ namespace LizziesMod
 
             if (lblModName != null)
             {
-                lblModName.Text = name;
+                string displayTitle = name;
+                int separatorIdx = name.IndexOfAny(new char[] { '_', '-' });
+                if (separatorIdx > 0 && separatorIdx < name.Length - 1)
+                {
+                    string extensionKey = name.Substring(0, separatorIdx);
+                    string actualModName = name.Substring(separatorIdx + 1);
+                    displayTitle = $"{actualModName} [a252ff]({extensionKey})[-]";
+                }
+
+                lblModName.Text = displayTitle;
                 bool hasSettings = ModSettingsManager.AllModSettings.ContainsKey(name) && ModSettingsManager.AllModSettings[name].Count > 0;
                 lblModName.Color = hasSettings ? UnityEngine.Color.white : new UnityEngine.Color(0.5f, 0.5f, 0.5f, 1f);
             }
@@ -354,8 +376,8 @@ namespace LizziesMod
                 sprEnableCheck.IsVisible = ModSettingsManager.GetSetting(this.modName, "Enabled", true);
             }
 
-            btnEnableToggle.viewComponent.IsVisible = !isProtectedMod; // hide the toggle button
-            
+            btnEnableToggle.viewComponent.IsVisible = !isProtectedMod;
+
             if (imgModIcon != null)
             {
                 Mod targetMod = null;
@@ -379,7 +401,6 @@ namespace LizziesMod
                             byte[] fileData = System.IO.File.ReadAllBytes(iconPath);
                             UnityEngine.Texture2D tex = new UnityEngine.Texture2D(2, 2, UnityEngine.TextureFormat.RGBA32, false);
                             UnityEngine.ImageConversion.LoadImage(tex, fileData);
-
                             imgModIcon.Texture = tex;
                             imgModIcon.IsVisible = true;
                         }
@@ -395,10 +416,8 @@ namespace LizziesMod
                     }
                 }
             }
-
             viewComponent.IsVisible = true;
         }
-
 
         public void Clear()
         {
@@ -408,11 +427,11 @@ namespace LizziesMod
 
         private void HandleBtnEnableTogglePress(XUiController _sender, int _mouseButton)
         {
-
             if (this.modName.Equals("TFP_Harmony", System.StringComparison.OrdinalIgnoreCase) || this.modName.Equals("LizziesMod", System.StringComparison.OrdinalIgnoreCase)) return;
 
             bool currentState = ModSettingsManager.GetSetting(this.modName, "Enabled", true);
             bool newState = !currentState;
+
             ModSettingsManager.SetSetting(this.modName, "Enabled", newState, true);
             ModSettingsManager.SaveModSettings(this.modName);
 
@@ -420,18 +439,17 @@ namespace LizziesMod
             {
                 sprEnableCheck.IsVisible = newState;
             }
+
+            if (mainController != null && mainController.SelectedMod == this.modName)
+            {
+                mainController.PopulateSettingsList();
+            }
         }
 
         private void HandlePress(XUiController _sender, int _mouseButton)
         {
             if (!string.IsNullOrEmpty(modName) && mainController != null)
             {
-
-                if (!ModPatcher.IsModEnabled(modName))
-                    mainController.GetChildById("settingsGrid").viewComponent.isVisible = false;
-                 else
-                    mainController.GetChildById("settingsGrid").viewComponent.isVisible = true;
-
                 mainController.SelectMod(modName);
             }
         }
@@ -444,10 +462,9 @@ namespace LizziesMod
         private XUiC_TextInput txtSettingValue;
         private XUiController chkSettingValue;
         private XUiV_Sprite sprCheck;
+        private bool isLocked = false;
 
         public ModSetting CurrentSetting => setting;
-
-        private bool isLocked = false;
 
         public override void Init()
         {
@@ -462,13 +479,11 @@ namespace LizziesMod
                 XUiController clickable = chkSettingValue.GetChildById("clickable") ?? chkSettingValue;
                 clickable.OnPress += (s, e) =>
                 {
-
                     if (isLocked)
                     {
                         Manager.PlayInsidePlayerHead("ui_denied");
                         return;
                     }
-
                     if (setting != null && setting.Type == "bool")
                     {
                         bool currentValue = sprCheck.IsVisible;
@@ -489,14 +504,14 @@ namespace LizziesMod
 
             bool inMultiplayerAsClient = SingletonMonoBehaviour<ConnectionManager>.Instance.IsClient &&
                                         !SingletonMonoBehaviour<ConnectionManager>.Instance.IsServer;
-
             isLocked = setting.ServerOnly && inMultiplayerAsClient;
 
             if (lblSettingName != null)
             {
- 
-                lblSettingName.Text = isLocked ? $"{setting.Name} [FF3333](Locked)[-]" : setting.Name;
-                lblSettingName.Text = setting.inMenuOnly ? $"{setting.Name} [FF3333](Menu Only)[-]" : setting.Name;
+                string label = setting.Name;
+                if (isLocked) label += " [FF3333](Locked)[-]";
+                else if (setting.inMenuOnly) label += " [FF3333](Menu Only)[-]";
+                lblSettingName.Text = label;
             }
 
             if (setting.Type == "bool")
@@ -514,7 +529,6 @@ namespace LizziesMod
                     txtSettingValue.Text = setting.Value;
                 }
             }
-
             viewComponent.IsVisible = !setting.Hidden;
         }
 
@@ -528,7 +542,6 @@ namespace LizziesMod
         public string GetValue()
         {
             if (setting == null) return "";
-
             if (isLocked) return setting.Value;
 
             if (setting.Type == "bool") return sprCheck != null && sprCheck.IsVisible ? "true" : "false";
@@ -555,13 +568,11 @@ namespace LizziesMod
         }
     }
 
-
     [HarmonyPatch(typeof(XUiC_MainMenuButtons), "Init")]
     public class MainMenuButtons_Init_Patch
     {
         public static void Postfix(XUiC_MainMenuButtons __instance)
         {
-
             XUiController btnSettings = __instance.GetChildById("btnModSettings");
             if (btnSettings != null)
             {
@@ -580,7 +591,6 @@ namespace LizziesMod
                 XUiController clickable = btnLibrary.GetChildById("clickable") ?? btnLibrary;
                 clickable.OnPress += (s, e) =>
                 {
-
                     ModLibraryUIController.PreviousMenu = "mainMenu";
                     __instance.xui.playerUI.windowManager.Close("mainMenu");
                     __instance.xui.playerUI.windowManager.Open("windowModLibrary", true);

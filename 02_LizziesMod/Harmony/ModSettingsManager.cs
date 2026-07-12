@@ -90,14 +90,13 @@ namespace LizziesMod
                                 bool bHidden = false;
                                 if (node.Attributes["hidden"] != null)
                                     bool.TryParse(node.Attributes["hidden"].Value, out bHidden);
-
                                 bool bServerOnly = false;
                                 if (node.Attributes["serverOnly"] != null)
                                     bool.TryParse(node.Attributes["serverOnly"].Value, out bServerOnly);
 
                                 bool bMenuOnly = false;
                                 if (node.Attributes["menuOnly"] != null)
-                                    bool.TryParse(node.Attributes["menuOnly"].Value, out bServerOnly);
+                                    bool.TryParse(node.Attributes["menuOnly"].Value, out bMenuOnly); 
 
                                 ModSetting existingSetting = currentSettings.Find(s => s.Name.Equals(sName, StringComparison.OrdinalIgnoreCase));
                                 if (existingSetting != null)

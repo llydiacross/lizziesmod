@@ -1,4 +1,4 @@
 <ModSettings>
-  <Setting name="AdminOnly" value="true" type="bool" requiresRestart="false" />
-  <Setting name="Enabled" value="true" type="bool" requiresRestart="true" hidden="true" />
+  <Setting name="AdminOnly" value="false" type="bool" requiresRestart="false" />
+  <Setting name="Enabled" value="false" type="bool" requiresRestart="true" hidden="true" />
 </ModSettings>

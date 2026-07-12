@@ -15,8 +15,10 @@ namespace LizziesMod
                 return;
             }
 
-            if(lastOutput.Length != 0 && lastOutput != message && counter > 0)
-                Log.Out("[LizziesMod] Last message repeated " + counter + " times");
+            if (lastOutput.Length != 0 && lastOutput != message && counter > 0) {
+                Log.Out("       Last message repeated " + counter + " times");
+                counter = 0;
+            };
 
             Log.Out("[LizziesMod] " + message);
             lastOutput = message;

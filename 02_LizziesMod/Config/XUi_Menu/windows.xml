@@ -149,9 +149,9 @@
         </window>
 
         <!-- Mod Settings Window -->
-        <window name="windowModSettings" depth="200" width="1200" height="800" anchor="Center" cursor_area="true" lock_navigation="true" controller="LizziesMod.ModSettingsUIController, LizziesMod">
+        <window name="windowModSettings" depth="200" width="1360" height="800" anchor="Center" cursor_area="true" lock_navigation="true" controller="LizziesMod.ModSettingsUIController, LizziesMod">
             <fullscreencollider color="0,0,0,220"/>
-            <rect depth="0" pos="-600, 400" width="1200" height="800">
+            <rect depth="0" pos="-600, 400" width="1360" height="800">
                 
                 <sprite depth="1" name="background" sprite="menu_empty" type="sliced" color="30,30,30,250" />
                 <sprite depth="2" name="border" sprite="menu_empty2px" type="sliced" color="255,180,0,255" fillcenter="false" />
@@ -162,14 +162,14 @@
                 </rect>
 
                 
-                <rect name="leftPanel" depth="3" pos="20, -70" width="350" height="650">
+                <rect name="leftPanel" depth="3" pos="20, -70" width="430" height="650">
                     <sprite depth="1" sprite="menu_empty" type="sliced" color="15,15,15,255" />
                     <sprite depth="2" sprite="menu_empty2px" type="sliced" color="60,60,60,255" fillcenter="false" />
                     
-                    <rect depth="3" pos="5, -5" width="340" height="640" on_scroll="true">
+                    <rect depth="3" pos="5, -5" width="420" height="640" on_scroll="true">
                         <defaultscrollbar />
                         <scrollview width="320" clippingsoftness="0,10">
-                            <grid name="modListGrid" pos="16,0" rows="50" cols="1" cell_width="320" cell_height="50" arrangement="vertical" repeat_content="true">
+                            <grid name="modListGrid" pos="16,0" rows="50" cols="1" cell_width="430" cell_height="50" arrangement="vertical" repeat_content="true">
                                 <rect name="modEntry" controller="LizziesMod.ModEntryController, LizziesMod">
                                     
                            
@@ -188,7 +188,7 @@
                     </rect>
                 </rect>
 
-                <rect name="rightPanel" depth="3" pos="390, -70" width="790" height="650">
+                <rect name="rightPanel" depth="3" pos="470, -70" width="790" height="650">
                     <sprite depth="1" sprite="menu_empty" type="sliced" color="15,15,15,255" />
                     <sprite depth="2" sprite="menu_empty2px" type="sliced" color="60,60,60,255" fillcenter="false" />
 
