@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <xml>
     <Name value="LizziesMod_JukeboxAndWalkman" />
-    <DisplayName value="Lizzies Tunes [Lizzies Mod]" />
+    <DisplayName value="Jukebox And Walkman" />
     <Description value="Adds findable music into the game which you can listen to on a walkman or a jukebox!" />
     <Author value="llydia" />
     <Version value="0.0.1" />

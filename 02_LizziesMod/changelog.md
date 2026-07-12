@@ -1,5 +1,8 @@
 # v1.0.0
 
+- Added mod profile system 1which checks the server you are connecting to has the correct mods
+- Severs will now share their mod list and their configuration with the player. If the player does not have the correct mods at the correct versions, they cannot connect!
+- Mod packs are easy to create for modders
 - Added menu icon drawer for mods in the main menu
     - Add a `atlas.png (256x256)` or a icon `icon.png (128x128)` to your mod folder for it to appear in the main menu.
 - Added custom audio system

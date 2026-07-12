@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <xml>
     <Name value="LizziesMod_DynamicStacks" />
-    <DisplayName value="Dynamic Stacks [Lizzies Mod]" />
+    <DisplayName value="Dynamic Stacks" />
     <Description value="Adjust the stack size to what ever you like!" />
     <Author value="llydia" />
     <Version value="0.0.1" />

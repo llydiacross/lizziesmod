@@ -228,7 +228,7 @@ namespace LizziesMod
                 {
                     string extensionKey = titleFallback.Substring(0, separatorIdx);
                     string actualModName = titleFallback.Substring(separatorIdx + 1);
-                    titleFallback = $"{actualModName} [a252ff]({extensionKey})[-]";
+                    titleFallback = $"{actualModName} [a2i52ff]({extensionKey})[-]";
                 }
 
 

@@ -23,6 +23,7 @@ namespace LizziesMod
 
             Type modApiInterface = typeof(IModApi);
             MethodInfo initModPrefix = typeof(ModPatcher).GetMethod(nameof(InitMod_Prefix), BindingFlags.Public | BindingFlags.Static);
+            MethodInfo initModFinalizer = typeof(ModPatcher).GetMethod(nameof(InitMod_Finalizer), BindingFlags.Public | BindingFlags.Static);
 
             foreach (Assembly assembly in AppDomain.CurrentDomain.GetAssemblies())
             {
@@ -30,12 +31,10 @@ namespace LizziesMod
                 {
                     foreach (Type type in assembly.GetTypes())
                     {
-           
                         if (modApiInterface.IsAssignableFrom(type) && !type.IsInterface && !type.IsAbstract)
                         {
                             if (type == typeof(LizziesMod.Main.Init)) continue;
 
-   
                             MethodInfo initModMethod = type.GetMethods(BindingFlags.Public | BindingFlags.Instance)
                                 .FirstOrDefault(m => m.Name == "InitMod" &&
                                                      m.GetParameters().Length == 1 &&
@@ -45,7 +44,8 @@ namespace LizziesMod
                             {
                                 try
                                 {
-                                    harmony.Patch(initModMethod, prefix: new HarmonyMethod(initModPrefix));
+                                    //
+                                    harmony.Patch(initModMethod, prefix: new HarmonyMethod(initModPrefix), finalizer: new HarmonyMethod(initModFinalizer));
                                     Logger.Info($"[ModManager] Successfully patched InitMod for {type.Name}");
                                 }
                                 catch (Exception ex)
@@ -70,6 +70,16 @@ namespace LizziesMod
                 return false;
             }
             return true;
+        }
+        // Catches unhandled exceptions inside other mods' InitMod methods
+        public static Exception InitMod_Finalizer(Exception __exception, [HarmonyArgument(0)] Mod modInstance)
+        {
+            if (__exception != null && modInstance != null)
+            {
+                ModErrorHandler.AddError($"[FFCC33][INIT CRASH][-]\nMod '{modInstance.Name}' threw an exception during startup:\n{__exception.Message}");
+                ModErrorHandler.ProblematicMods.Add(modInstance.Name);
+            }
+            return __exception;
         }
 
         public static void GetLoadedMods_Postfix(ref List<Mod> __result)

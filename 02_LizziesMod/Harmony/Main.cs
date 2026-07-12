@@ -16,6 +16,8 @@ namespace LizziesMod
             public void InitMod(Mod modInstance)
             {
 
+                Application.logMessageReceivedThreaded += ModErrorHandler.LogCallback;
+
                 // Load our custom changes
                 ModTextures.Init(modInstance);
 

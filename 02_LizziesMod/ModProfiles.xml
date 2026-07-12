@@ -34,156 +34,6 @@
       <Setting name="Enabled" value="false" type="bool" />
     </Mod>
   </Profile>
-  <Profile name="Default">
-    <Mod name="LizziesMod" version="0.0.1">
-      <Setting name="StartingYear" value="1986" type="int" />
-      <Setting name="EnableMechanicalPress" value="true" type="bool" />
-      <Setting name="EnableTimeParadox" value="true" type="bool" />
-      <Setting name="BrassScrapMaxDamage" value="1650" type="int" />
-      <Setting name="BrassScrapStabilityGlue" value="70" type="int" />
-      <Setting name="Enabled" value="true" type="bool" hidden="true" />
-      <Setting name="LastProfileName" value="Game" type="string" hidden="true" />
-    </Mod>
-    <Mod name="TFP_Harmony" version="1.1.0.4">
-      <Setting name="Enabled" value="true" type="bool" hidden="true" />
-    </Mod>
-    <Mod name="AEC_InternationalMarket">
-      <Setting name="Enabled" value="false" type="bool" hidden="true" />
-    </Mod>
-    <Mod name="Izayo_WeaponFixes">
-      <Setting name="Enabled" value="false" type="bool" hidden="true" />
-    </Mod>
-    <Mod name="IZY_FPV_GLOVES">
-      <Setting name="Enabled" value="false" type="bool" hidden="true" />
-    </Mod>
-    <Mod name="IZY_MMVMV2">
-      <Setting name="Enabled" value="false" type="bool" hidden="true" />
-    </Mod>
-    <Mod name="IZY_RMP_Miscpack">
-      <Setting name="Enabled" value="false" type="bool" hidden="true" />
-    </Mod>
-    <Mod name="IZY_RMP_44magnum">
-      <Setting name="Enabled" value="false" type="bool" hidden="true" />
-    </Mod>
-    <Mod name="IZY_RMP_45ACP">
-      <Setting name="Enabled" value="false" type="bool" hidden="true" />
-    </Mod>
-    <Mod name="IZY_RMP_556pack">
-      <Setting name="Enabled" value="false" type="bool" hidden="true" />
-    </Mod>
-    <Mod name="IZY_RMP_762pack">
-      <Setting name="Enabled" value="false" type="bool" hidden="true" />
-    </Mod>
-    <Mod name="IZY_RMP_9mmVAL">
-      <Setting name="Enabled" value="false" type="bool" hidden="true" />
-    </Mod>
-    <Mod name="IZY_RMP_Demopack">
-      <Setting name="Enabled" value="false" type="bool" hidden="true" />
-    </Mod>
-    <Mod name="IZY_RMP_HVW">
-      <Setting name="Enabled" value="false" type="bool" hidden="true" />
-    </Mod>
-    <Mod name="IZY_RMP_SG">
-      <Setting name="Enabled" value="false" type="bool" hidden="true" />
-    </Mod>
-    <Mod name="IZY_RMP_Tech">
-      <Setting name="Enabled" value="false" type="bool" hidden="true" />
-    </Mod>
-    <Mod name="IZY_melee">
-      <Setting name="Enabled" value="false" type="bool" hidden="true" />
-    </Mod>
-    <Mod name="IZY_VRP">
-      <Setting name="Enabled" value="false" type="bool" hidden="true" />
-    </Mod>
-    <Mod name="AGF-HUDPlus-1Main">
-      <Setting name="Enabled" value="false" type="bool" hidden="true" />
-    </Mod>
-    <Mod name="AtmosphericWeather">
-      <Setting name="Enabled" value="false" type="bool" hidden="true" />
-    </Mod>
-    <Mod name="Betterloot">
-      <Setting name="Enabled" value="false" type="bool" hidden="true" />
-    </Mod>
-    <Mod name="Cjay-RemoteInventory-V3">
-      <Setting name="Enabled" value="false" type="bool" hidden="true" />
-    </Mod>
-    <Mod name="Flogis_perk_mod">
-      <Setting name="Enabled" value="false" type="bool" hidden="true" />
-    </Mod>
-    <Mod name="ImprovedBuilding">
-      <Setting name="Enabled" value="false" type="bool" hidden="true" />
-    </Mod>
-    <Mod name="LittleRedSonja_AmmoRecycling">
-      <Setting name="Enabled" value="false" type="bool" hidden="true" />
-    </Mod>
-    <Mod name="LittleRedSonja_AmmoRecycling_ADD-ON_CustomAmmoBench">
-      <Setting name="Enabled" value="false" type="bool" hidden="true" />
-    </Mod>
-    <Mod name="LittleRedSonja_FancyZombieVariants">
-      <Setting name="Enabled" value="false" type="bool" hidden="true" />
-    </Mod>
-    <Mod name="LittleRedSonja_Plushies">
-      <Setting name="Enabled" value="false" type="bool" hidden="true" />
-    </Mod>
-    <Mod name="LizziesMod_DynamicBackpacks" version="0.0.1">
-      <Setting name="BackpackGridSizeX" value="17" type="int" />
-      <Setting name="BackpackGridSizeY" value="15" type="int" />
-      <Setting name="BackpackMaxSize" value="456" type="int" />
-      <Setting name="DisableEncumbrance" value="false" type="bool" />
-      <Setting name="Enabled" value="true" type="bool" hidden="true" />
-    </Mod>
-    <Mod name="LizziesMod_DynamicStacks" version="0.0.1">
-      <Setting name="StackNumber" value="16000" type="int" />
-      <Setting name="AmmoStackNumber" value="600" type="int" />
-      <Setting name="Enabled" value="true" type="bool" hidden="true" />
-    </Mod>
-    <Mod name="LizziesMod_JukeboxAndWalkman" version="0.0.1">
-      <Setting name="VolumeLevel" value="10" type="int" />
-      <Setting name="MinJukeboxDistance" value="10" type="int" />
-      <Setting name="MaxJukeboxDistance" value="30" type="int" />
-      <Setting name="Enabled" value="true" type="bool" hidden="true" />
-    </Mod>
-    <Mod name="LizziesMod_Physgun">
-      <Setting name="AdminOnly" value="false" type="bool" />
-      <Setting name="Enabled" value="false" type="bool" hidden="true" />
-    </Mod>
-    <Mod name="MisteryBoxes">
-      <Setting name="Enabled" value="false" type="bool" hidden="true" />
-    </Mod>
-    <Mod name="NWG_BBStorage_plus120">
-      <Setting name="Enabled" value="false" type="bool" hidden="true" />
-    </Mod>
-    <Mod name="NWG_BetterBurningCoal">
-      <Setting name="Enabled" value="false" type="bool" hidden="true" />
-    </Mod>
-    <Mod name="OptimizationMod">
-      <Setting name="Enabled" value="false" type="bool" hidden="true" />
-    </Mod>
-    <Mod name="StickyStumps">
-      <Setting name="Enabled" value="false" type="bool" hidden="true" />
-    </Mod>
-    <Mod name="Walber-AutoSorter">
-      <Setting name="Enabled" value="false" type="bool" hidden="true" />
-    </Mod>
-    <Mod name="WMMRandomZombieNames">
-      <Setting name="Enabled" value="false" type="bool" hidden="true" />
-    </Mod>
-    <Mod name="WraithsBackpacks">
-      <Setting name="Enabled" value="false" type="bool" hidden="true" />
-    </Mod>
-    <Mod name="LittleRedSonja_GrabYourStuff">
-      <Setting name="Enabled" value="false" type="bool" hidden="true" />
-    </Mod>
-    <Mod name="zz_Srsly_SqueakyCleanFixtures">
-      <Setting name="Enabled" value="false" type="bool" hidden="true" />
-    </Mod>
-    <Mod name="zz_Srsly_SqueakyCleanSurvival">
-      <Setting name="Enabled" value="false" type="bool" hidden="true" />
-    </Mod>
-    <Mod name="zz_Srsly_VanillaCraftableLoot">
-      <Setting name="Enabled" value="false" type="bool" hidden="true" />
-    </Mod>
-  </Profile>
   <Profile name="Game">
     <Mod name="LizziesMod" version="0.0.1">
       <Setting name="StartingYear" value="2013" type="int" />
@@ -332,6 +182,156 @@
     </Mod>
     <Mod name="zz_Srsly_VanillaCraftableLoot" version="1.2.4">
       <Setting name="Enabled" value="true" type="bool" hidden="true" />
+    </Mod>
+  </Profile>
+  <Profile name="Default">
+    <Mod name="LizziesMod" version="0.0.1">
+      <Setting name="StartingYear" value="1986" type="int" />
+      <Setting name="EnableMechanicalPress" value="true" type="bool" />
+      <Setting name="EnableTimeParadox" value="true" type="bool" />
+      <Setting name="BrassScrapMaxDamage" value="1650" type="int" />
+      <Setting name="BrassScrapStabilityGlue" value="70" type="int" />
+      <Setting name="Enabled" value="true" type="bool" hidden="true" />
+      <Setting name="LastProfileName" value="Default" type="string" hidden="true" />
+    </Mod>
+    <Mod name="TFP_Harmony" version="1.1.0.4">
+      <Setting name="Enabled" value="true" type="bool" hidden="true" />
+    </Mod>
+    <Mod name="AEC_InternationalMarket">
+      <Setting name="Enabled" value="false" type="bool" hidden="true" />
+    </Mod>
+    <Mod name="Izayo_WeaponFixes">
+      <Setting name="Enabled" value="false" type="bool" hidden="true" />
+    </Mod>
+    <Mod name="IZY_FPV_GLOVES">
+      <Setting name="Enabled" value="false" type="bool" hidden="true" />
+    </Mod>
+    <Mod name="IZY_MMVMV2">
+      <Setting name="Enabled" value="false" type="bool" hidden="true" />
+    </Mod>
+    <Mod name="IZY_RMP_Miscpack">
+      <Setting name="Enabled" value="false" type="bool" hidden="true" />
+    </Mod>
+    <Mod name="IZY_RMP_44magnum">
+      <Setting name="Enabled" value="false" type="bool" hidden="true" />
+    </Mod>
+    <Mod name="IZY_RMP_45ACP">
+      <Setting name="Enabled" value="false" type="bool" hidden="true" />
+    </Mod>
+    <Mod name="IZY_RMP_556pack">
+      <Setting name="Enabled" value="false" type="bool" hidden="true" />
+    </Mod>
+    <Mod name="IZY_RMP_762pack">
+      <Setting name="Enabled" value="false" type="bool" hidden="true" />
+    </Mod>
+    <Mod name="IZY_RMP_9mmVAL">
+      <Setting name="Enabled" value="false" type="bool" hidden="true" />
+    </Mod>
+    <Mod name="IZY_RMP_Demopack">
+      <Setting name="Enabled" value="false" type="bool" hidden="true" />
+    </Mod>
+    <Mod name="IZY_RMP_HVW">
+      <Setting name="Enabled" value="false" type="bool" hidden="true" />
+    </Mod>
+    <Mod name="IZY_RMP_SG">
+      <Setting name="Enabled" value="false" type="bool" hidden="true" />
+    </Mod>
+    <Mod name="IZY_RMP_Tech">
+      <Setting name="Enabled" value="false" type="bool" hidden="true" />
+    </Mod>
+    <Mod name="IZY_melee">
+      <Setting name="Enabled" value="false" type="bool" hidden="true" />
+    </Mod>
+    <Mod name="IZY_VRP">
+      <Setting name="Enabled" value="false" type="bool" hidden="true" />
+    </Mod>
+    <Mod name="AGF-HUDPlus-1Main">
+      <Setting name="Enabled" value="false" type="bool" hidden="true" />
+    </Mod>
+    <Mod name="AtmosphericWeather">
+      <Setting name="Enabled" value="false" type="bool" hidden="true" />
+    </Mod>
+    <Mod name="Betterloot">
+      <Setting name="Enabled" value="false" type="bool" hidden="true" />
+    </Mod>
+    <Mod name="Cjay-RemoteInventory-V3">
+      <Setting name="Enabled" value="false" type="bool" hidden="true" />
+    </Mod>
+    <Mod name="Flogis_perk_mod">
+      <Setting name="Enabled" value="false" type="bool" hidden="true" />
+    </Mod>
+    <Mod name="ImprovedBuilding">
+      <Setting name="Enabled" value="false" type="bool" hidden="true" />
+    </Mod>
+    <Mod name="LittleRedSonja_AmmoRecycling">
+      <Setting name="Enabled" value="false" type="bool" hidden="true" />
+    </Mod>
+    <Mod name="LittleRedSonja_AmmoRecycling_ADD-ON_CustomAmmoBench">
+      <Setting name="Enabled" value="false" type="bool" hidden="true" />
+    </Mod>
+    <Mod name="LittleRedSonja_FancyZombieVariants">
+      <Setting name="Enabled" value="false" type="bool" hidden="true" />
+    </Mod>
+    <Mod name="LittleRedSonja_Plushies">
+      <Setting name="Enabled" value="false" type="bool" hidden="true" />
+    </Mod>
+    <Mod name="LizziesMod_DynamicBackpacks" version="0.0.1">
+      <Setting name="BackpackGridSizeX" value="17" type="int" />
+      <Setting name="BackpackGridSizeY" value="15" type="int" />
+      <Setting name="BackpackMaxSize" value="456" type="int" />
+      <Setting name="DisableEncumbrance" value="false" type="bool" />
+      <Setting name="Enabled" value="true" type="bool" hidden="true" />
+    </Mod>
+    <Mod name="LizziesMod_DynamicStacks" version="0.0.1">
+      <Setting name="StackNumber" value="16000" type="int" />
+      <Setting name="AmmoStackNumber" value="600" type="int" />
+      <Setting name="Enabled" value="true" type="bool" hidden="true" />
+    </Mod>
+    <Mod name="LizziesMod_JukeboxAndWalkman" version="0.0.1">
+      <Setting name="VolumeLevel" value="10" type="int" />
+      <Setting name="MinJukeboxDistance" value="10" type="int" />
+      <Setting name="MaxJukeboxDistance" value="30" type="int" />
+      <Setting name="Enabled" value="true" type="bool" hidden="true" />
+    </Mod>
+    <Mod name="LizziesMod_Physgun" version="0.0.1">
+      <Setting name="AdminOnly" value="false" type="bool" />
+      <Setting name="Enabled" value="true" type="bool" hidden="true" />
+    </Mod>
+    <Mod name="MisteryBoxes">
+      <Setting name="Enabled" value="false" type="bool" hidden="true" />
+    </Mod>
+    <Mod name="NWG_BBStorage_plus120">
+      <Setting name="Enabled" value="false" type="bool" hidden="true" />
+    </Mod>
+    <Mod name="NWG_BetterBurningCoal">
+      <Setting name="Enabled" value="false" type="bool" hidden="true" />
+    </Mod>
+    <Mod name="OptimizationMod">
+      <Setting name="Enabled" value="false" type="bool" hidden="true" />
+    </Mod>
+    <Mod name="StickyStumps">
+      <Setting name="Enabled" value="false" type="bool" hidden="true" />
+    </Mod>
+    <Mod name="Walber-AutoSorter">
+      <Setting name="Enabled" value="false" type="bool" hidden="true" />
+    </Mod>
+    <Mod name="WMMRandomZombieNames">
+      <Setting name="Enabled" value="false" type="bool" hidden="true" />
+    </Mod>
+    <Mod name="WraithsBackpacks">
+      <Setting name="Enabled" value="false" type="bool" hidden="true" />
+    </Mod>
+    <Mod name="LittleRedSonja_GrabYourStuff">
+      <Setting name="Enabled" value="false" type="bool" hidden="true" />
+    </Mod>
+    <Mod name="zz_Srsly_SqueakyCleanFixtures">
+      <Setting name="Enabled" value="false" type="bool" hidden="true" />
+    </Mod>
+    <Mod name="zz_Srsly_SqueakyCleanSurvival">
+      <Setting name="Enabled" value="false" type="bool" hidden="true" />
+    </Mod>
+    <Mod name="zz_Srsly_VanillaCraftableLoot">
+      <Setting name="Enabled" value="false" type="bool" hidden="true" />
     </Mod>
   </Profile>
 </ModProfiles>
