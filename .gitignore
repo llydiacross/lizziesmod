@@ -1,10 +1,14 @@
 # Ignore EVERYTHING
 
 *
+!*.xml
+!*.cs
+!*.png
+!*.scv
 
-# But keep the mods
+# Only Allow these mods
 
-!11_LizziesMod
+!02_LizziesMod
 !LizziesMod_DynamicBackpacks
 !LizziesMod_DynamicStacks
 !LizziesMod_JukeboxAndWallpapers

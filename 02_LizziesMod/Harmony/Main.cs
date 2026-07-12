@@ -25,8 +25,8 @@ namespace LizziesMod
                 // Load the manuals for mods
                 ModManualManager.LoadAllManuals();
 
-                // Register Callbacks for mod manager (must be after we load settings)
-                ModSettingsManager.RegisterCallback("LizziesMod", "StartingYear", (newValue) =>
+				// Register Callbacks for mod manager (must be after we load settings)
+				ModSettingsManager.RegisterCallback("LizziesMod", "StartingYear", (newValue) =>
                 {
                     if (int.TryParse(newValue, out int parsed))
                     {

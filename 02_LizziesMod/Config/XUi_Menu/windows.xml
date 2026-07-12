@@ -1,5 +1,55 @@
 <configs>
     <append xpath="/windows">
+        <!-- Mod Profile Selector -->
+        <window name="windowProfileSelector" width="900" height="600" panel="Center" cursor_area="true" controller="LizziesMod.ProfileSelectorUIController, LizziesMod">
+            <fullscreencollider color="0,0,0,220"/>
+            
+            <sprite depth="0" name="background" sprite="menu_empty" type="sliced" color="30,30,30,255" pos="0,0" width="900" height="600" />
+            <sprite depth="1" name="border" sprite="menu_empty2px" type="sliced" color="255,180,0,255" pos="0,0" width="900" height="600" fillcenter="false" />
+
+            <panel name="header" pos="0,0" height="50" depth="2">
+                <sprite depth="1" sprite="ui_game_panel_header" type="sliced" width="900" height="50" />
+                <label depth="2" pos="0,-10" width="900" height="30" text="SELECT PROFILE" font_size="28" justify="center" color="[white]"/>
+            </panel>
+
+            <rect name="leftPane" pos="10,-60" width="280" height="470" depth="2">
+                <sprite depth="1" sprite="menu_empty" type="sliced" color="15,15,15,255" />
+                <sprite depth="2" sprite="menu_empty2px" type="sliced" color="60,60,60,255" fillcenter="false" />
+                
+                <rect pos="5,-5" width="270" height="460" on_scroll="true">
+                    <defaultscrollbar />
+                    <scrollview width="250" clippingsoftness="0,10">
+                        <grid name="profileListGrid" pos="0,0" rows="20" cols="1" cell_width="250" cell_height="40" arrangement="vertical" repeat_content="true">
+                            <rect name="profileEntry" controller="LizziesMod.ProfileEntryController, LizziesMod" width="250" height="38">
+                                <button name="clickable" depth="2" sprite="menu_empty" type="sliced" defaultcolor="40,40,40,255" hovercolor="80,180,255,255" width="250" height="38" />
+                                <label name="lblName" depth="3" pos="10,-8" text="Profile Name" font_size="20" color="[white]" />
+                            </rect>
+                        </grid>
+                    </scrollview>
+                </rect>
+            </rect>
+
+            <rect name="rightPane" pos="300,-60" width="590" height="470" depth="2">
+                <sprite depth="1" sprite="menu_empty" type="sliced" color="20,20,20,255" />
+                <sprite depth="2" sprite="menu_empty2px" type="sliced" color="60,60,60,255" fillcenter="false" />
+                
+                <label name="lblProfileTitle" depth="3" pos="10,-10" width="570" height="35" text="PROFILE NAME" font_size="28" color="255,180,0,255" justify="center" upper_case="true"/>
+                <sprite depth="3" sprite="menu_empty1px" type="sliced" color="100,100,100,255" pos="20,-50" width="550" height="2" />
+                <label name="lblSettingsCount" depth="3" pos="20,-60" width="550" height="30" text="Total Tweaks: 0" font_size="22" color="200,200,200,255" />
+                
+                <label depth="3" pos="20,-100" width="550" height="24" text="Enabled Mods:" font_size="22" color="80,255,80,255" />
+                <label name="lblEnabledMods" depth="3" pos="20,-130" width="550" height="150" text="None" font_size="20" color="[white]" justify="left" pivot="topleft" />
+                
+                <label depth="3" pos="20,-290" width="550" height="24" text="Disabled Mods:" font_size="22" color="255,80,80,255" />
+                <label name="lblDisabledMods" depth="3" pos="20,-320" width="550" height="130" text="None" font_size="20" color="[white]" justify="left" pivot="topleft" />
+            </rect>
+
+            <rect pos="0, -540" width="900" height="50" depth="2">
+                <simplebutton name="btnLoad" depth="3" pos="220,0" width="200" height="40" font_size="24" caption="LOAD PROFILE" />
+                <simplebutton name="btnCancel" depth="3" pos="480,0" width="200" height="40" font_size="24" caption="CANCEL" />
+            </rect>
+        </window>
+
         <!-- Menu Readme Library -->
         <window name="windowModLibrary" depth="200" width="1200" height="800" anchor="Center" cursor_area="true" lock_navigation="true" controller="LizziesMod.ModLibraryUIController, LizziesMod">
             <fullscreencollider color="0,0,0,220"/>
@@ -176,11 +226,22 @@
 
                 </rect>
 
-                <simplebutton name="btnClose" depth="4" pos="20,-740" width="1160" height="40" font_size="26" caption="CLOSE &amp; SAVE" />
+                <rect name="profileArea" depth="4" pos="20,-740" width="1160" height="40">
+                    <label depth="5" pos="0,-8" width="120" text="PROFILE:" font_size="24" color="255,180,0,255" font_weight="bold" />
+                    
+                    <textfield name="txtProfileName" depth="5" pos="110,0" width="250" height="40" font_size="22" justify="center" backgroundcolor="20,20,20,255" textcolor="255,255,255,255" active_text_color="80,180,255,255" caret_color="255,255,255,255" max_length="30" vk_propagates_events="false" />
+                    
+               
+                    <simplebutton name="btnLoadProfile" depth="5" pos="370,0" width="200" height="40" font_size="22" caption="LOAD PROFILE" />
+                    <simplebutton name="btnSaveProfile" depth="5" pos="580,0" width="200" height="40" font_size="22" caption="SAVE PROFILE" />
+      
+                    <simplebutton name="btnClose" depth="5" pos="790,0" width="370" height="40" font_size="26" caption="CLOSE &amp; SAVE" />
+                </rect>
             </rect>
         </window>
     </append>
     
+    <!-- Injects some buttons into the main menu grid -->
     <append xpath="/windows/window[@name='mainMenu']/grid">
         <mainmenubutton name="btnModSettings" depth="3" pos="0, -310" width="250" height="40" font_size="24" caption_key="xuiModSettings" />
         <mainmenubutton name="btnModLibrary" depth="3" pos="0, -350" width="250" height="40" font_size="24" caption_key="xuiModLibrary" />

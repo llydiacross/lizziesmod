@@ -1,7 +1,9 @@
 <ModSettings>
-  <Setting name="StartingYear" value="1986" type="int" requiresRestart="false" />
+  <Setting name="StartingYear" value="2013" type="int" requiresRestart="false" />
   <Setting name="EnableMechanicalPress" value="true" type="bool" requiresRestart="false" />
   <Setting name="EnableTimeParadox" value="true" type="bool" requiresRestart="false" />
   <Setting name="BrassScrapMaxDamage" value="1650" type="int" requiresRestart="true" />
   <Setting name="BrassScrapStabilityGlue" value="70" type="int" requiresRestart="true" />
+  <Setting name="Enabled" value="true" type="bool" requiresRestart="false" />
+  <Setting name="LastProfileName" value="Game" type="string" requiresRestart="true" hidden="true" />
 </ModSettings>

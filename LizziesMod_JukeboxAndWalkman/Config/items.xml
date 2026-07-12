@@ -1,26 +1,6 @@
 <configs>
     <append xpath="/items">
-		<!-- Manual for the item -->
-        <item name="manualJukebox">
-            <property name="Extends" value="itemGeneralMaster"/>
-            <property name="CustomIcon" value="Manual"/>
-            <property name="DescriptionKey" value="manualJukeboxDesc"/>
-            <property name="CustomIconTint" value="255,180,0"/>
-            <property name="HoldType" value="21"/> 
-            <property name="Meshfile" value="@:Other/Items/Misc/bookPrefab.prefab"/>
-            <property name="DropMeshfile" value="@:Other/Items/Misc/sack_droppedPrefab.prefab"/>
-            <property name="Material" value="Mpaper"/>
-            <property name="Stacknumber" value="1"/> 
-            <property name="EconomicValue" value="50"/>
-            <property class="Action0">
-                <property name="Class" value="LizziesMod.ItemActionOpenModManual, LizziesMod"/>
-                <property name="BookId" value="guide_jukebox"/>
-                <property name="Delay" value="0"/> 
-                <property name="Use_time" value="0"/>
-                <property name="Sound_start" value="open_inventory"/>
-            </property>
-            
-        </item>
+		<!-- Test Track-->
         <item name="musicDisc_TestTrack">
             <property name="Extends" value="resourcePaper"/> 
             <property name="CustomIcon" value="Track"/> 

@@ -1,4 +1,5 @@
 <ModSettings>
   <Setting name="StackNumber" value="16000" type="int" requiresRestart="true" />
   <Setting name="AmmoStackNumber" value="600" type="int" requiresRestart="true" />
+  <Setting name="Enabled" value="true" type="bool" requiresRestart="true" hidden="true" />
 </ModSettings>

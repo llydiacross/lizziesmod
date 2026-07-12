@@ -24,12 +24,8 @@ namespace LizziesMod
 
         private readonly Vector2i defaultImgPos = new Vector2i(20, -105);
         private readonly Vector2i defaultImgSize = new Vector2i(750, 150);
-
-        private readonly Vector2i defaultTextPosNoImg = new Vector2i(20, -110);
-        private readonly Vector2i defaultTextSizeNoImg = new Vector2i(750, 245);
-
-        private readonly Vector2i defaultTextPosWithImg = new Vector2i(20, -315);
-        private readonly Vector2i defaultTextSizeWithImg = new Vector2i(750, 195);
+        private readonly Vector2i defaultTextPos = new Vector2i(20, -110);
+        private readonly Vector2i defaultTextSize = new Vector2i(750, 245);
 
         public override void Init()
         {
@@ -104,7 +100,6 @@ namespace LizziesMod
                 sprBackground.SpriteName = !string.IsNullOrEmpty(page.Background) ? page.Background : book.DefaultBackground;
             }
 
-            bool hasImage = false;
             if (imgPageDiagram != null)
             {
                 if (!string.IsNullOrEmpty(page.ImageName))
@@ -134,7 +129,6 @@ namespace LizziesMod
 
                                 imgPageDiagram.Texture = tex;
                                 imgPageDiagram.IsVisible = true;
-                                hasImage = true;
                             }
                             catch (Exception ex)
                             {
@@ -161,14 +155,14 @@ namespace LizziesMod
   
                 if (page.TextPos.HasValue || page.TextSize.HasValue)
                 {
-                    textArea.viewComponent.Position = page.TextPos ?? (hasImage ? defaultTextPosWithImg : defaultTextPosNoImg);
-                    textArea.viewComponent.Size = page.TextSize ?? (hasImage ? defaultTextSizeWithImg : defaultTextSizeNoImg);
+                    textArea.viewComponent.Position = page.TextPos ?? defaultTextPos;
+                    textArea.viewComponent.Size = page.TextSize ?? defaultTextSize;
                 }
                 else
                 {
 
-                    textArea.viewComponent.Position = hasImage ? defaultTextPosWithImg : defaultTextPosNoImg;
-                    textArea.viewComponent.Size = hasImage ? defaultTextSizeWithImg : defaultTextSizeNoImg;
+                    textArea.viewComponent.Position = defaultTextPos;
+                    textArea.viewComponent.Size = defaultTextSize;
                 }
             }
 
@@ -238,12 +232,16 @@ namespace LizziesMod
             if (btnNextPage != null) btnNextPage.viewComponent.IsVisible = false;
             if (lblPageNumber != null) lblPageNumber.Text = "";
         }
+        public override void OnClose()
+        {
+            base.OnClose();
+            if (!string.IsNullOrEmpty(PreviousMenu))
+                xui.playerUI.windowManager.Open(PreviousMenu, true);
+        }
 
         private void HandleClose(XUiController _sender, int _mouseButton)
         {
             xui.playerUI.windowManager.Close("windowModLibrary");
-            if (!string.IsNullOrEmpty(PreviousMenu))
-                xui.playerUI.windowManager.Open(PreviousMenu, true);
         }
     }
 

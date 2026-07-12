@@ -3,11 +3,14 @@
         <window_group name="windowModSettingsRestartPrompt" actionset="true" close_comp_on_escape="true">
             <window name="windowModSettingsRestartPrompt" />
         </window_group>
-        <window_group name="windowModSettings">
+        <window_group name="windowModSettings" actionset="true" close_comp_on_escape="true">
             <window name="windowModSettings" />
         </window_group>
-        <window_group name="windowModLibrary">
+        <window_group name="windowModLibrary" actionset="true" close_comp_on_escape="true">
             <window name="windowModLibrary" />
+        </window_group>
+        <window_group name="windowProfileSelector" actionset="true" close_comp_on_escape="true">
+            <window name="windowProfileSelector" />
         </window_group>
     </append>
     <append xpath="/xui/window_group[@name='mainMenu']">

@@ -22,6 +22,10 @@
         <window_group name="windowFluxTeleportTimer" actionset="false">
             <window name="windowFluxTeleportTimer" />
         </window_group>
+
+        <window_group name="windowProfileSelector" actionset="true" close_comp_on_escape="true">
+            <window name="windowProfileSelector" />
+        </window_group>
     </append>
 
     <append xpath="/xui/window_group[@name='compass']">

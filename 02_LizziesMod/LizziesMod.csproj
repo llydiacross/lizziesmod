@@ -34,6 +34,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Harmony\ItemActionOpenModManual.cs" />
+    <Compile Include="Harmony\LevelProfileManager.cs" />
     <Compile Include="Harmony\ModController.cs" />
     <Compile Include="Harmony\BlockJukebox.cs" />
     <Compile Include="Harmony\CustomAudioManager.cs" />
@@ -53,6 +54,8 @@
     <Compile Include="Harmony\ModSettingsManager.cs" />
     <Compile Include="Harmony\ModSettingsUIController.cs" />
     <Compile Include="Harmony\NetPackageJukeboxPlay.cs" />
+    <Compile Include="Harmony\NetPackageLeveLProfile.cs" />
+    <Compile Include="Harmony\ProfileSelectorUIController.cs" />
     <Compile Include="Harmony\TeleportUIController.cs" />
     <Compile Include="Harmony\ModTextures.cs" />
     <Compile Include="Harmony\TimeManager.cs" />
