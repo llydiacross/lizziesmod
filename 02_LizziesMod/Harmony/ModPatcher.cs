@@ -44,7 +44,7 @@ namespace LizziesMod
                             {
                                 try
                                 {
-                                    //
+                                    // will attempt
                                     harmony.Patch(initModMethod, prefix: new HarmonyMethod(initModPrefix), finalizer: new HarmonyMethod(initModFinalizer));
                                     Logger.Info($"[ModManager] Successfully patched InitMod for {type.Name}");
                                 }
@@ -56,7 +56,9 @@ namespace LizziesMod
                         }
                     }
                 }
-                catch (ReflectionTypeLoadException) { }
+                catch (ReflectionTypeLoadException ex) {
+                    Logger.Warning($"[ModManager] Failed reflection Error: {ex.Message}");
+                }
             }
         }
 
@@ -71,7 +73,8 @@ namespace LizziesMod
             }
             return true;
         }
-        // Catches unhandled exceptions inside other mods' InitMod methods
+
+        // Catches unhandled exceptions inside other mods' InitMod methods to stop bad mods from crashing the game. Logs the error and adds the mod to a list of problematic mods.
         public static Exception InitMod_Finalizer(Exception __exception, [HarmonyArgument(0)] Mod modInstance)
         {
             if (__exception != null && modInstance != null)

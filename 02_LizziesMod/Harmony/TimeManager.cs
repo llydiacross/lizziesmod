@@ -5,7 +5,7 @@ namespace LizziesMod
     public static class TimeManager
     {
 
-        private static int startingYear = 1973; // cannot change
+        private static int startingYear = 2013;
         public static int currentYear = 0;
 
         public static void Init(int _startingYear)
