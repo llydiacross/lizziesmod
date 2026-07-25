@@ -86,9 +86,7 @@ namespace LizziesMod
 
             int chunkX = World.toChunkXZ(Mathf.FloorToInt(targetPos.x));
             int chunkZ = World.toChunkXZ(Mathf.FloorToInt(targetPos.z));
-
-
-
+  
             while (cc != null && cc.GetChunkSync(chunkX, chunkZ) == null)
             {
                 Logger.Info("[DimensionManager] ...");
