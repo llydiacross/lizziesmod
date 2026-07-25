@@ -30,7 +30,7 @@ namespace LizziesMod
                 XUiController btnCtrl = GetChildById($"btnTeleport{i}")?.GetChildById("clickable");
                 if (btnCtrl != null) btnCtrl.OnPress += HandleTeleportClick;
             }
-      
+
             XUiController closeBtn = GetChildById("btnClose")?.GetChildById("clickable");
             if (closeBtn != null) closeBtn.OnPress += HandleCloseClick;
 
@@ -41,11 +41,11 @@ namespace LizziesMod
             if (prevBtn != null) prevBtn.OnPress += HandlePreviousTeleportClick;
 
             XUiController btnDayUp = GetChildById("btnDayUp")?.GetChildById("clickable");
-            if (btnDayUp != null )
+            if (btnDayUp != null)
                 btnDayUp.OnPress += (s, e) => AdjustTime("day", 1);
             XUiController btnDayDown = GetChildById("btnDayDown")?.GetChildById("clickable");
-            if(btnDayDown != null)
-              btnDayDown.OnPress += (s, e) => AdjustTime("day", -1);
+            if (btnDayDown != null)
+                btnDayDown.OnPress += (s, e) => AdjustTime("day", -1);
 
             XUiController btnTimeUp = GetChildById("btnTimeUp")?.GetChildById("clickable");
             if (btnTimeUp != null)
@@ -73,7 +73,7 @@ namespace LizziesMod
             string itemName = heldItem != null ? heldItem.ItemClass.GetItemName() : "";
             isCrystalActive = (itemName == "crystalFluxTeleporter");
 
- 
+
             ulong worldTime = GameManager.Instance.World.worldTime;
             long totalDays = GameUtils.WorldTimeToDays(worldTime);
 
@@ -161,7 +161,7 @@ namespace LizziesMod
 
         private void AdjustTime(string type, int amount)
         {
-            if (!isCrystalActive) return; 
+            if (!isCrystalActive) return;
 
             xui.mPlayerUI.localPlayer.entityPlayerLocal.PlayOneShot("weapon_click");
 
@@ -305,11 +305,10 @@ namespace LizziesMod
             xui.playerUI.windowManager.Close("windowTeleportSelector");
         }
 
-        private IEnumerator TeleportSequence(EntityPlayerLocal player, Vector3 targetPos, ItemValue heldItem, ulong? newWorldTime = null, bool noDuration = false, bool clearPreviousTeleport = false)
+        private IEnumerator TeleportSequence(EntityPlayerLocal player, Vector3 targetPos, ItemValue heldItem, ulong? newWorldTime = null, bool noDuration = false, bool clearPreviousTeleport = false, string targetDimension = "Overworld")
         {
             float duration = EffectManager.GetValue(PassiveEffects.MagazineSize, heldItem, defaultTeleportDelayTime, player, null, FastTags<TagGroup.Global>.Parse("teleportTime"));
             float elapsed = 0f;
-
             if (noDuration) duration = 1f;
 
             XUiWindowGroup timerGroup = (XUiWindowGroup)player.playerUI.windowManager.GetWindow("windowFluxTeleportTimer");
@@ -324,7 +323,6 @@ namespace LizziesMod
                 while (elapsed < duration)
                 {
                     if (lblView != null) lblView.Text = $"FLUX JUMP IN T-MINUS {Mathf.CeilToInt(duration - elapsed)}";
-
                     if (!player.Buffs.HasBuff("buffFluxTeleporting"))
                     {
                         GameManager.ShowTooltip(player, "Teleport aborted!");
@@ -348,32 +346,79 @@ namespace LizziesMod
             if (heldItem.UseTimes >= heldItem.MaxUseTimes)
             {
                 player.PlayOneShot("alarm1_oneshot");
+                yield break;
+            }
+
+            if (!clearPreviousTeleport)
+            {
+                previousTeleport = initialPosition;
+                previousYear = targetYear;
             }
             else
             {
-                if (!clearPreviousTeleport)
-                {
-                    previousTeleport = initialPosition;
-                    previousYear = targetYear;
-                }
-                else
-                {
-                    previousTeleport = null;
-                    previousYear = 0;
-                }
-
-                heldItem.UseTimes += 100f;
-                player.inventory.onInventoryChanged();
-
-                if (newWorldTime.HasValue) GameManager.Instance.World.worldTime = newWorldTime.Value;
-                TimeManager.UpdateCurrentYear();
-
-                player.SetPosition(targetPos, true);
-                player.PlayOneShot("weapon_electric_charge");
-                GameManager.ShowTooltip(player, "Jump complete!");
+                previousTeleport = null;
+                previousYear = 0;
             }
-        }
 
+            heldItem.UseTimes += 100f;
+            player.inventory.onInventoryChanged();
+
+            GameManager.Instance.SaveWorld();
+
+            player.playerUI.windowManager.Open("windowTimeTravelLoading", true);
+
+            player.SetPosition(targetPos, true);
+            Rigidbody playerRb = player.RootTransform.GetComponent<Rigidbody>();
+            if (playerRb != null) playerRb.isKinematic = true;
+
+            if (newWorldTime.HasValue) GameManager.Instance.World.worldTime = newWorldTime.Value;
+            TimeManager.UpdateCurrentYear();
+
+            if (newWorldTime.HasValue) GameManager.Instance.World.worldTime = newWorldTime.Value;
+            TimeManager.UpdateCurrentYear();
+            TimeManager.currentDimension = targetDimension;
+
+            Logger.Info("[TimeTravel] Flushing Chunk Cache to load new timeline...");
+            ChunkCluster cc = GameManager.Instance.World.ChunkCache;
+            if (cc != null)
+            {
+
+                System.Collections.Generic.List<long> chunksToRemove = new System.Collections.Generic.List<long>();
+                foreach (Chunk chunk in cc.GetChunkArray())
+                {
+                    chunksToRemove.Add(chunk.Key);
+                }
+
+ 
+                foreach (long key in chunksToRemove)
+                {
+                    cc.RemoveChunkSync(key);
+                }
+            }
+
+            Logger.Info("[TimeTravel] Waiting for new timeline chunks to generate and load...");
+
+            yield return new WaitForSeconds(1.0f);
+
+  
+            int chunkX = World.toChunkXZ(Mathf.FloorToInt(targetPos.x));
+            int chunkZ = World.toChunkXZ(Mathf.FloorToInt(targetPos.z));
+
+            while (cc != null && !cc.ContainsChunkSync(cc.GetChunk(chunkX,chunkZ).Key))
+            {
+                yield return new WaitForSeconds(0.2f);
+            }
+
+            yield return new WaitForSeconds(1.5f);
+
+            if (playerRb != null) playerRb.isKinematic = false;
+
+            player.playerUI.windowManager.Close("windowLizzieLoadingScreen");
+
+            player.PlayOneShot("weapon_electric_charge");
+            GameManager.ShowTooltip(player, "Time jump complete!");
+        }
+    
         private void HandleCloseClick(XUiController _sender, int _mouseButton) => xui.playerUI.windowManager.Close("windowTeleportSelector");
         private void HandleCancelTeleportClick(XUiController _sender, int _mouseButton)
         {

@@ -7,6 +7,24 @@
         <item name="meleeWeaponHydraulicSledge" prob="0.05" />
     </append>
 
+    <!-- Dimension Portal (Secret Easteregg) -->
+    <append xpath="/lootcontainers">
+        <!-- Adds a 0.5% chance to find it in the final loot room stashes -->
+        <append xpath="//lootgroup[@name='groupHiddenStash']">
+            <item name="dimensionalPortal" prob="0.005" />
+        </append>
+
+        <!-- Adds a 1% chance to find it in Supply Drops -->
+        <append xpath="//lootgroup[@name='groupAirDrop']">
+            <item name="dimensionalPortal" prob="0.01" />
+        </append>
+
+        <!-- Adds a 0.2% chance to find it in high-tier construction crates -->
+        <append xpath="//lootgroup[@name='groupConstructionInfected']">
+            <item name="dimensionalPortal" prob="0.002" />
+        </append>
+    </append>
+
      <!-- Flux Seed -->
     <append xpath="/lootcontainers/lootgroup[@name='seeds']">
         <item name="plantedFlux1"/>

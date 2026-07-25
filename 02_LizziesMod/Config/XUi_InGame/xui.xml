@@ -4,6 +4,12 @@
         <window_group name="windowTeleportSelector" controller="LizziesMod.TeleportUIController, LizziesMod">
             <window name="windowBrassFluxTeleporter"/>
         </window_group>
+
+        <!-- Loading Screen -->
+        <window_group name="windowLizzieLoadingScreen">
+            <window name="windowLizzieLoadingScreen"/>
+        </window_group>
+
         <!-- Mechnical Press Window Group -->
         <window_group name="workstation_MechanicalPress" controller="XUiC_WorkstationWindowGroup" close_compass_on_open="true" defaultselected="bp.content">
             <window name="windowCraftingList"/>

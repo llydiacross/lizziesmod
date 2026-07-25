@@ -5,6 +5,15 @@
     </append>
 
     <append xpath="/windows">
+
+        <!-- Lizzie Loading Screen -->
+        <window name="windowLizzieLoadingScreen" depth="999" anchor="CenterTop" size="10000,10000" panel="Center" cursor_area="true">
+            <rect>
+                <sprite depth="1" name="blackout" sprite="menu_empty" color="0,0,0,255" type="sliced" fillcenter="true" globalopacity="true"/>
+                <label depth="2" pos="0,0" text="CALCULATING TEMPORAL SHIFT..." font_size="32" color="0,255,200,255" justify="center" pivot="center"/>
+            </rect>
+        </window>
+
         <!-- Mod Profile Selector -->
         <window name="windowProfileSelector" width="900" height="600" panel="Center" cursor_area="true" controller="LizziesMod.ProfileSelectorUIController, LizziesMod">
             <fullscreencollider color="0,0,0,220"/>

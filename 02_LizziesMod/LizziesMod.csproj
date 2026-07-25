@@ -33,6 +33,8 @@
     <DefineConstants>TRACE</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Harmony\BlockDimensionPortal.cs" />
+    <Compile Include="Harmony\DimensionManager.cs" />
     <Compile Include="Harmony\ItemActionOpenModManual.cs" />
     <Compile Include="Harmony\ModProfileManager.cs" />
     <Compile Include="Harmony\ModErrorHandler.cs" />
@@ -57,6 +59,7 @@
     <Compile Include="Harmony\NetPackageJukeboxPlay.cs" />
     <Compile Include="Harmony\NetPackageLevelProfile.cs" />
     <Compile Include="Harmony\ProfileSelectorUIController.cs" />
+    <Compile Include="Harmony\SavePatcher.cs" />
     <Compile Include="Harmony\TeleportUIController.cs" />
     <Compile Include="Harmony\ModTextures.cs" />
     <Compile Include="Harmony\TimeManager.cs" />
