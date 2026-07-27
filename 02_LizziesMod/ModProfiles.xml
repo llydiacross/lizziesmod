@@ -1,39 +1,4 @@
 <ModProfiles>
-  <Profile name="Base">
-    <Mod name="LizziesMod" version="0.0.1">
-      <Setting name="StartingYear" value="1986" type="int" />
-      <Setting name="EnableMechanicalPress" value="true" type="bool" />
-      <Setting name="EnableTimeParadox" value="true" type="bool" />
-      <Setting name="BrassScrapMaxDamage" value="1650" type="int" />
-      <Setting name="BrassScrapStabilityGlue" value="70" type="int" />
-      <Setting name="Enabled" value="true" type="bool" />
-    </Mod>
-    <Mod name="TFP_Harmony" version="1.1.0.4">
-      <Setting name="Enabled" value="true" type="bool" />
-    </Mod>
-    <Mod name="LizziesMod_DynamicBackpacks">
-      <Setting name="BackpackGridSizeX" value="17" type="int" />
-      <Setting name="BackpackGridSizeY" value="15" type="int" />
-      <Setting name="BackpackMaxSize" value="456" type="int" />
-      <Setting name="DisableEncumbrance" value="false" type="bool" />
-      <Setting name="Enabled" value="false" type="bool" />
-    </Mod>
-    <Mod name="LizziesMod_DynamicStacks">
-      <Setting name="StackNumber" value="16000" type="int" />
-      <Setting name="AmmoStackNumber" value="600" type="int" />
-      <Setting name="Enabled" value="false" type="bool" />
-    </Mod>
-    <Mod name="LizziesMod_JukeboxAndWalkman">
-      <Setting name="VolumeLevel" value="10" type="int" />
-      <Setting name="MinJukeboxDistance" value="10" type="int" />
-      <Setting name="MaxJukeboxDistance" value="30" type="int" />
-      <Setting name="Enabled" value="false" type="bool" />
-    </Mod>
-    <Mod name="LizziesMod_Physgun">
-      <Setting name="AdminOnly" value="false" type="bool" />
-      <Setting name="Enabled" value="false" type="bool" />
-    </Mod>
-  </Profile>
   <Profile name="Default">
     <Mod name="LizziesMod" version="0.0.1">
       <Setting name="StartingYear" value="1986" type="int" />
@@ -332,6 +297,42 @@
     </Mod>
     <Mod name="zz_Srsly_VanillaCraftableLoot" version="1.2.4">
       <Setting name="Enabled" value="true" type="bool" hidden="true" />
+    </Mod>
+  </Profile>
+  <Profile name="Base">
+    <Mod name="LizziesMod" version="0.0.1">
+      <Setting name="StartingYear" value="1986" type="int" />
+      <Setting name="EnableMechanicalPress" value="true" type="bool" />
+      <Setting name="EnableTimeParadox" value="true" type="bool" />
+      <Setting name="BrassScrapMaxDamage" value="1650" type="int" />
+      <Setting name="BrassScrapStabilityGlue" value="70" type="int" />
+      <Setting name="Enabled" value="true" type="bool" hidden="true" />
+      <Setting name="LastProfileName" value="Default" type="string" hidden="true" />
+    </Mod>
+    <Mod name="TFP_Harmony" version="1.1.0.4">
+      <Setting name="Enabled" value="true" type="bool" hidden="true" />
+    </Mod>
+    <Mod name="LizziesMod_DynamicBackpacks">
+      <Setting name="BackpackGridSizeX" value="17" type="int" />
+      <Setting name="BackpackGridSizeY" value="15" type="int" />
+      <Setting name="BackpackMaxSize" value="456" type="int" />
+      <Setting name="DisableEncumbrance" value="false" type="bool" />
+      <Setting name="Enabled" value="false" type="bool" hidden="true" />
+    </Mod>
+    <Mod name="LizziesMod_DynamicStacks">
+      <Setting name="StackNumber" value="16000" type="int" />
+      <Setting name="AmmoStackNumber" value="600" type="int" />
+      <Setting name="Enabled" value="false" type="bool" hidden="true" />
+    </Mod>
+    <Mod name="LizziesMod_JukeboxAndWalkman">
+      <Setting name="VolumeLevel" value="10" type="int" />
+      <Setting name="MinJukeboxDistance" value="10" type="int" />
+      <Setting name="MaxJukeboxDistance" value="30" type="int" />
+      <Setting name="Enabled" value="false" type="bool" hidden="true" />
+    </Mod>
+    <Mod name="LizziesMod_Physgun">
+      <Setting name="AdminOnly" value="false" type="bool" />
+      <Setting name="Enabled" value="false" type="bool" hidden="true" />
     </Mod>
   </Profile>
 </ModProfiles>

@@ -36,7 +36,7 @@
     <Compile Include="Harmony\BlockDimensionPortal.cs" />
     <Compile Include="Harmony\DimensionManager.cs" />
     <Compile Include="Harmony\ItemActionOpenModManual.cs" />
-    <Compile Include="Harmony\ModProfileManager.cs" />
+    <Compile Include="Harmony\ModSaveManager.cs" />
     <Compile Include="Harmony\ModErrorHandler.cs" />
     <Compile Include="Harmony\ModPatcher.cs" />
     <Compile Include="Harmony\BlockJukebox.cs" />
@@ -45,6 +45,8 @@
     <Compile Include="Harmony\CustomTexture.cs" />
     <Compile Include="Harmony\ItemActionHydraulicBlast.cs" />
     <Compile Include="Harmony\ItemActionPhysgun.cs" />
+    <Compile Include="Harmony\MissingProfileModsUIController.cs" />
+    <Compile Include="Harmony\ScrollWheelActionSupport.cs" />
     <Compile Include="Harmony\ItemActionTeleport.cs" />
     <Compile Include="Harmony\ItemActionWalkman.cs" />
     <Compile Include="Harmony\JukeboxUIController.cs" />

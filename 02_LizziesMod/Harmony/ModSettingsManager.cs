@@ -49,6 +49,8 @@ namespace LizziesMod
 
         public static Dictionary<string, List<ModSetting>> AllModSettings = new Dictionary<string, List<ModSetting>>();
         public static bool PendingRestart = false;
+        public static List<string> LastMissingProfileMods = new List<string>();
+
         public static void LoadAllModSettings()
         {
             Logger.Info("Scanning for ModSettings.xml across all loaded mods...");
@@ -172,6 +174,23 @@ namespace LizziesMod
 
             return paths;
         }
+
+        private static string GetProfileModLabel(XmlNode modNode, string modName)
+        {
+            Mod installedMod = ModManager.GetMod(modName);
+            if (installedMod == null)
+            {
+                string savedVersion = modNode.Attributes["version"]?.Value;
+                return string.IsNullOrEmpty(savedVersion)
+                    ? modName + " [missing]"
+                    : modName + " [missing, profile " + savedVersion + "]";
+            }
+
+            return string.IsNullOrEmpty(installedMod.VersionString)
+                ? modName
+                : modName + " [" + installedMod.VersionString + "]";
+        }
+
         public static List<ModProfileInfo> GetAvailableProfiles()
         {
  
@@ -218,14 +237,14 @@ namespace LizziesMod
                                     {
                                         foundEnabledSetting = true;
                                         if (sValue != null && sValue.Equals("true", StringComparison.OrdinalIgnoreCase))
-                                            info.EnabledMods.Add(modName + $" [{ModManager.GetMod(modName).VersionString}]");
+                                            info.EnabledMods.Add(GetProfileModLabel(modNode, modName));
                                         else
-                                            info.DisabledMods.Add(modName + $" [{ModManager.GetMod(modName).VersionString}]");
+                                            info.DisabledMods.Add(GetProfileModLabel(modNode, modName));
                                     }
                                 }
                             }
 
-                            if (!foundEnabledSetting) info.EnabledMods.Add(modName + $" [{ModManager.GetMod(modName).VersionString}]");
+                            if (!foundEnabledSetting) info.EnabledMods.Add(GetProfileModLabel(modNode, modName));
                         }
 
                         // Add or overwrite the profile in our dictionary
@@ -319,9 +338,12 @@ namespace LizziesMod
             xmlDoc.Save(path);
             Logger.Info($"[ModProfiles] Saved profile '{profileName}'");
         }
+        
         public static bool LoadProfile(string profileName)
         {
             if (string.IsNullOrEmpty(profileName)) return false;
+
+            LastMissingProfileMods = new List<string>();
 
             List<string> allPaths = GetAllProfilePaths();
             allPaths.Reverse();
@@ -334,6 +356,8 @@ namespace LizziesMod
                     xmlDoc.Load(path);
                     XmlNode profileNode = xmlDoc.DocumentElement?.SelectSingleNode($"Profile[@name='{profileName}']");
                     if (profileNode == null) continue;
+
+                    List<string> missingMods = new List<string>();
 
                     foreach (var mod in AllModSettings.Keys)
                     {
@@ -350,7 +374,11 @@ namespace LizziesMod
                         string modName = modNode.Attributes["name"]?.Value;
                         if (string.IsNullOrEmpty(modName)) continue;
 
-                        if (!AllModSettings.ContainsKey(modName)) continue;
+                        if (!AllModSettings.ContainsKey(modName))
+                        {
+                            missingMods.Add(modName);
+                            continue;
+                        }
 
                         foreach (XmlNode settingNode in modNode.ChildNodes)
                         {
@@ -365,7 +393,6 @@ namespace LizziesMod
                             }
                             else
                             {
-
                                 string sType = settingNode.Attributes["type"]?.Value ?? "string";
                                 bool bServerOnly = false;
                                 if (settingNode.Attributes["serverOnly"] != null)
@@ -381,7 +408,7 @@ namespace LizziesMod
 
                                 bool bMenuOnly = false;
                                 if (settingNode.Attributes["menuOnly"] != null)
-                                    bool.TryParse(settingNode.Attributes["menuOnly"].Value, out bServerOnly);
+                                    bool.TryParse(settingNode.Attributes["menuOnly"].Value, out bMenuOnly);
 
                                 ModSetting newSetting = new ModSetting
                                 {
@@ -399,6 +426,12 @@ namespace LizziesMod
                             }
                         }
                         SaveModSettings(modName);
+                    }
+
+                    LastMissingProfileMods = missingMods;
+                    if (missingMods.Count > 0)
+                    {
+                        Logger.Warning($"[ModProfiles] The profile '{profileName}' was loaded with missing mods: {string.Join(", ", missingMods)}");
                     }
 
                     Logger.Info($"[ModProfiles] Successfully applied profile '{profileName}'");

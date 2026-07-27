@@ -15,6 +15,7 @@ namespace LizziesMod
         private XUiV_Label lblSettingsCount;
 
         private string selectedProfileName = "";
+        private bool isOpeningMissingMods;
 
         public override void Init()
         {
@@ -114,6 +115,14 @@ namespace LizziesMod
                 if (success)
                 {
                     ModSettingsUIController.LastLoadedProfile = selectedProfileName;
+
+                    if (ModSettingsManager.LastMissingProfileMods.Count > 0)
+                    {
+                        isOpeningMissingMods = true;
+                        xui.playerUI.windowManager.Close("windowProfileSelector");
+                        xui.playerUI.windowManager.Open("windowProfileMissingMods", true);
+                        return;
+                    }
                 }
             }
 
@@ -122,6 +131,13 @@ namespace LizziesMod
         public override void OnClose()
         {
             base.OnClose();
+
+            if (isOpeningMissingMods)
+            {
+                isOpeningMissingMods = false;
+                return;
+            }
+
             if (!string.IsNullOrEmpty(PreviousMenu))
                 xui.playerUI.windowManager.Open(PreviousMenu, true);
         }

@@ -16,6 +16,7 @@
 
                 <property class="Action0">
                     <property name="Class" value="LizziesMod.ItemActionPhysgun, LizziesMod"/>
+                    <property name="UsesScrollWheel" value="true"/>
                     <property name="Delay" value="0.1"/> 
                 </property>
 

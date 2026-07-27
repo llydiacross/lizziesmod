@@ -9,7 +9,8 @@ namespace LizziesMod
         public static void Postfix(ref string __result)
         {
 
-            if (TimeManager.currentYear != 0 || TimeManager.currentDimension != "Overworld")
+            if (LizziesMod.ModSettingsManager.GetSetting<bool>("LizziesMod","ExperimentalFeatures") 
+                &&  ( TimeManager.currentYear != 0 || TimeManager.currentDimension != "Overworld"))
             {
                 string yearStr = TimeManager.GetGameYear().ToString();
                 string dimStr = TimeManager.currentDimension;

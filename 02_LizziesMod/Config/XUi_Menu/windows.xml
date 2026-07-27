@@ -50,6 +50,48 @@
             </rect>
         </window>
 
+        <!-- Missing Profile Mods -->
+        <window name="windowProfileMissingMods" width="820" height="560" panel="Center" cursor_area="true" controller="LizziesMod.MissingProfileModsUIController, LizziesMod">
+            <fullscreencollider color="0,0,0,220"/>
+
+            <sprite depth="0" name="background" sprite="menu_empty" type="sliced" color="30,30,30,255" pos="0,0" width="820" height="560" />
+            <sprite depth="1" name="border" sprite="menu_empty2px" type="sliced" color="255,180,0,255" pos="0,0" width="820" height="560" fillcenter="false" />
+
+            <panel name="header" pos="0,0" height="50" depth="2">
+                <sprite depth="1" sprite="ui_game_panel_header" type="sliced" width="820" height="50" />
+                <label depth="2" pos="0,-10" width="820" height="30" text="MISSING PROFILE MODS" font_size="28" justify="center" color="[white]"/>
+            </panel>
+
+            <rect name="leftPane" pos="15,-60" width="500" height="420" depth="2">
+                <sprite depth="1" sprite="menu_empty" type="sliced" color="15,15,15,255" />
+                <sprite depth="2" sprite="menu_empty2px" type="sliced" color="60,60,60,255" fillcenter="false" />
+                <label depth="3" pos="15,-10" width="470" height="30" text="NOT INSTALLED" font_size="22" color="255,110,110,255" />
+
+                <rect pos="10,-45" width="480" height="360" on_scroll="true">
+                    <defaultscrollbar />
+                    <scrollview width="460" clippingsoftness="0,10">
+                        <grid name="missingModsListGrid" pos="0,0" rows="50" cols="1" cell_width="450" cell_height="40" arrangement="vertical" repeat_content="true">
+                            <rect name="missingModEntry" controller="LizziesMod.MissingProfileModEntryController, LizziesMod" width="450" height="38">
+                                <sprite depth="1" sprite="menu_empty" type="sliced" color="55,25,25,255" width="450" height="38" />
+                                <label name="lblModName" depth="2" pos="12,-8" width="425" height="28" text="MOD NAME" font_size="20" color="255,210,210,255" />
+                            </rect>
+                        </grid>
+                    </scrollview>
+                </rect>
+            </rect>
+
+            <rect name="rightPane" pos="530,-60" width="275" height="420" depth="2">
+                <sprite depth="1" sprite="menu_empty" type="sliced" color="20,20,20,255" />
+                <sprite depth="2" sprite="menu_empty2px" type="sliced" color="60,60,60,255" fillcenter="false" />
+                <label depth="3" pos="15,-15" width="245" height="370" text="The available profile settings have been applied.&#10;&#10;Restart the game before continuing with this profile." font_size="22" justify="left" pivot="topleft" color="[white]" />
+            </rect>
+
+            <rect pos="0,-500" width="820" height="50" depth="2">
+                <simplebutton name="btnCancel" depth="3" pos="195,0" width="190" height="40" font_size="24" caption="CANCEL" />
+                <simplebutton name="btnRestart" depth="3" pos="435,0" width="190" height="40" font_size="24" caption="RESTART" />
+            </rect>
+        </window>
+
         <!-- Menu Readme Library -->
         <window name="windowModLibrary" depth="200" width="1200" height="800" anchor="Center" cursor_area="true" lock_navigation="true" controller="LizziesMod.ModLibraryUIController, LizziesMod">
             <fullscreencollider color="0,0,0,220"/>

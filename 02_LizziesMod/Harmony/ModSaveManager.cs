@@ -5,9 +5,10 @@ using System.Xml;
 
 namespace LizziesMod
 {
-    public static class ModProfileManager
+    public static class ModSaveManager
     {
-        public static void SaveLevelProfile()
+        
+        public static void SaveLevelModProfile()
         {
             if (SingletonMonoBehaviour<ConnectionManager>.Instance == null || !SingletonMonoBehaviour<ConnectionManager>.Instance.IsServer)
                 return;
@@ -71,7 +72,7 @@ namespace LizziesMod
             }
         }
 
-        public static bool VerifyLevelProfile(string path, out string warningText)
+        public static bool VerifyLevelModProfile(string path, out string warningText)
         {
             warningText = "";
             if (!File.Exists(path)) return false;
@@ -174,7 +175,7 @@ namespace LizziesMod
 
             if (File.Exists(profilePath))
             {
-                if (ModProfileManager.VerifyLevelProfile(profilePath, out string mismatchWarning))
+                if (ModSaveManager.VerifyLevelModProfile(profilePath, out string mismatchWarning))
                 {
                     XUiC_MessageBoxWindowGroup.ShowOkCancel(
                         LocalPlayerUI.primaryUI.mXUi,
@@ -184,7 +185,7 @@ namespace LizziesMod
                         () =>
                         {
                             Logger.Info("[ModProfileManager] Mismatch bypassed. Creating folder backup.");
-                            ModProfileManager.BackupSaveDirectory(saveDir);
+                            ModSaveManager.BackupSaveDirectory(saveDir);
                             bypassWarning = true;
 
                    
@@ -223,7 +224,7 @@ namespace LizziesMod
                 () =>
                 {
                     Logger.Info("[ModProfileManager] Injecting configuration into legacy save. Creating backup.");
-                    ModProfileManager.BackupSaveDirectory(saveDir);
+                    ModSaveManager.BackupSaveDirectory(saveDir);
                     bypassWarning = true;
 
                     // Re-calculate the offline status directly from the ConnectionManager
@@ -244,7 +245,7 @@ namespace LizziesMod
         {
             if (__state)
             {
-                ModProfileManager.SaveLevelProfile();
+                ModSaveManager.SaveLevelModProfile();
             }
         }
     }
@@ -316,7 +317,7 @@ namespace LizziesMod
 
             try
             {
-                ModProfileManager.SaveLevelProfile();
+                ModSaveManager.SaveLevelModProfile();
             }  
             catch
             {

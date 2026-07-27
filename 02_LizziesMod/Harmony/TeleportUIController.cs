@@ -373,9 +373,6 @@ namespace LizziesMod
 
             if (newWorldTime.HasValue) GameManager.Instance.World.worldTime = newWorldTime.Value;
             TimeManager.UpdateCurrentYear();
-
-            if (newWorldTime.HasValue) GameManager.Instance.World.worldTime = newWorldTime.Value;
-            TimeManager.UpdateCurrentYear();
             TimeManager.currentDimension = targetDimension;
 
             Logger.Info("[TimeTravel] Flushing Chunk Cache to load new timeline...");
@@ -399,12 +396,12 @@ namespace LizziesMod
             Logger.Info("[TimeTravel] Waiting for new timeline chunks to generate and load...");
 
             yield return new WaitForSeconds(1.0f);
-
-  
+ 
             int chunkX = World.toChunkXZ(Mathf.FloorToInt(targetPos.x));
-            int chunkZ = World.toChunkXZ(Mathf.FloorToInt(targetPos.z));
+            int chunkZ = World.toChunkXZ(Mathf.FloorToInt(targetPos.z));                                                 
+            Chunk chunk1 = cc.GetChunk(chunkX, chunkZ);
 
-            while (cc != null && !cc.ContainsChunkSync(cc.GetChunk(chunkX,chunkZ).Key))
+            while (cc != null && chunk1 != null && !cc.ContainsChunkSync(chunk1.Key))
             {
                 yield return new WaitForSeconds(0.2f);
             }
