@@ -597,6 +597,8 @@ namespace LizziesMod
                     __instance.xui.playerUI.windowManager.Open("windowModLibrary", true);
                 };
             }
+
+                XmlValidationRunner.Start(__instance.xui);
         }
     }
 }

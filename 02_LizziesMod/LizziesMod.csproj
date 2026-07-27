@@ -66,6 +66,7 @@
     <Compile Include="Harmony\ModTextures.cs" />
     <Compile Include="Harmony\TimeManager.cs" />
     <Compile Include="Harmony\XmlTokenReplacer.cs" />
+      <Compile Include="Harmony\XmlValidationRunner.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

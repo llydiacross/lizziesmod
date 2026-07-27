@@ -1,5 +1,7 @@
 ﻿using HarmonyLib;
+using System;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using UnityEngine;
 
 namespace LizziesMod
@@ -10,9 +12,15 @@ namespace LizziesMod
         public static HashSet<string> ProblematicMods = new HashSet<string>(System.StringComparer.OrdinalIgnoreCase);
 
         private static readonly object _lock = new object();
+        private static readonly Regex XmlPatchFailurePattern = new Regex(
+            @"^XML loader: (?:Loading XML patch file|Patching) '.*' from mod '([^']+)' failed:",
+            RegexOptions.Compiled | RegexOptions.CultureInvariant);
+        private static int acknowledgedErrorCount;
 
         public static void AddError(string error)
         {
+            if (string.IsNullOrEmpty(error)) return;
+
             lock (_lock)
             {
                 if (!ModErrors.Contains(error))
@@ -22,36 +30,75 @@ namespace LizziesMod
             }
         }
 
+            public static bool HasUnacknowledgedErrors()
+            {
+                lock (_lock)
+                {
+                    return ModErrors.Count > acknowledgedErrorCount;
+                }
+            }
+
+            public static string GetErrorReport()
+            {
+                lock (_lock)
+                {
+                    string errorText = "The following mod loading errors were detected:\n\n" + string.Join("\n\n", ModErrors);
+                    return errorText.Length > 2500 ? errorText.Substring(0, 2497) + "..." : errorText;
+                }
+            }
+
+            public static List<string> GetProblematicMods()
+            {
+                lock (_lock)
+                {
+                    return new List<string>(ProblematicMods);
+                }
+            }
+
+            public static void AcknowledgeErrors()
+            {
+                lock (_lock)
+                {
+                    acknowledgedErrorCount = ModErrors.Count;
+                }
+            }
+
+            public static void ClearErrors()
+            {
+                lock (_lock)
+                {
+                    ModErrors.Clear();
+                    ProblematicMods.Clear();
+                    acknowledgedErrorCount = 0;
+                }
+            }
+
         public static void LogCallback(string condition, string stackTrace, LogType type)
         {
-            if (type == LogType.Error || type == LogType.Exception)
-            {
-                if (condition.Contains("XML patch for mod") ||
-                    condition.Contains("Failed loading XML") ||
-                    condition.Contains("Patching failed") ||
-                    condition.Contains("Exception thrown while patching"))
-                {
-                    AddError($"[FF3333][XML ERROR][-]\n{condition}");
- 
-                    string marker = "XML patch for mod ";
-                    int idx = condition.IndexOf(marker);
-                    if (idx != -1)
-                    {
-                        int start = idx + marker.Length;
-                        int end = condition.IndexOf(' ', start);
-                        if (end == -1) end = condition.Length;
+                if (type != LogType.Error && type != LogType.Exception) return;
+                if (string.IsNullOrEmpty(condition)) return;
 
-                        // Clean up any trailing punctuation
-                        string modName = condition.Substring(start, end - start).Trim().Trim(':', ',', '.', '\'');
-                        if (!string.IsNullOrEmpty(modName))
-                        {
-                            lock (_lock)
-                            {
-                                ProblematicMods.Add(modName);
-                            }
-                        }
+                Match patchFailure = XmlPatchFailurePattern.Match(condition);
+                if (patchFailure.Success)
+            {
+                    AddError($"[FF3333][XML ERROR][-]\n{condition}");
+
+                    string modName = patchFailure.Groups[1].Value;
+                    if (!string.IsNullOrEmpty(modName))
+                {
+                        lock (_lock)
+                    {
+                            ProblematicMods.Add(modName);
                     }
                 }
+
+                    return;
+                }
+
+                if (condition.StartsWith("XML loader: Loading base XML ", StringComparison.Ordinal) ||
+                    condition.StartsWith("XML.Patch (", StringComparison.Ordinal))
+                {
+                    AddError($"[FF3333][XML ERROR][-]\n{condition}");
             }
         }
     }
@@ -69,15 +116,9 @@ namespace LizziesMod
                 return true;
             }
 
-            if (ModErrorHandler.ModErrors.Count > 0)
+            if (ModErrorHandler.HasUnacknowledgedErrors())
             {
-                string errorText = "The following errors occurred during game boot:\n\n" + string.Join("\n\n", ModErrorHandler.ModErrors);
-
-                if (errorText.Length > 2500)
-                {
-                    errorText = errorText.Substring(0, 2497) + "...";
-                }
-
+                string errorText = ModErrorHandler.GetErrorReport();
                 errorText += "\n\n[FFCC33]Do you still wish to proceed? If you select Cancel, the game will automatically disable the problematic mods.[-]";
 
                 XUiC_MessageBoxWindowGroup.ShowOkCancel(
@@ -89,8 +130,7 @@ namespace LizziesMod
                     {
                         Logger.Info("[ModErrorHandler] User bypassed mod error warning. Proceeding to load game.");
                         bypassErrorWarning = true;
-                        ModErrorHandler.ModErrors.Clear();
-                        ModErrorHandler.ProblematicMods.Clear();
+                            ModErrorHandler.ClearErrors();
 
                         bool isOffline = SingletonMonoBehaviour<ConnectionManager>.Instance.CurrentMode == ProtocolManager.NetworkType.OfflineServer;
                         __instance.StartGame(isOffline);
@@ -100,7 +140,7 @@ namespace LizziesMod
                         Logger.Info("[ModErrorHandler] User aborted game load. Quarantining broken mods.");
 
                         bool disabledAny = false;
-                        foreach (string modName in ModErrorHandler.ProblematicMods)
+                            foreach (string modName in ModErrorHandler.GetProblematicMods())
                         {
                             if (ModPatcher.IsModEnabled(modName))
                             {
@@ -116,8 +156,7 @@ namespace LizziesMod
                             ModSettingsManager.PendingRestart = true;
                         }
 
-                        ModErrorHandler.ModErrors.Clear();
-                        ModErrorHandler.ProblematicMods.Clear();
+                        ModErrorHandler.ClearErrors();
 
                         SingletonMonoBehaviour<ConnectionManager>.Instance.Disconnect();
                     }
