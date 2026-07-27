@@ -15,6 +15,9 @@
         <window_group name="windowProfileMissingMods" actionset="true" close_comp_on_escape="true">
             <window name="windowProfileMissingMods" />
         </window_group>
+        <window_group name="windowModLoadErrors" actionset="true" close_comp_on_escape="true">
+            <window name="windowModLoadErrors" />
+        </window_group>
     </append>
     <append xpath="/xui/window_group[@name='mainMenu']">
         <window name="windowMenuIconDrawer" />

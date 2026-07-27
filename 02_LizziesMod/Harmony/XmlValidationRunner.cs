@@ -39,16 +39,8 @@ namespace LizziesMod
 
             if (ModErrorHandler.HasUnacknowledgedErrors())
             {
-                Logger.Warning("[XmlValidation] Mod loading errors were found. Showing the validation report.");
-                XUiC_MessageBoxWindowGroup.ShowOk(
-                    xui,
-                    "MOD XML ERRORS DETECTED",
-                    ModErrorHandler.GetErrorReport() + "\n\n[FFCC33]Fix the affected mod files and restart before starting a world.[-]",
-                    "",
-                    ModErrorHandler.AcknowledgeErrors,
-                    false,
-                    false,
-                    false);
+                Logger.Warning("[XmlValidation] Mod loading errors were found. Opening the validation report.");
+                ModErrorWindowUIController.ShowValidationErrors(xui);
             }
             else
             {

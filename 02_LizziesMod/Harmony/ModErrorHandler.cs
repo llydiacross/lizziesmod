@@ -16,6 +16,7 @@ namespace LizziesMod
             @"^XML loader: (?:Loading XML patch file|Patching) '.*' from mod '([^']+)' failed:",
             RegexOptions.Compiled | RegexOptions.CultureInvariant);
         private static int acknowledgedErrorCount;
+        internal static bool bypassStartGameWarning;
 
         public static void AddError(string error)
         {
@@ -35,6 +36,22 @@ namespace LizziesMod
                 lock (_lock)
                 {
                     return ModErrors.Count > acknowledgedErrorCount;
+                }
+            }
+
+            public static bool HasErrors()
+            {
+                lock (_lock)
+                {
+                    return ModErrors.Count > 0;
+                }
+            }
+
+            public static bool HasProblematicMods()
+            {
+                lock (_lock)
+                {
+                    return ProblematicMods.Count > 0;
                 }
             }
 
@@ -73,6 +90,41 @@ namespace LizziesMod
                 }
             }
 
+            public static void ProceedWithGameStart(GameManager gameManager)
+            {
+                if (gameManager == null) return;
+
+                bypassStartGameWarning = true;
+                ClearErrors();
+
+                bool isOffline = SingletonMonoBehaviour<ConnectionManager>.Instance.CurrentMode == ProtocolManager.NetworkType.OfflineServer;
+                gameManager.StartGame(isOffline);
+            }
+
+            public static bool DisableProblematicMods()
+            {
+                bool disabledAny = false;
+                foreach (string modName in GetProblematicMods())
+                {
+                    if (ModPatcher.IsModEnabled(modName))
+                    {
+                        Logger.Info($"[ModErrorHandler] Auto-disabling problematic mod: {modName}");
+                        ModSettingsManager.SetSetting(modName, "Enabled", false, true);
+                        ModSettingsManager.SaveModSettings(modName);
+                        disabledAny = true;
+                    }
+                }
+
+                if (disabledAny)
+                {
+                    ModSettingsManager.PendingRestart = true;
+                }
+
+                ClearErrors();
+                SingletonMonoBehaviour<ConnectionManager>.Instance.Disconnect();
+                return disabledAny;
+            }
+
         public static void LogCallback(string condition, string stackTrace, LogType type)
         {
                 if (type != LogType.Error && type != LogType.Exception) return;
@@ -106,62 +158,17 @@ namespace LizziesMod
     [HarmonyPatch(typeof(GameManager), "StartGame")]
     public class ModError_StartGame_Patch
     {
-        private static bool bypassErrorWarning = false;
-
         public static bool Prefix(GameManager __instance)
         {
-            if (bypassErrorWarning)
+            if (ModErrorHandler.bypassStartGameWarning)
             {
-                bypassErrorWarning = false;
+                ModErrorHandler.bypassStartGameWarning = false;
                 return true;
             }
 
-            if (ModErrorHandler.HasUnacknowledgedErrors())
+            if (ModErrorHandler.HasErrors())
             {
-                string errorText = ModErrorHandler.GetErrorReport();
-                errorText += "\n\n[FFCC33]Do you still wish to proceed? If you select Cancel, the game will automatically disable the problematic mods.[-]";
-
-                XUiC_MessageBoxWindowGroup.ShowOkCancel(
-                    LocalPlayerUI.primaryUI.xui,
-                    "MOD LOAD ERRORS DETECTED",
-                    errorText,
-                    "",
-                    () =>
-                    {
-                        Logger.Info("[ModErrorHandler] User bypassed mod error warning. Proceeding to load game.");
-                        bypassErrorWarning = true;
-                            ModErrorHandler.ClearErrors();
-
-                        bool isOffline = SingletonMonoBehaviour<ConnectionManager>.Instance.CurrentMode == ProtocolManager.NetworkType.OfflineServer;
-                        __instance.StartGame(isOffline);
-                    },
-                    () =>
-                    {
-                        Logger.Info("[ModErrorHandler] User aborted game load. Quarantining broken mods.");
-
-                        bool disabledAny = false;
-                            foreach (string modName in ModErrorHandler.GetProblematicMods())
-                        {
-                            if (ModPatcher.IsModEnabled(modName))
-                            {
-                                Logger.Info($"[ModErrorHandler] Auto-disabling problematic mod: {modName}");
-                                ModSettingsManager.SetSetting(modName, "Enabled", false, true);
-                                ModSettingsManager.SaveModSettings(modName);
-                                disabledAny = true;
-                            }
-                        }
-
-                        if (disabledAny)
-                        {
-                            ModSettingsManager.PendingRestart = true;
-                        }
-
-                        ModErrorHandler.ClearErrors();
-
-                        SingletonMonoBehaviour<ConnectionManager>.Instance.Disconnect();
-                    }
-                );
-
+                ModErrorWindowUIController.ShowGameStartErrors(__instance);
                 return false;
             }
 

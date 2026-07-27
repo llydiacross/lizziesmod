@@ -54,6 +54,7 @@
     <Compile Include="Harmony\Main.cs" />
     <Compile Include="Harmony\MainMenuIconController.cs" />
     <Compile Include="Harmony\ModLibraryUIController.cs" />
+    <Compile Include="Harmony\ModErrorWindowUIController.cs" />
     <Compile Include="Harmony\ModManualManager.cs" />
     <Compile Include="Harmony\ModManualUIController.cs" />
     <Compile Include="Harmony\ModSettingsManager.cs" />

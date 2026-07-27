@@ -92,6 +92,38 @@
             </rect>
         </window>
 
+        <!-- Mod Load Errors -->
+        <window name="windowModLoadErrors" width="1120" height="760" panel="Center" cursor_area="true" controller="LizziesMod.ModErrorWindowUIController, LizziesMod">
+            <fullscreencollider color="0,0,0,220"/>
+
+            <sprite depth="0" name="background" sprite="menu_empty" type="sliced" color="30,30,30,255" pos="0,0" width="1120" height="760" />
+            <sprite depth="1" name="border" sprite="menu_empty2px" type="sliced" color="255,100,100,255" pos="0,0" width="1120" height="760" fillcenter="false" />
+
+            <panel name="header" pos="0,0" height="50" depth="2">
+                <sprite depth="1" sprite="ui_game_panel_header" type="sliced" width="1120" height="50" />
+                <label depth="2" pos="0,-10" width="1120" height="30" text="MOD LOAD ERRORS" font_size="28" justify="center" color="[white]"/>
+            </panel>
+
+            <rect name="errorPane" pos="20,-65" width="1080" height="605" depth="2">
+                <sprite depth="1" sprite="menu_empty" type="sliced" color="15,15,15,255" />
+                <sprite depth="2" sprite="menu_empty2px" type="sliced" color="90,50,50,255" fillcenter="false" />
+                <label depth="3" pos="15,-10" width="1050" height="28" text="REVIEW THE ERROR DETAILS" font_size="22" color="255,125,125,255" />
+
+                <rect pos="15,-48" width="1050" height="540" on_scroll="true">
+                    <defaultscrollbar />
+                    <scrollview width="1025" clippingsoftness="0,10">
+                        <label name="lblErrorText" depth="4" pos="0,0" width="1005" text="Loading error details..." font_size="20" color="[white]" justify="left" pivot="topleft" />
+                    </scrollview>
+                </rect>
+            </rect>
+
+            <rect pos="0,-710" width="1120" height="50" depth="2">
+                <simplebutton name="btnProceed" depth="3" pos="130,0" width="240" height="40" font_size="22" caption="CONTINUE" />
+                <simplebutton name="btnDisableMods" depth="3" pos="440,0" width="240" height="40" font_size="22" caption="DISABLE MODS" />
+                <simplebutton name="btnClose" depth="3" pos="750,0" width="240" height="40" font_size="22" caption="CLOSE" />
+            </rect>
+        </window>
+
         <!-- Menu Readme Library -->
         <window name="windowModLibrary" depth="200" width="1200" height="800" anchor="Center" cursor_area="true" lock_navigation="true" controller="LizziesMod.ModLibraryUIController, LizziesMod">
             <fullscreencollider color="0,0,0,220"/>
