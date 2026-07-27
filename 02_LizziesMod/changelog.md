@@ -1,5 +1,8 @@
 # v1.0.0
 
+- Secret Update Stuff
+- Added "ScrollWheel" action things, modders will know what I mean
+- Added XML Verification runner, know that which mod's XML is broken as soon as you launch the game
 - Added mod profile system 1which checks the server you are connecting to has the correct mods
 - Severs will now share their mod list and their configuration with the player. If the player does not have the correct mods at the correct versions, they cannot connect!
 - Mod packs are easy to create for modders
