@@ -210,6 +210,11 @@ namespace LizziesMod
         {
             base.Init();
             iconStack = GetChildById("propIcon") as XUiC_ItemStack;
+            if (iconStack != null)
+            {
+                iconStack.SimpleClick = false;
+                iconStack.OnPress += HandlePress;
+            }
 
             XUiController clickable = GetChildById("clickable") ?? this;
             clickableView = clickable.viewComponent;
@@ -226,7 +231,6 @@ namespace LizziesMod
             if (iconStack != null)
             {
                 iconStack.IsDragAndDrop = false;
-                iconStack.SimpleClick = true;
                 iconStack.AllowDropping = false;
                 iconStack.setItemStack(definition.GetIconStack());
                 iconStack.viewComponent.IsVisible = true;
