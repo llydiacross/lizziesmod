@@ -192,6 +192,7 @@
       <Setting name="EnableTimeParadox" value="true" type="bool" />
       <Setting name="BrassScrapMaxDamage" value="1650" type="int" />
       <Setting name="BrassScrapStabilityGlue" value="70" type="int" />
+      <Setting name="ExperimentalFeatures" value="true" type="bool" />
       <Setting name="Enabled" value="true" type="bool" hidden="true" />
       <Setting name="LastProfileName" value="Default" type="string" hidden="true" />
     </Mod>
@@ -219,6 +220,14 @@
     <Mod name="LizziesMod_Physgun" version="0.0.1">
       <Setting name="AdminOnly" value="false" type="bool" />
       <Setting name="Enabled" value="true" type="bool" hidden="true" />
+    </Mod>
+    <Mod name="LizziesMod_PropSpawner" version="0.0.1">
+      <Setting name="Enabled" value="true" type="bool" hidden="true" />
+      <Setting name="AdminOnly" value="true" type="bool" />
+      <Setting name="MaxPropsPerPlayer" value="30" type="int" />
+      <Setting name="MaxPropsWorld" value="150" type="int" />
+      <Setting name="SpawnDistance" value="8" type="float" />
+      <Setting name="GenerateCandidateCatalog" value="false" type="bool" />
     </Mod>
   </Profile>
 </ModProfiles>

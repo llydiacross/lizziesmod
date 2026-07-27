@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <xml>
     <Name value="LizziesMod_PropSpawner" />
-    <DisplayName value="LizziesMod Prop Spawner" />
+    <DisplayName value="Prop Spawner" />
     <Description value="Adds a physics prop spawn menu for LizziesMod." />
     <Author value="llydia" />
     <Version value="0.0.1" />
