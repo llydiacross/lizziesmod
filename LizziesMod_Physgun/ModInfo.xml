@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <xml>
 	<Name value="LizziesMod_Physgun" />
-	<DisplayName value="Craftable Physgun [LizziesMod]" />
+	<DisplayName value="Craftable Physgun" />
 	<Description value="Makes the physgun craftable, requries LizziesMod!" />
 	<Author value="llydia" />
 	<Version value="0.0.1" />

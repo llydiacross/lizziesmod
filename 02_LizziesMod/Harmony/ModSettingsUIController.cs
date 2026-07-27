@@ -566,6 +566,18 @@ namespace LizziesMod
                     __instance.xui.playerUI.windowManager.Open("windowModSettings", true);
                 };
             }
+
+            XUiController btnLibrary = __instance.GetChildById("btnModLibrary");
+            if (btnLibrary != null)
+            {
+                XUiController clickable = btnLibrary.GetChildById("clickable") ?? btnLibrary;
+                clickable.OnPress += (s, e) =>
+                {
+                    ModLibraryUIController.PreviousMenu = __instance.WindowGroup.Id;
+                    __instance.xui.playerUI.windowManager.Close(__instance.WindowGroup.Id);
+                    __instance.xui.playerUI.windowManager.Open("windowModLibrary", true);
+                };
+            }
         }
     }
 

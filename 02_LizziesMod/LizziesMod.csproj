@@ -35,6 +35,7 @@
   <ItemGroup>
     <Compile Include="Harmony\BlockDimensionPortal.cs" />
     <Compile Include="Harmony\DimensionManager.cs" />
+    <Compile Include="Harmony\EntityPhysicsProp.cs" />
     <Compile Include="Harmony\ItemActionOpenModManual.cs" />
     <Compile Include="Harmony\ModSaveManager.cs" />
     <Compile Include="Harmony\ModErrorHandler.cs" />
@@ -62,12 +63,18 @@
     <Compile Include="Harmony\NetPackageJukeboxPlay.cs" />
     <Compile Include="Harmony\NetPackageLevelProfile.cs" />
     <Compile Include="Harmony\ProfileSelectorUIController.cs" />
+    <Compile Include="Harmony\PropCatalog.cs" />
+    <Compile Include="Harmony\PropCatalogLoader.cs" />
+    <Compile Include="Harmony\PropSpawnerInputController.cs" />
+    <Compile Include="Harmony\PropSpawnerManager.cs" />
+    <Compile Include="Harmony\PropSpawnerUIController.cs" />
     <Compile Include="Harmony\SavePatcher.cs" />
     <Compile Include="Harmony\TeleportUIController.cs" />
     <Compile Include="Harmony\ModTextures.cs" />
     <Compile Include="Harmony\TimeManager.cs" />
     <Compile Include="Harmony\XmlTokenReplacer.cs" />
-      <Compile Include="Harmony\XmlValidationRunner.cs" />
+    <Compile Include="Harmony\XmlValidationRunner.cs" />
+    <Compile Include="Harmony\NetPackagePhysicsPropCommand.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

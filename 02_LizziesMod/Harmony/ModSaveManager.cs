@@ -16,6 +16,16 @@ namespace LizziesMod
             string saveDir = GameIO.GetSaveGameDir();
             if (string.IsNullOrEmpty(saveDir)) return;
 
+            try
+            {
+                Directory.CreateDirectory(saveDir);
+            }
+            catch (Exception e)
+            {
+                Logger.Error($"[ModProfileManager] Failed to create world save directory '{saveDir}': {e.Message}");
+                return;
+            }
+
             string path = Path.Combine(saveDir, "LevelModProfile.xml");
 
             string currentProfileName = ModSettingsManager.GetSetting("LizziesMod", "LastProfileName", "Default");
@@ -37,8 +47,15 @@ namespace LizziesMod
                 root.AppendChild(modNode);
             }
 
-            xmlDoc.Save(path);
-            Logger.Info($"[ModProfileManager] Saved active profile '{currentProfileName}' to world save directory.");
+            try
+            {
+                xmlDoc.Save(path);
+                Logger.Info($"[ModProfileManager] Saved active profile '{currentProfileName}' to world save directory.");
+            }
+            catch (Exception e)
+            {
+                Logger.Error($"[ModProfileManager] Failed to save level profile to '{path}': {e.Message}");
+            }
         }
 
         public static void BackupSaveDirectory(string saveDir)

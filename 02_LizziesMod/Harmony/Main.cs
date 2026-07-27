@@ -33,6 +33,7 @@ namespace LizziesMod
                     if (int.TryParse(newValue, out int parsed))
                     {
                         TimeManager.Init(parsed);
+                        YearHUDUIController.RequestDisplayFade();
                         try
                         {
                             TimeManager.UpdateCurrentYear();

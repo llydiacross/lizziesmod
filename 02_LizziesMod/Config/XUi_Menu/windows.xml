@@ -70,10 +70,11 @@
                 <rect pos="10,-45" width="480" height="360" on_scroll="true">
                     <defaultscrollbar />
                     <scrollview width="460" clippingsoftness="0,10">
-                        <grid name="missingModsListGrid" pos="0,0" rows="50" cols="1" cell_width="450" cell_height="40" arrangement="vertical" repeat_content="true">
-                            <rect name="missingModEntry" controller="LizziesMod.MissingProfileModEntryController, LizziesMod" width="450" height="38">
-                                <sprite depth="1" sprite="menu_empty" type="sliced" color="55,25,25,255" width="450" height="38" />
-                                <label name="lblModName" depth="2" pos="12,-8" width="425" height="28" text="MOD NAME" font_size="20" color="255,210,210,255" />
+                        <grid name="missingModsListGrid" pos="0,0" rows="50" cols="1" cell_width="450" cell_height="56" arrangement="vertical" repeat_content="true">
+                            <rect name="missingModEntry" controller="LizziesMod.MissingProfileModEntryController, LizziesMod" width="450" height="52">
+                                <sprite depth="1" sprite="menu_empty" type="sliced" color="55,25,25,255" width="450" height="52" />
+                                <label name="lblModName" depth="2" pos="12,-5" width="425" height="24" text="MOD NAME" font_size="20" color="255,210,210,255" />
+                                <label name="lblModVersion" depth="2" pos="12,-29" width="425" height="20" text="PROFILE VERSION" font_size="16" color="220,180,180,255" />
                             </rect>
                         </grid>
                     </scrollview>

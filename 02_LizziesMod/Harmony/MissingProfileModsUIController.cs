@@ -54,7 +54,7 @@ namespace LizziesMod
         {
             if (missingModsListGrid == null) return;
 
-            List<string> missingMods = ModSettingsManager.LastMissingProfileMods;
+            List<MissingProfileModInfo> missingMods = ModSettingsManager.LastMissingProfileMods;
             int index = 0;
 
             foreach (XUiController child in missingModsListGrid.Children)
@@ -64,7 +64,8 @@ namespace LizziesMod
 
                 if (index < missingMods.Count)
                 {
-                    entry.SetModName(missingMods[index]);
+                    MissingProfileModInfo missingMod = missingMods[index];
+                    entry.SetMod(missingMod.Name, missingMod.Version);
                     index++;
                 }
                 else
@@ -78,18 +79,27 @@ namespace LizziesMod
     public class MissingProfileModEntryController : XUiController
     {
         private XUiV_Label modNameLabel;
+        private XUiV_Label modVersionLabel;
 
         public override void Init()
         {
             base.Init();
             modNameLabel = GetChildById("lblModName")?.viewComponent as XUiV_Label;
+            modVersionLabel = GetChildById("lblModVersion")?.viewComponent as XUiV_Label;
         }
 
-        public void SetModName(string modName)
+        public void SetMod(string modName, string modVersion)
         {
             if (modNameLabel != null)
             {
                 modNameLabel.Text = modName;
+            }
+
+            if (modVersionLabel != null)
+            {
+                modVersionLabel.Text = string.IsNullOrEmpty(modVersion)
+                    ? "Required version: not recorded"
+                    : "Required version: " + modVersion;
             }
 
             viewComponent.IsVisible = true;

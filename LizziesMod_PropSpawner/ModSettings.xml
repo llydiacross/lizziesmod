@@ -1,0 +1,8 @@
+<ModSettings>
+  <Setting name="Enabled" value="true" type="bool" requiresRestart="true" hidden="true" />
+  <Setting name="AdminOnly" value="true" type="bool" requiresRestart="false" />
+  <Setting name="MaxPropsPerPlayer" value="30" type="int" requiresRestart="false" />
+  <Setting name="MaxPropsWorld" value="150" type="int" requiresRestart="false" />
+  <Setting name="SpawnDistance" value="8" type="float" requiresRestart="false" />
+  <Setting name="GenerateCandidateCatalog" value="false" type="bool" requiresRestart="false" />
+</ModSettings>

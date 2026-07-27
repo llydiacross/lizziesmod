@@ -1,5 +1,8 @@
 # v1.0.0
 
+- Added a spawn menu
+- You can undo spawned props (works on multiplayer)
+- Added detailed errors
 - Secret Update Stuff
 - Added "ScrollWheel" action things, modders will know what I mean
 - Added XML Verification runner, know that which mod's XML is broken as soon as you launch the game

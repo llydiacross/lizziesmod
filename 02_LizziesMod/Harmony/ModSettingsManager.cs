@@ -53,12 +53,18 @@ namespace LizziesMod
         public int TotalSettingsModified = 0;
     }
 
+    public class MissingProfileModInfo
+    {
+        public string Name;
+        public string Version;
+    }
+
     public static class ModSettingsManager
     {
 
         public static Dictionary<string, List<ModSetting>> AllModSettings = new Dictionary<string, List<ModSetting>>();
         public static bool PendingRestart = false;
-        public static List<string> LastMissingProfileMods = new List<string>();
+        public static List<MissingProfileModInfo> LastMissingProfileMods = new List<MissingProfileModInfo>();
 
         public static void LoadAllModSettings()
         {
@@ -352,7 +358,7 @@ namespace LizziesMod
         {
             if (string.IsNullOrEmpty(profileName)) return false;
 
-            LastMissingProfileMods = new List<string>();
+            LastMissingProfileMods = new List<MissingProfileModInfo>();
 
             List<string> allPaths = GetAllProfilePaths();
             allPaths.Reverse();
@@ -366,7 +372,7 @@ namespace LizziesMod
                     XmlNode profileNode = xmlDoc.DocumentElement?.SelectSingleNode($"Profile[@name='{profileName}']");
                     if (profileNode == null) continue;
 
-                    List<string> missingMods = new List<string>();
+                    List<MissingProfileModInfo> missingMods = new List<MissingProfileModInfo>();
                     Dictionary<string, string> desiredEnabledStates = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
                     HashSet<string> modsToSave = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
                     foreach (var mod in AllModSettings.Keys)
@@ -382,7 +388,11 @@ namespace LizziesMod
 
                         if (!AllModSettings.ContainsKey(modName))
                         {
-                            missingMods.Add(modName);
+                            missingMods.Add(new MissingProfileModInfo
+                            {
+                                Name = modName,
+                                Version = modNode.Attributes["version"]?.Value
+                            });
                             continue;
                         }
 
@@ -483,7 +493,7 @@ namespace LizziesMod
                     LastMissingProfileMods = missingMods;
                     if (missingMods.Count > 0)
                     {
-                        Logger.Warning($"[ModProfiles] The profile '{profileName}' was loaded with missing mods: {string.Join(", ", missingMods)}");
+                        Logger.Warning($"[ModProfiles] The profile '{profileName}' was loaded with missing mods: {string.Join(", ", missingMods.ConvertAll(mod => mod.Name))}");
                     }
 
                     Logger.Info($"[ModProfiles] Successfully applied profile '{profileName}'");
