@@ -51,7 +51,7 @@
                     <rect depth="3" pos="15,-64" width="955" height="522" on_scroll="true">
                         <defaultscrollbar />
                         <scrollview width="920" clippingsoftness="0,10">
-                            <grid name="propGrid" pos="0,0" rows="5" cols="10" cell_width="92" cell_height="92" arrangement="horizontal" repeat_content="true">
+                            <grid name="propGrid" pos="0,0" rows="100" cols="10" cell_width="92" cell_height="92" arrangement="horizontal" repeat_content="true">
                                 <rect name="propEntry" controller="LizziesMod.PropSpawnEntryController, LizziesMod" width="88" height="88">
                                     <button name="clickable" depth="1" pos="2,-2" width="84" height="84" sprite="menu_empty" type="sliced" defaultcolor="34,42,48,255" hovercolor="48,106,119,255" sound_play_on_hover="[default_hover]" sound="[default_click]" />
                                     <item_stack name="propIcon" depth="2" pos="12,-12" width="64" height="64" />
