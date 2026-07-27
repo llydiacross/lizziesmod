@@ -46,7 +46,7 @@
     <Compile Include="Harmony\ItemActionHydraulicBlast.cs" />
     <Compile Include="Harmony\ItemActionPhysgun.cs" />
     <Compile Include="Harmony\MissingProfileModsUIController.cs" />
-    <Compile Include="Harmony\ScrollWheelActionSupport.cs" />
+    <Compile Include="Harmony\ScrollWheelActionData.cs" />
     <Compile Include="Harmony\ItemActionTeleport.cs" />
     <Compile Include="Harmony\ItemActionWalkman.cs" />
     <Compile Include="Harmony\JukeboxUIController.cs" />

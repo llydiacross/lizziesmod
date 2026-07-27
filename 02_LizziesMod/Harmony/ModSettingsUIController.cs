@@ -300,6 +300,7 @@ namespace LizziesMod
                 XUiController clickable = btnYes.GetChildById("clickable") ?? btnYes;
                 clickable.OnPress += (s, e) =>
                 {
+                    isQuitting = true;
                     UnityEngine.Application.Quit();
                 };
             }
@@ -318,7 +319,7 @@ namespace LizziesMod
 
             ModSettingsManager.PendingRestart = false;
             if (!string.IsNullOrEmpty(ModSettingsUIController.PreviousMenu))
-                xui.playerUI.windowManager.Open(ModSettingsUIController.PreviousMenu, false);
+                xui.playerUI.windowManager.Open(ModSettingsUIController.PreviousMenu, true);
         }
     }
 

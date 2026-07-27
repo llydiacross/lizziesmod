@@ -21,12 +21,21 @@ namespace LizziesMod
 
         public void SetValue(string newValue)
         {
-            if (Value != newValue)
+            bool valueChanged = !string.Equals(Value, newValue, StringComparison.Ordinal);
+            if (Name.Equals("Enabled", StringComparison.OrdinalIgnoreCase) &&
+                bool.TryParse(Value, out bool currentEnabled) &&
+                bool.TryParse(newValue, out bool requestedEnabled))
+            {
+                valueChanged = currentEnabled != requestedEnabled;
+                newValue = requestedEnabled.ToString().ToLowerInvariant();
+            }
+
+            if (valueChanged)
             {
                 Value = newValue;
                 Logger.Info($"Setting '{Name}' for mod '{ModName}' changed to: {newValue} {(OnValueChanged != null ? "INVOKABLE" : "NON-INVOKABLE") }");
  
-                if (requiresRestart || Name.Equals("Enabled", StringComparison.OrdinalIgnoreCase))
+                if (Name.Equals("Enabled", StringComparison.OrdinalIgnoreCase))
                 {
                     ModSettingsManager.PendingRestart = true;
                 }
@@ -358,14 +367,11 @@ namespace LizziesMod
                     if (profileNode == null) continue;
 
                     List<string> missingMods = new List<string>();
-
+                    Dictionary<string, string> desiredEnabledStates = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+                    HashSet<string> modsToSave = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
                     foreach (var mod in AllModSettings.Keys)
                     {
-                        ModSetting enabledSetting = AllModSettings[mod].Find(s => s.Name.Equals("Enabled", StringComparison.OrdinalIgnoreCase));
-                        if (enabledSetting != null)
-                        {
-                            enabledSetting.SetValue("false");
-                        }
+                        desiredEnabledStates[mod] = "false";
                     }
 
                     foreach (XmlNode modNode in profileNode.ChildNodes)
@@ -380,11 +386,19 @@ namespace LizziesMod
                             continue;
                         }
 
+                        bool hasEnabledSetting = false;
                         foreach (XmlNode settingNode in modNode.ChildNodes)
                         {
                             if (settingNode.Name != "Setting") continue;
                             string sName = settingNode.Attributes["name"]?.Value;
                             string sValue = settingNode.Attributes["value"]?.Value;
+
+                            if (sName != null && sName.Equals("Enabled", StringComparison.OrdinalIgnoreCase))
+                            {
+                                desiredEnabledStates[modName] = sValue ?? "true";
+                                hasEnabledSetting = true;
+                                continue;
+                            }
 
                             ModSetting existing = AllModSettings[modName].Find(s => s.Name.Equals(sName, StringComparison.OrdinalIgnoreCase));
                             if (existing != null)
@@ -425,6 +439,44 @@ namespace LizziesMod
                                 newSetting.OnValueChanged?.Invoke(sValue);
                             }
                         }
+
+                        if (!hasEnabledSetting)
+                        {
+                            desiredEnabledStates[modName] = "true";
+                        }
+
+                        modsToSave.Add(modName);
+                    }
+
+                    foreach (var enabledState in desiredEnabledStates)
+                    {
+                        string modName = enabledState.Key;
+                        string desiredValue = enabledState.Value;
+                        ModSetting enabledSetting = AllModSettings[modName].Find(s => s.Name.Equals("Enabled", StringComparison.OrdinalIgnoreCase));
+
+                        if (enabledSetting != null)
+                        {
+                            if (!string.Equals(enabledSetting.Value, desiredValue, StringComparison.OrdinalIgnoreCase))
+                            {
+                                enabledSetting.SetValue(desiredValue);
+                                modsToSave.Add(modName);
+                            }
+                        }
+                        else
+                        {
+                            bool desiredEnabled;
+                            if (!bool.TryParse(desiredValue, out desiredEnabled))
+                            {
+                                desiredEnabled = true;
+                            }
+
+                            SetSetting(modName, "Enabled", desiredEnabled, true);
+                            modsToSave.Add(modName);
+                        }
+                    }
+
+                    foreach (string modName in modsToSave)
+                    {
                         SaveModSettings(modName);
                     }
 

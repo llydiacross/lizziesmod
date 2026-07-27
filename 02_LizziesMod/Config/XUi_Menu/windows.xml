@@ -83,7 +83,7 @@
             <rect name="rightPane" pos="530,-60" width="275" height="420" depth="2">
                 <sprite depth="1" sprite="menu_empty" type="sliced" color="20,20,20,255" />
                 <sprite depth="2" sprite="menu_empty2px" type="sliced" color="60,60,60,255" fillcenter="false" />
-                <label depth="3" pos="15,-15" width="245" height="370" text="The available profile settings have been applied.&#10;&#10;Restart the game before continuing with this profile." font_size="22" justify="left" pivot="topleft" color="[white]" />
+                <label depth="3" pos="15,-15" width="245" height="370" text="Please download the missing mods.&#10;&#10;Once you are done downloading, click restart and try again to load this profile!" font_size="22" justify="left" pivot="topleft" color="[white]" />
             </rect>
 
             <rect pos="0,-500" width="820" height="50" depth="2">

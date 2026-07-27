@@ -1,5 +1,5 @@
 <ModProfiles>
-  <Profile name="Game">
+  <Profile name="Test">
     <Mod name="LizziesMod" version="0.0.1">
       <Setting name="StartingYear" value="1986" type="int" />
       <Setting name="EnableMechanicalPress" value="true" type="bool" />
