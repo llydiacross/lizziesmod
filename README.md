@@ -2,12 +2,6 @@
 
 Hello world! This is Lizzie's Mod.
 
-Included in LizziesMod is a collection of features and patches for 7 Days to Die.
-
-<!--
-TODO: Liz help me here ;m;
--->
-
 - **Physgun** - A GMod style physics gun for you to launch zombies and break blocks into the stratosphere.
 
 - **JukeBox and Wallpapers** - More additions for custom music in the jukebox and add more wallpapers to the game.

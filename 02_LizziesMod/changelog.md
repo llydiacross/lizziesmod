@@ -1,9 +1,9 @@
-# v1.0.0
+# Alpha Test
 
 - Added a spawn menu
 - You can undo spawned props (works on multiplayer)
 - Added detailed errors
-- Secret Update Stuff
+- Added dimensions
 - Added "ScrollWheel" action things, modders will know what I mean
 - Added XML Verification runner, know that which mod's XML is broken as soon as you launch the game
 - Added mod profile system 1which checks the server you are connecting to has the correct mods
