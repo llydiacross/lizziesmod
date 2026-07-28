@@ -35,6 +35,7 @@ namespace LizziesMod
         private static readonly Dictionary<string, int> textureIdsByName =
             new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
         private static readonly List<CustomTexture> activeTextures = new List<CustomTexture>();
+        private static readonly HashSet<MeshDescription> textureExpansionsInProgress = new HashSet<MeshDescription>();
         private static bool definitionsLoaded;
         private static bool registrationsFinalized;
 
@@ -91,41 +92,69 @@ namespace LizziesMod
 
         public static IEnumerator WaitAndExpandTextures(MeshDescription meshDescription)
         {
+            while (!registrationsFinalized)
+            {
+                yield return new WaitForSeconds(0.1f);
+            }
+
+            if (activeTextures.Count == 0)
+            {
+                CompleteTextureExpansion(meshDescription);
+                yield break;
+            }
+
             while (meshDescription.TexDiffuse == null || meshDescription.TexNormal == null || meshDescription.TexSpecular == null)
             {
                 yield return new WaitForSeconds(0.1f);
             }
 
-            Texture2DArray oldDiffuse = meshDescription.TexDiffuse as Texture2DArray;
-            Texture2DArray oldNormal = meshDescription.TexNormal as Texture2DArray;
-            Texture2DArray oldSpecular = meshDescription.TexSpecular as Texture2DArray;
-            if (oldDiffuse == null || oldNormal == null || oldSpecular == null || IsExtendedArray(oldDiffuse)) yield break;
-
-            Texture2DArray newDiffuse = ExpandTextureArray(oldDiffuse, "Diffuse");
-            Texture2DArray newNormal = ExpandTextureArray(oldNormal, "Normal");
-            Texture2DArray newSpecular = ExpandTextureArray(oldSpecular, "Specular");
-
-            meshDescription.TexDiffuse = newDiffuse;
-            meshDescription.TexNormal = newNormal;
-            meshDescription.TexSpecular = newSpecular;
-
-            TextureAtlasBlocks atlas = meshDescription.textureAtlas as TextureAtlasBlocks;
-            if (atlas != null)
+            try
             {
-                atlas.diffuseTexture = newDiffuse;
-                atlas.normalTexture = newNormal;
-                atlas.specularTexture = newSpecular;
+                Texture2DArray oldDiffuse = meshDescription.TexDiffuse as Texture2DArray;
+                Texture2DArray oldNormal = meshDescription.TexNormal as Texture2DArray;
+                Texture2DArray oldSpecular = meshDescription.TexSpecular as Texture2DArray;
+                if (oldDiffuse == null || oldNormal == null || oldSpecular == null || IsExtendedArray(oldDiffuse)) yield break;
+
+                Texture2DArray newDiffuse = ExpandTextureArray(oldDiffuse, "Diffuse");
+                Texture2DArray newNormal = ExpandTextureArray(oldNormal, "Normal");
+                Texture2DArray newSpecular = ExpandTextureArray(oldSpecular, "Specular");
+
+                meshDescription.TexDiffuse = newDiffuse;
+                meshDescription.TexNormal = newNormal;
+                meshDescription.TexSpecular = newSpecular;
+
+                TextureAtlasBlocks atlas = meshDescription.textureAtlas as TextureAtlasBlocks;
+                if (atlas != null)
+                {
+                    atlas.diffuseTexture = newDiffuse;
+                    atlas.normalTexture = newNormal;
+                    atlas.specularTexture = newSpecular;
+                }
+
+                if (meshDescription.material != null)
+                {
+                    UpdateMaterialProperty(meshDescription.material, "_MainTex", oldDiffuse, newDiffuse);
+                    UpdateMaterialProperty(meshDescription.material, "_TextureArray", oldDiffuse, newDiffuse);
+                    UpdateMaterialProperty(meshDescription.material, "_BumpMap", oldNormal, newNormal);
+                    UpdateMaterialProperty(meshDescription.material, "_Normal", oldNormal, newNormal);
+                    UpdateMaterialProperty(meshDescription.material, "_SpecularMap", oldSpecular, newSpecular);
+                    UpdateMaterialProperty(meshDescription.material, "_GlossMap", oldSpecular, newSpecular);
+                    UpdateMaterialProperty(meshDescription.material, "_MetallicGlossMap", oldSpecular, newSpecular);
+                }
             }
-
-            if (meshDescription.material != null)
+            finally
             {
-                UpdateMaterialProperty(meshDescription.material, "_MainTex", oldDiffuse, newDiffuse);
-                UpdateMaterialProperty(meshDescription.material, "_TextureArray", oldDiffuse, newDiffuse);
-                UpdateMaterialProperty(meshDescription.material, "_BumpMap", oldNormal, newNormal);
-                UpdateMaterialProperty(meshDescription.material, "_Normal", oldNormal, newNormal);
-                UpdateMaterialProperty(meshDescription.material, "_SpecularMap", oldSpecular, newSpecular);
-                UpdateMaterialProperty(meshDescription.material, "_GlossMap", oldSpecular, newSpecular);
-                UpdateMaterialProperty(meshDescription.material, "_MetallicGlossMap", oldSpecular, newSpecular);
+                CompleteTextureExpansion(meshDescription);
+            }
+        }
+
+        public static bool TryBeginTextureExpansion(MeshDescription meshDescription)
+        {
+            if (meshDescription == null) return false;
+
+            lock (textureExpansionsInProgress)
+            {
+                return textureExpansionsInProgress.Add(meshDescription);
             }
         }
 
@@ -444,6 +473,14 @@ namespace LizziesMod
             return texture != null && texture.name.StartsWith("lizzies_extended_", StringComparison.Ordinal);
         }
 
+        private static void CompleteTextureExpansion(MeshDescription meshDescription)
+        {
+            lock (textureExpansionsInProgress)
+            {
+                textureExpansionsInProgress.Remove(meshDescription);
+            }
+        }
+
         private static void UpdateMaterialProperty(Material material, string propertyName, Texture oldTexture, Texture newTexture)
         {
             if (material.HasProperty(propertyName) && material.GetTexture(propertyName) == oldTexture)
@@ -477,6 +514,7 @@ namespace LizziesMod
         public static void Postfix(MeshDescription __instance)
         {
             if (!string.Equals(__instance.Name, "opaque", StringComparison.OrdinalIgnoreCase) || CustomTextureManager.CustomTextures.Count == 0) return;
+            if (!CustomTextureManager.TryBeginTextureExpansion(__instance)) return;
 
             ThreadManager.StartCoroutine(CustomTextureManager.WaitAndExpandTextures(__instance));
         }

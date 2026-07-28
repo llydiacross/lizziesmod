@@ -64,5 +64,6 @@
 
     <append xpath="/xui/window_group[@name='compass']">
         <window name="windowYearDisplay"/>
+        <window name="windowModDiagnostics"/>
     </append>
 </configs>

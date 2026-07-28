@@ -9,12 +9,19 @@ namespace LizziesMod
     public static class ModErrorHandler
     {
         public static List<string> ModErrors = new List<string>();
+        public static List<string> ModWarnings = new List<string>();
         public static HashSet<string> ProblematicMods = new HashSet<string>(System.StringComparer.OrdinalIgnoreCase);
 
         private static readonly object _lock = new object();
         private static readonly Regex XmlPatchFailurePattern = new Regex(
             @"^XML loader: (?:Loading XML patch file|Patching) '.*' from mod '([^']+)' failed:",
             RegexOptions.Compiled | RegexOptions.CultureInvariant);
+        private static readonly Regex XmlPatchModPattern = new Regex(
+            @"\bfrom mod '([^']+)'",
+            RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
+        private static readonly Regex XmlConfigPathPattern = new Regex(
+            @"(?:^|[\\/])Mods[\\/]([^\\/]+)[\\/]Config[\\/]",
+            RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
         private static int acknowledgedErrorCount;
         internal static bool bypassStartGameWarning;
 
@@ -29,6 +36,39 @@ namespace LizziesMod
                     ModErrors.Add(error);
                 }
             }
+        }
+
+        public static void AddWarning(string warning)
+        {
+            if (string.IsNullOrEmpty(warning)) return;
+
+            lock (_lock)
+            {
+                if (!ModWarnings.Contains(warning))
+                {
+                    ModWarnings.Add(warning);
+                }
+            }
+        }
+
+        public static void ReportXmlError(string modName, string condition)
+        {
+            string sourceLabel = string.IsNullOrEmpty(modName) ? "[Unknown Mod]" : "[" + modName + "]";
+            AddError($"[FF3333][XML ERROR][-] {sourceLabel}\n{condition}");
+
+            if (!string.IsNullOrEmpty(modName))
+            {
+                lock (_lock)
+                {
+                    ProblematicMods.Add(modName);
+                }
+            }
+        }
+
+        public static void ReportXmlWarning(string modName, string condition)
+        {
+            string sourceLabel = string.IsNullOrEmpty(modName) ? "[Unknown Mod]" : "[" + modName + "]";
+            AddWarning($"[FFCC33][XML WARNING][-] {sourceLabel}\n{condition}");
         }
 
             public static bool HasUnacknowledgedErrors()
@@ -47,6 +87,23 @@ namespace LizziesMod
                 }
             }
 
+            public static bool HasDiagnostics()
+            {
+                lock (_lock)
+                {
+                    return ModErrors.Count > 0 || ModWarnings.Count > 0;
+                }
+            }
+
+            public static void GetDiagnosticCounts(out int errorCount, out int warningCount)
+            {
+                lock (_lock)
+                {
+                    errorCount = ModErrors.Count;
+                    warningCount = ModWarnings.Count;
+                }
+            }
+
             public static bool HasProblematicMods()
             {
                 lock (_lock)
@@ -57,10 +114,28 @@ namespace LizziesMod
 
             public static string GetErrorReport()
             {
+                return GetDiagnosticReport();
+            }
+
+            public static string GetDiagnosticReport()
+            {
                 lock (_lock)
                 {
-                    string errorText = "The following mod loading errors were detected:\n\n" + string.Join("\n\n", ModErrors);
-                    return errorText.Length > 2500 ? errorText.Substring(0, 2497) + "..." : errorText;
+                    List<string> sections = new List<string>();
+                    if (ModErrors.Count > 0)
+                    {
+                        sections.Add("[FF6666]XML ERRORS[-]\n\n" + string.Join("\n\n", ModErrors));
+                    }
+
+                    if (ModWarnings.Count > 0)
+                    {
+                        sections.Add("[FFCC33]XML WARNINGS[-]\n\n" + string.Join("\n\n", ModWarnings));
+                    }
+
+                    string diagnosticText = sections.Count == 0
+                        ? "No mod XML diagnostics were detected."
+                        : string.Join("\n\n", sections);
+                    return diagnosticText.Length > 2500 ? diagnosticText.Substring(0, 2497) + "..." : diagnosticText;
                 }
             }
 
@@ -85,6 +160,7 @@ namespace LizziesMod
                 lock (_lock)
                 {
                     ModErrors.Clear();
+                    ModWarnings.Clear();
                     ProblematicMods.Clear();
                     acknowledgedErrorCount = 0;
                 }
@@ -127,31 +203,49 @@ namespace LizziesMod
 
         public static void LogCallback(string condition, string stackTrace, LogType type)
         {
-                if (type != LogType.Error && type != LogType.Exception) return;
                 if (string.IsNullOrEmpty(condition)) return;
+                if (type != LogType.Error && type != LogType.Exception && type != LogType.Warning) return;
+
+                string diagnosticText = string.IsNullOrEmpty(stackTrace)
+                    ? condition
+                    : condition + "\n" + stackTrace;
+                if (!IsXmlDiagnostic(diagnosticText)) return;
 
                 Match patchFailure = XmlPatchFailurePattern.Match(condition);
-                if (patchFailure.Success)
-            {
-                    AddError($"[FF3333][XML ERROR][-]\n{condition}");
-
-                    string modName = patchFailure.Groups[1].Value;
-                    if (!string.IsNullOrEmpty(modName))
+                string modName = patchFailure.Success
+                    ? patchFailure.Groups[1].Value
+                    : FindSourceMod(diagnosticText);
+                if (type == LogType.Warning)
                 {
-                        lock (_lock)
-                    {
-                            ProblematicMods.Add(modName);
-                    }
-                }
-
+                    ReportXmlWarning(modName, condition);
                     return;
                 }
 
-                if (condition.StartsWith("XML loader: Loading base XML ", StringComparison.Ordinal) ||
-                    condition.StartsWith("XML.Patch (", StringComparison.Ordinal))
-                {
-                    AddError($"[FF3333][XML ERROR][-]\n{condition}");
-            }
+                ReportXmlError(modName, condition);
+        }
+
+        private static bool IsXmlDiagnostic(string diagnosticText)
+        {
+            if (string.IsNullOrEmpty(diagnosticText)) return false;
+
+            return diagnosticText.IndexOf("XML loader:", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                diagnosticText.IndexOf("XML.Patch", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                (diagnosticText.IndexOf("xml", StringComparison.OrdinalIgnoreCase) >= 0 &&
+                    (diagnosticText.IndexOf("error", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    diagnosticText.IndexOf("exception", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    diagnosticText.IndexOf("failed", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    diagnosticText.IndexOf("warning", StringComparison.OrdinalIgnoreCase) >= 0));
+        }
+
+        private static string FindSourceMod(string diagnosticText)
+        {
+            Match modMatch = XmlPatchModPattern.Match(diagnosticText);
+            if (modMatch.Success) return modMatch.Groups[1].Value;
+
+            Match configPathMatch = XmlConfigPathPattern.Match(diagnosticText);
+            if (configPathMatch.Success) return configPathMatch.Groups[1].Value;
+
+            return "";
         }
     }
 

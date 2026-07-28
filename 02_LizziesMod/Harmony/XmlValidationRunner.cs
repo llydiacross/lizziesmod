@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Xml;
 using UnityEngine;
 
 namespace LizziesMod
@@ -29,6 +30,8 @@ namespace LizziesMod
 
         private IEnumerator ValidateXml()
         {
+            yield return StartCoroutine(ValidateRawModXml());
+
             List<string> configNames = GetConfigNames();
             Logger.Info($"[XmlValidation] Validating {configNames.Count} modded XML configuration file(s).");
 
@@ -48,6 +51,36 @@ namespace LizziesMod
             }
 
             Destroy(gameObject);
+        }
+
+        private static IEnumerator ValidateRawModXml()
+        {
+            int fileCount = 0;
+            foreach (Mod mod in global::ModManager.GetLoadedMods())
+            {
+                string modConfigDirectory = Path.Combine(mod.Path, "Config");
+                if (!Directory.Exists(modConfigDirectory)) continue;
+
+                foreach (string filePath in Directory.GetFiles(modConfigDirectory, "*.xml", SearchOption.AllDirectories))
+                {
+                    fileCount++;
+                    try
+                    {
+                        XmlDocument document = new XmlDocument();
+                        document.Load(filePath);
+                    }
+                    catch (Exception exception)
+                    {
+                        ModErrorHandler.ReportXmlError(
+                            mod.Name,
+                            $"Invalid XML file '{filePath}': {exception.Message}");
+                    }
+
+                    yield return null;
+                }
+            }
+
+            Logger.Info($"[XmlValidation] Checked XML syntax in {fileCount} mod configuration file(s).");
         }
 
         private static void ValidatePatchedXml(XmlFile xmlFile)
