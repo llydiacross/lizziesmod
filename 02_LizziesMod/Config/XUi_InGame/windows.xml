@@ -16,10 +16,12 @@
         </window>
 
         <window name="windowModDiagnostics" controller="LizziesMod.ModDiagnosticsHUDController, LizziesMod" anchor="TopRight" pos="-20,-20" width="320" height="70" depth="50" visible="false">
-            <sprite depth="1" sprite="menu_empty" type="sliced" color="248,248,248,240" />
-            <sprite depth="2" sprite="menu_empty2px" type="sliced" color="50,50,50,255" fillcenter="false" />
-            <label name="lblModDiagnosticStatus" depth="3" pos="12,-9" width="296" height="25" text="MOD XML DIAGNOSTICS" font_size="18" color="190,35,35,255" />
-            <label name="lblModDiagnosticDetails" depth="3" pos="12,-35" width="296" height="22" text="0 errors | 0 warnings" font_size="16" color="35,35,35,255" />
+            <rect name="modDiagnosticsContent" pos="0,0" width="320" height="70">
+                <sprite depth="1" sprite="menu_empty" type="sliced" color="248,248,248,240" />
+                <sprite depth="2" sprite="menu_empty2px" type="sliced" color="50,50,50,255" fillcenter="false" />
+                <label name="lblModDiagnosticStatus" depth="3" pos="12,-9" width="296" height="25" text="MOD XML DIAGNOSTICS" font_size="18" color="190,35,35,255" />
+                <label name="lblModDiagnosticDetails" depth="3" pos="12,-35" width="296" height="22" text="0 errors | 0 warnings" font_size="16" color="35,35,35,255" />
+            </rect>
         </window>
 
         <!-- Mod Profile Selector -->

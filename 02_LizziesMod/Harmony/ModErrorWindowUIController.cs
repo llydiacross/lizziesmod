@@ -132,6 +132,7 @@ namespace LizziesMod
 
     public class ModDiagnosticsHUDController : XUiController
     {
+        private XUiController diagnosticsContent;
         private XUiV_Label statusLabel;
         private XUiV_Label detailsLabel;
         private int displayedErrorCount = -1;
@@ -140,6 +141,7 @@ namespace LizziesMod
         public override void Init()
         {
             base.Init();
+            diagnosticsContent = GetChildById("modDiagnosticsContent");
             statusLabel = GetChildById("lblModDiagnosticStatus")?.viewComponent as XUiV_Label;
             detailsLabel = GetChildById("lblModDiagnosticDetails")?.viewComponent as XUiV_Label;
             RefreshDiagnostics();
@@ -163,7 +165,9 @@ namespace LizziesMod
             displayedWarningCount = warningCount;
 
             bool hasDiagnostics = errorCount > 0 || warningCount > 0;
-            if (viewComponent != null) viewComponent.IsVisible = hasDiagnostics;
+            SetVisible(diagnosticsContent, hasDiagnostics);
+            if (statusLabel != null) statusLabel.IsVisible = hasDiagnostics;
+            if (detailsLabel != null) detailsLabel.IsVisible = hasDiagnostics;
             if (!hasDiagnostics) return;
 
             string report = ModErrorHandler.GetDiagnosticReport();
@@ -181,6 +185,14 @@ namespace LizziesMod
                 detailsLabel.Text = errorCount + " error" + (errorCount == 1 ? "" : "s") +
                     " | " + warningCount + " warning" + (warningCount == 1 ? "" : "s");
                 detailsLabel.ToolTip = report;
+            }
+        }
+
+        private static void SetVisible(XUiController controller, bool isVisible)
+        {
+            if (controller?.viewComponent != null)
+            {
+                controller.viewComponent.IsVisible = isVisible;
             }
         }
     }

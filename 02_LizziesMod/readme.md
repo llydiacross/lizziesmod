@@ -8,7 +8,7 @@ Uses work from https://github.com/OCB7D2D/OcbCustomTexturesPaints to implement c
 
 ## Custom Block Paints
 
-LizziesMod discovers `Config/CustomTextures.xml` in every loaded mod. Each `opaque` entry becomes a paint-menu entry using the next available native paint slot, while its texture ID is appended after the existing opaque atlas mappings (never assigned a fixed ID such as `1000`). Use the texture `id` in block XML:
+LizziesMod discovers `Config/CustomTextures.xml` in every loaded mod. Each `opaque` entry becomes a paint-menu entry using the next available native paint slot, while its texture ID is appended after the existing opaque atlas mappings. Use the texture `id` in block XML:
 
 ```xml
 <block name="example_custom_block">
@@ -49,4 +49,4 @@ Custom item actions can block the scroll wheel. Add the XML opt-in to the action
 </property>
 ```
 
-While UsesScrollWheel is trye, LizziesMod blocks wheel item cycling, previous/next slot input, toolbelt updates, and inventory item-index changes. Missing, `false`, or malformed `UsesScrollWheel` values leave the action unlocked.
+While UsesScrollWheel is true, LizziesMod blocks wheel item cycling, previous/next slot input, toolbelt updates, and inventory item-index changes. Missing, `false`, or malformed `UsesScrollWheel` values leave the action unlocked.
