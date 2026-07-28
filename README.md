@@ -73,6 +73,24 @@ Then register that new block as a prop:
 
 The physics prop uses each `MeshFilter` in the resolved model to create a convex `MeshCollider`. Keep collision meshes simple, split complex models into several mesh objects where necessary, and test the prop in-game before shipping it.
 
+## Manuals
+
+Books in `ModManual.xml` with `is_readme="true"` appear in the Mod README library, available from the main menu and in-game. Legacy pages with only text and an optional `image` attribute remain supported. For a free-form scrollable layout, give a README page a `canvas_size` and add positioned `TextArea` and `Image` elements:
+
+```xml
+<Page title="Getting Started" canvas_size="1030,720">
+	<TextArea id="intro" pos="0,0" size="1010,100"><![CDATA[
+Welcome to the mod.
+	]]></TextArea>
+	<Image id="controls" source="controls.png" pos="0,-125" size="600,338" />
+	<TextArea id="notes" pos="625,-125" size="385,338"><![CDATA[
+Explain the controls beside the image.
+	]]></TextArea>
+</Page>
+```
+
+`pos` uses XUi coordinates: positive `x` moves right and negative `y` moves down. Every element needs a unique `id`, `pos`, and positive `size`. Images must be `.png`, `.jpg`, or `.jpeg` files under the owning mod's `ManualResources` folder. The shipped reader provides up to 32 text areas and 32 images per page; extra elements are reported in the game log. The page scrolls as one canvas, and its scrollbar is hidden until the content exceeds the reading viewport.
+
 ## Custom Block Paints
 
 LizziesMod discovers `Config/CustomTextures.xml` in every loaded mod. Each `opaque` entry becomes a paint-menu entry using the next available native paint slot, while its texture ID is appended after the existing opaque atlas mappings. Use the texture `id` in block XML:
