@@ -1,7 +1,24 @@
-# Alpha Test
+# Alpha Test 3
 
+- Added custom paints/texture system
 - Added a spawn menu
-- You can undo spawned props (works on multiplayer)
+    - Mods can add spawnable props into the game
+    - You can undo spawned props (works on multiplayer)
+- Added detailed error in-game logging for mods
+- Fixes to the mod profile system
+
+# Alpha Test 2
+
+- Added dimensions experimental features
+- Added "ScrollWheel" action functionality for weapons, modders will know what this mean!
+- Added XML Verification runner, know that which mod's XML is broken as 
+
+# Alpha Test 1
+
+- Added custom paints/texture system
+- Added a spawn menu
+    - Mods can add spawnable props into the game
+    - You can undo spawned props (works on multiplayer)
 - Added detailed errors
 - Added dimensions
 - Added "ScrollWheel" action things, modders will know what I mean
