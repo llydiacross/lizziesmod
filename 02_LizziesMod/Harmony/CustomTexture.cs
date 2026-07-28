@@ -2,264 +2,472 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
+using System.Xml.Linq;
 using UnityEngine;
 
 namespace LizziesMod
 {
     public class CustomTexture
     {
-        public int PaintID;
+        public int PaintID = -1;
+        public ushort TextureID;
         public string Name;
+        public string DisplayName;
         public string BundlePath;
         public string DiffuseName;
         public string NormalName;
         public string SpecularName;
-        public int NewSliceIndex;
+        public string Group = "Custom";
+        public ushort PaintCost = 1;
+        public byte SortIndex = byte.MaxValue;
+        public bool Hidden;
+        public int NewSliceIndex = -1;
     }
 
     public static class CustomTextureManager
     {
-        public static List<CustomTexture> CustomTextures = new List<CustomTexture>();
+        public const int FirstCustomTextureId = 256;
 
-        private const int BASE_TEXTURE_ID = 1000;
-        private static Dictionary<string, int> modTextureCounts = new Dictionary<string, int>();
+        public static readonly List<CustomTexture> CustomTextures = new List<CustomTexture>();
 
+        private static readonly Dictionary<string, int> textureIdsByName =
+            new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+        private static readonly List<CustomTexture> activeTextures = new List<CustomTexture>();
+        private static bool definitionsLoaded;
+        private static bool registrationsFinalized;
 
-        public static int RegisterTexture(Mod modInstance, string bundlePath, string diffuse, string normal, string specular, string name = "CustomTexture")
+        public static void LoadAllTextures()
         {
-            if (modInstance == null) return -1;
+            if (definitionsLoaded) return;
 
-            int modIndex = global::ModManager.GetLoadedMods().IndexOf(modInstance);
-            if (modIndex == -1) modIndex = 99; 
-
-            string modName = modInstance.Name;
-            if (!modTextureCounts.ContainsKey(modName))
+            definitionsLoaded = true;
+            foreach (Mod mod in global::ModManager.GetLoadedMods())
             {
-                modTextureCounts[modName] = 0;
+                if (mod == null || string.IsNullOrEmpty(mod.Path)) continue;
+
+                string configPath = Path.Combine(mod.Path, "Config", "CustomTextures.xml");
+                if (File.Exists(configPath)) LoadTextureConfig(mod, configPath);
             }
 
-            int currentCount = modTextureCounts[modName];
-            if (currentCount >= 32)
-            {
-                Logger.Warning($"[CustomTextureManager] Mod '{modName}' exceeded the 32 custom texture limit!");
-                return -1;
-            }
-
-            int assignedPaintId = BASE_TEXTURE_ID + (modIndex * 32) + currentCount;
-            modTextureCounts[modName]++;
-
-            CustomTextures.Add(new CustomTexture
-            {
-                PaintID = assignedPaintId,
-                BundlePath = bundlePath,
-                DiffuseName = diffuse,
-                NormalName = normal,
-                SpecularName = specular,
-                Name = name
-            });
-
-            string settingKey = $"TextureID_{name.Replace(" ", "_")}";
-
-            if (!ModSettingsManager.AllModSettings.ContainsKey(modName))
-            {
-                ModSettingsManager.AllModSettings[modName] = new List<ModSetting>();
-            }
-
-            ModSettingsManager.AllModSettings[modName].Add(new ModSetting
-            {
-                ModName = modName,
-                Name = settingKey,
-                Value = assignedPaintId.ToString(),
-                Type = "int",
-                Hidden = true
-            });
-
-            Logger.Info($"Registered Texture '{name}' for '{modName}' at Static PaintID: {assignedPaintId} (Slot: {currentCount + 1}/32)");
-            return assignedPaintId;
+            Logger.Info($"[CustomTextures] Loaded {CustomTextures.Count} texture definition(s).");
         }
 
-        public static void InjectBlockTextureData()
+        public static IEnumerator RegisterAfterVanillaTextureLoad(IEnumerator vanillaLoad)
         {
-            if (CustomTextures.Count == 0) return;
-
-            Logger.Info("Injecting Custom BlockTextureData...");
-
-            int maxId = 0;
-            foreach (var tex in CustomTextures)
+            while (vanillaLoad != null && vanillaLoad.MoveNext())
             {
-                if (tex.PaintID > maxId) maxId = tex.PaintID;
+                yield return vanillaLoad.Current;
             }
 
-            int targetSize = Math.Max(BlockTextureData.list != null ? BlockTextureData.list.Length : 2048, maxId + 50);
-
-            if (BlockTextureData.list == null)
-            {
-                BlockTextureData.list = new BlockTextureData[targetSize];
-            }
-            else if (BlockTextureData.list.Length < targetSize)
-            {
-                Array.Resize(ref BlockTextureData.list, targetSize);
-            }
-
-            foreach (var tex in CustomTextures)
-            {
-                BlockTextureData data = new BlockTextureData();
-                data.ID = tex.PaintID; // how the game finds it
-                data.Name = tex.Name;
-                data.Group = "Custom";
-                data.SortIndex = 1;
-                data.PaintCost = 1;
-                data.LocalizedName = tex.Name;
-                data.TextureID = (ushort)tex.NewSliceIndex;  // where it is in the atlas
-
-                BlockTextureData.list[tex.PaintID] = data;
-                Logger.Info($"Registered BlockTextureData for '{tex.Name}' at Paint ID {tex.PaintID}/{tex.NewSliceIndex}");
-            }
+            FinalizeRegistrations();
         }
 
-        public static Texture2DArray ExpandTextureArray(Texture2DArray original, string textureType)
-        { 
+        public static void ResolveBlockTextureReferences(XmlFile xmlFile)
+        {
+            if (xmlFile == null || textureIdsByName.Count == 0) return;
 
-            if (original == null) return null;
+            XElement root = xmlFile.XmlDoc?.Root;
+            if (root == null) return;
 
-            Logger.Info("expanding " + textureType);
-
-            int oldDepth = original.depth;
-            int newDepth = oldDepth + CustomTextures.Count;
-            bool isLinear = (textureType != "Diffuse");
-            Texture2DArray newArray = new Texture2DArray(
-                original.width,
-                original.height,
-                newDepth,
-                original.format,
-                original.mipmapCount > 1,
-                isLinear
-            );
-
-            newArray.filterMode = original.filterMode;
-            newArray.wrapMode = original.wrapMode;
-            newArray.anisoLevel = original.anisoLevel;
-
-            for (int i = 0; i < oldDepth; i++)
+            foreach (XElement block in root.Elements("block"))
             {
-                for (int mip = 0; mip < original.mipmapCount; mip++)
+                foreach (XElement property in block.Descendants("property"))
                 {
-                    Graphics.CopyTexture(original, i, mip, newArray, i, mip);
-                }
-            }
+                    XAttribute propertyName = property.Attribute("name");
+                    XAttribute propertyValue = property.Attribute("value");
+                    if (propertyName == null || propertyValue == null) continue;
+                    if (propertyName.Value != "Texture" && propertyName.Value != "UiBackgroundTexture") continue;
 
-            for (int i = 0; i < CustomTextures.Count; i++)
-            {
-                CustomTexture customTex = CustomTextures[i];
-                int newSliceIndex = oldDepth + i;
-                customTex.NewSliceIndex = newSliceIndex;
-
-                AssetBundle bundle = AssetBundle.LoadFromFile(customTex.BundlePath);
-
-                if (bundle != null)
-                {
-                    string targetTexName = textureType == "Diffuse" ? customTex.DiffuseName :
-                                           textureType == "Normal" ? customTex.NormalName : customTex.SpecularName;
-
-                    if (!string.IsNullOrEmpty(targetTexName))
+                    string resolvedValue = ResolveTextureValue(propertyValue.Value);
+                    if (!string.Equals(resolvedValue, propertyValue.Value, StringComparison.Ordinal))
                     {
-                        Texture2D tex = bundle.LoadAsset<Texture2D>(targetTexName);
-
-                        if (tex != null)
-                        {
-                            if (tex.mipmapCount != original.mipmapCount)
-                            {
-                                Logger.Error($"MIPMAP MISHAP! {targetTexName} needs to equal " + original.mipmapCount + " it is " + tex.mipmapCount);
-                            } 
-                           
-                            int mipsToCopy = Math.Min(tex.mipmapCount, original.mipmapCount);
-                            for (int mip = 0; mip < mipsToCopy; mip++)
-                            {
-                                Graphics.CopyTexture(tex, 0, mip, newArray, newSliceIndex, mip);
-                            }
-                        }
-                        else
-                            Logger.Warning("Tex invalid: " + customTex.BundlePath);
+                        propertyValue.Value = resolvedValue;
                     }
-                    else
-                        Logger.Warning("Tex Empty " + customTex.BundlePath);
-
-                    bundle.Unload(false);
                 }
-                else
-                    Logger.Warning("Bundle invalid: " + customTex.BundlePath);
             }
-
-            return newArray;
         }
 
-        public static IEnumerator WaitAndExpandTextures(MeshDescription meshDesc)
+        public static IEnumerator WaitAndExpandTextures(MeshDescription meshDescription)
         {
-            Logger.Info("Waiting for vanilla textures to load asynchronously...");
-
-            while (meshDesc.TexDiffuse == null)
+            while (meshDescription.TexDiffuse == null || meshDescription.TexNormal == null || meshDescription.TexSpecular == null)
             {
                 yield return new WaitForSeconds(0.1f);
             }
 
-            Logger.Info("Vanilla textures loaded! Expanding arrays...");
+            Texture2DArray oldDiffuse = meshDescription.TexDiffuse as Texture2DArray;
+            Texture2DArray oldNormal = meshDescription.TexNormal as Texture2DArray;
+            Texture2DArray oldSpecular = meshDescription.TexSpecular as Texture2DArray;
+            if (oldDiffuse == null || oldNormal == null || oldSpecular == null || IsExtendedArray(oldDiffuse)) yield break;
 
-            Texture oldDiffuse = meshDesc.TexDiffuse;
-            Texture oldNormal = meshDesc.TexNormal;
-            Texture oldSpecular = meshDesc.TexSpecular;
-            Texture2DArray newDiffuse = ExpandTextureArray((Texture2DArray)oldDiffuse, "Diffuse");
-            Texture2DArray newNormal = ExpandTextureArray((Texture2DArray)oldNormal, "Normal");
-            Texture2DArray newSpecular = ExpandTextureArray((Texture2DArray)oldSpecular, "Specular");
+            Texture2DArray newDiffuse = ExpandTextureArray(oldDiffuse, "Diffuse");
+            Texture2DArray newNormal = ExpandTextureArray(oldNormal, "Normal");
+            Texture2DArray newSpecular = ExpandTextureArray(oldSpecular, "Specular");
 
-            meshDesc.TexDiffuse = newDiffuse;
-            meshDesc.TexNormal = newNormal;
-            meshDesc.TexSpecular = newSpecular;
+            meshDescription.TexDiffuse = newDiffuse;
+            meshDescription.TexNormal = newNormal;
+            meshDescription.TexSpecular = newSpecular;
 
-            if (meshDesc.material != null)
+            TextureAtlasBlocks atlas = meshDescription.textureAtlas as TextureAtlasBlocks;
+            if (atlas != null)
             {
-                UpdateMaterialProperty(meshDesc.material, "_MainTex", oldDiffuse, newDiffuse);
-                UpdateMaterialProperty(meshDesc.material, "_TextureArray", oldDiffuse, newDiffuse);
-                UpdateMaterialProperty(meshDesc.material, "_BumpMap", oldNormal, newNormal);
-                UpdateMaterialProperty(meshDesc.material, "_Normal", oldNormal, newNormal);
-                UpdateMaterialProperty(meshDesc.material, "_SpecularMap", oldSpecular, newSpecular);
-                UpdateMaterialProperty(meshDesc.material, "_GlossMap", oldSpecular, newSpecular);
-                UpdateMaterialProperty(meshDesc.material, "_MetallicGlossMap", oldSpecular, newSpecular);
+                atlas.diffuseTexture = newDiffuse;
+                atlas.normalTexture = newNormal;
+                atlas.specularTexture = newSpecular;
+            }
 
-                foreach (var tex in CustomTextures)
-                {
-                    if (BlockTextureData.list != null && BlockTextureData.list[tex.PaintID] != null)
-                    {
-                        BlockTextureData.list[tex.PaintID].TextureID = (ushort)tex.NewSliceIndex;
-                        Logger.Info($"Mapped UI PaintID {tex.PaintID} to GPU Slice {tex.NewSliceIndex}");
-                    }
-                }
+            if (meshDescription.material != null)
+            {
+                UpdateMaterialProperty(meshDescription.material, "_MainTex", oldDiffuse, newDiffuse);
+                UpdateMaterialProperty(meshDescription.material, "_TextureArray", oldDiffuse, newDiffuse);
+                UpdateMaterialProperty(meshDescription.material, "_BumpMap", oldNormal, newNormal);
+                UpdateMaterialProperty(meshDescription.material, "_Normal", oldNormal, newNormal);
+                UpdateMaterialProperty(meshDescription.material, "_SpecularMap", oldSpecular, newSpecular);
+                UpdateMaterialProperty(meshDescription.material, "_GlossMap", oldSpecular, newSpecular);
+                UpdateMaterialProperty(meshDescription.material, "_MetallicGlossMap", oldSpecular, newSpecular);
             }
         }
 
-        private static void UpdateMaterialProperty(Material mat, string propertyName, Texture oldTex, Texture newTex)
+        private static void LoadTextureConfig(Mod mod, string configPath)
         {
-            if (mat.HasProperty(propertyName))
+            try
             {
-                if (mat.GetTexture(propertyName) == oldTex)
+                XDocument document = XDocument.Load(configPath);
+                if (document.Root == null) return;
+
+                foreach (XElement element in document.Root.Elements("opaque"))
                 {
-                    mat.SetTexture(propertyName, newTex);
+                    string name = GetAttribute(element, "id");
+                    string bundlePath = GetAttribute(element, "bundle");
+                    string diffuse = GetAttribute(element, "diffuse");
+                    string normal = GetAttribute(element, "normal");
+                    string specular = GetAttribute(element, "specular");
+                    if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(bundlePath) ||
+                        string.IsNullOrEmpty(diffuse) || string.IsNullOrEmpty(normal) || string.IsNullOrEmpty(specular))
+                    {
+                        Logger.Warning($"[CustomTextures] Ignoring malformed texture definition in '{configPath}'.");
+                        continue;
+                    }
+
+                    if (!Path.IsPathRooted(bundlePath)) bundlePath = Path.Combine(mod.Path, bundlePath);
+
+                    RegisterDefinition(new CustomTexture
+                    {
+                        Name = name,
+                        DisplayName = GetAttribute(element, "name") ?? name,
+                        BundlePath = bundlePath,
+                        DiffuseName = diffuse,
+                        NormalName = normal,
+                        SpecularName = specular,
+                        Group = GetAttribute(element, "group") ?? "Custom",
+                        PaintCost = ParseUShort(GetAttribute(element, "paintCost"), 1),
+                        SortIndex = ParseByte(GetAttribute(element, "sortIndex"), byte.MaxValue),
+                        Hidden = ParseBool(GetAttribute(element, "hidden"))
+                    }, mod.Name);
                 }
+            }
+            catch (Exception exception)
+            {
+                Logger.Error($"[CustomTextures] Failed to load '{configPath}': {exception.Message}");
+            }
+        }
+
+        private static void RegisterDefinition(CustomTexture definition, string modName)
+        {
+            if (string.IsNullOrEmpty(definition.Name)) return;
+
+            foreach (CustomTexture existing in CustomTextures)
+            {
+                if (string.Equals(existing.Name, definition.Name, StringComparison.OrdinalIgnoreCase))
+                {
+                    Logger.Warning($"[CustomTextures] Ignoring duplicate texture id '{definition.Name}' from '{modName}'.");
+                    return;
+                }
+            }
+
+            CustomTextures.Add(definition);
+            Logger.Info($"[CustomTextures] Registered '{definition.Name}' from '{modName}'.");
+        }
+
+        private static void FinalizeRegistrations()
+        {
+            if (registrationsFinalized) return;
+
+            registrationsFinalized = true;
+            if (CustomTextures.Count == 0) return;
+
+            MeshDescription opaqueMesh = MeshDescription.meshes[MeshDescription.MESH_OPAQUE];
+            TextureAtlasBlocks atlas = opaqueMesh?.textureAtlas as TextureAtlasBlocks;
+            Texture2DArray diffuse = atlas?.diffuseTexture as Texture2DArray;
+            Texture2DArray normal = atlas?.normalTexture as Texture2DArray;
+            Texture2DArray specular = atlas?.specularTexture as Texture2DArray;
+            if (atlas == null || diffuse == null || normal == null || specular == null || BlockTextureData.list == null)
+            {
+                Logger.Error("[CustomTextures] The opaque texture atlas was unavailable; custom paints were not registered.");
+                return;
+            }
+
+            List<CustomTexture> compatibleTextures = new List<CustomTexture>();
+            foreach (CustomTexture texture in CustomTextures)
+            {
+                if (ValidateTextureAssets(texture, diffuse, normal, specular)) compatibleTextures.Add(texture);
+            }
+
+            HashSet<int> reservedPaintIds = new HashSet<int>();
+            foreach (CustomTexture texture in compatibleTextures)
+            {
+                int paintId = FindFreePaintId(reservedPaintIds);
+                if (paintId < 0)
+                {
+                    Logger.Error($"[CustomTextures] No free paint-menu slot remains for '{texture.Name}'.");
+                    continue;
+                }
+
+                texture.PaintID = paintId;
+                reservedPaintIds.Add(paintId);
+                activeTextures.Add(texture);
+            }
+
+            if (activeTextures.Count == 0) return;
+
+            int firstTextureId = Math.Max(FirstCustomTextureId, atlas.uvMapping?.Length ?? 0);
+            if (firstTextureId + activeTextures.Count > ushort.MaxValue)
+            {
+                Logger.Error("[CustomTextures] Texture atlas ID limit reached; custom paints were not registered.");
+                activeTextures.Clear();
+                return;
+            }
+
+            if (atlas.uvMapping == null) atlas.uvMapping = new UVRectTiling[firstTextureId + activeTextures.Count];
+            else if (atlas.uvMapping.Length < firstTextureId + activeTextures.Count)
+                Array.Resize(ref atlas.uvMapping, firstTextureId + activeTextures.Count);
+
+            for (int index = 0; index < activeTextures.Count; index++)
+            {
+                CustomTexture texture = activeTextures[index];
+                int textureId = firstTextureId + index;
+                texture.TextureID = (ushort)textureId;
+                texture.NewSliceIndex = diffuse.depth + index;
+
+                atlas.uvMapping[textureId] = new UVRectTiling
+                {
+                    index = texture.NewSliceIndex,
+                    textureName = texture.Name,
+                    uv = new Rect(0f, 0f, 1f, 1f),
+                    bGlobalUV = false,
+                    bSwitchUV = false
+                };
+
+                BlockTextureData data = new BlockTextureData
+                {
+                    ID = texture.PaintID,
+                    TextureID = texture.TextureID,
+                    Name = texture.DisplayName,
+                    LocalizedName = texture.DisplayName,
+                    Group = texture.Group,
+                    PaintCost = texture.PaintCost,
+                    SortIndex = texture.SortIndex,
+                    Hidden = texture.Hidden
+                };
+
+                BlockTextureData.list[texture.PaintID] = data;
+                data.Init();
+                textureIdsByName.Add(texture.Name, textureId);
+                Logger.Info($"[CustomTextures] '{texture.Name}' uses paint slot {texture.PaintID}, texture ID {textureId}, and atlas slice {texture.NewSliceIndex}.");
+            }
+        }
+
+        private static int FindFreePaintId(HashSet<int> reservedPaintIds)
+        {
+            int lastPaintId = Math.Min(255, BlockTextureData.list.Length - 1);
+            for (int paintId = 1; paintId <= lastPaintId; paintId++)
+            {
+                if (BlockTextureData.list[paintId] == null && !reservedPaintIds.Contains(paintId)) return paintId;
+            }
+
+            return -1;
+        }
+
+        private static bool ValidateTextureAssets(CustomTexture definition, Texture2DArray diffuse, Texture2DArray normal, Texture2DArray specular)
+        {
+            AssetBundle bundle = AssetBundle.LoadFromFile(definition.BundlePath);
+            if (bundle == null)
+            {
+                Logger.Error($"[CustomTextures] '{definition.Name}' could not load bundle '{definition.BundlePath}'.");
+                return false;
+            }
+
+            try
+            {
+                return ValidateTextureAsset(bundle, definition, "Diffuse", definition.DiffuseName, diffuse) &&
+                    ValidateTextureAsset(bundle, definition, "Normal", definition.NormalName, normal) &&
+                    ValidateTextureAsset(bundle, definition, "Specular", definition.SpecularName, specular);
+            }
+            finally
+            {
+                bundle.Unload(false);
+            }
+        }
+
+        private static bool ValidateTextureAsset(AssetBundle bundle, CustomTexture definition, string channel, string assetName, Texture2DArray target)
+        {
+            Texture2D source = bundle.LoadAsset<Texture2D>(assetName);
+            if (source == null)
+            {
+                Logger.Error($"[CustomTextures] '{definition.Name}' is missing its {channel} asset '{assetName}'.");
+                return false;
+            }
+
+            if (TryGetCompatibleBaseMip(source, target, out int baseMip)) return true;
+
+            Logger.Error(
+                $"[CustomTextures] '{definition.Name}' {channel} asset '{assetName}' is incompatible. " +
+                $"Expected {target.width}x{target.height}, {target.format}, and {target.mipmapCount} usable mip level(s); " +
+                $"received {source.width}x{source.height}, {source.format}, and {source.mipmapCount} mip level(s).");
+            return false;
+        }
+
+        private static Texture2DArray ExpandTextureArray(Texture2DArray original, string textureType)
+        {
+            Texture2DArray expanded = new Texture2DArray(
+                original.width,
+                original.height,
+                original.depth + activeTextures.Count,
+                original.format,
+                original.mipmapCount > 1,
+                textureType != "Diffuse");
+
+            expanded.name = "lizzies_extended_" + textureType.ToLowerInvariant();
+            expanded.filterMode = original.filterMode;
+            expanded.wrapMode = original.wrapMode;
+            expanded.anisoLevel = original.anisoLevel;
+
+            for (int slice = 0; slice < original.depth; slice++)
+            {
+                for (int mip = 0; mip < original.mipmapCount; mip++)
+                {
+                    Graphics.CopyTexture(original, slice, mip, expanded, slice, mip);
+                }
+            }
+
+            foreach (CustomTexture customTexture in activeTextures)
+            {
+                AssetBundle bundle = AssetBundle.LoadFromFile(customTexture.BundlePath);
+                if (bundle == null) continue;
+
+                try
+                {
+                    string assetName = GetAssetName(customTexture, textureType);
+                    Texture2D source = bundle.LoadAsset<Texture2D>(assetName);
+                    if (source == null || !TryGetCompatibleBaseMip(source, original, out int baseMip)) continue;
+
+                    for (int mip = 0; mip < original.mipmapCount; mip++)
+                    {
+                        Graphics.CopyTexture(source, 0, baseMip + mip, expanded, customTexture.NewSliceIndex, mip);
+                    }
+                }
+                finally
+                {
+                    bundle.Unload(false);
+                }
+            }
+
+            return expanded;
+        }
+
+        private static bool TryGetCompatibleBaseMip(Texture2D source, Texture2DArray target, out int baseMip)
+        {
+            baseMip = 0;
+            if (source.format != target.format) return false;
+
+            int sourceWidth = source.width;
+            int sourceHeight = source.height;
+            while (sourceWidth > target.width || sourceHeight > target.height)
+            {
+                sourceWidth = Math.Max(1, sourceWidth / 2);
+                sourceHeight = Math.Max(1, sourceHeight / 2);
+                baseMip++;
+            }
+
+            return sourceWidth == target.width &&
+                sourceHeight == target.height &&
+                source.mipmapCount >= baseMip + target.mipmapCount;
+        }
+
+        private static string ResolveTextureValue(string value)
+        {
+            string[] textureNames = value.Split(',');
+            bool resolvedAny = false;
+            for (int index = 0; index < textureNames.Length; index++)
+            {
+                string textureName = textureNames[index].Trim();
+                if (textureIdsByName.TryGetValue(textureName, out int textureId))
+                {
+                    textureNames[index] = textureId.ToString(CultureInfo.InvariantCulture);
+                    resolvedAny = true;
+                }
+            }
+
+            return resolvedAny ? string.Join(",", textureNames) : value;
+        }
+
+        private static string GetAssetName(CustomTexture texture, string textureType)
+        {
+            if (textureType == "Diffuse") return texture.DiffuseName;
+            if (textureType == "Normal") return texture.NormalName;
+            return texture.SpecularName;
+        }
+
+        private static string GetAttribute(XElement element, string name)
+        {
+            return element.Attribute(name)?.Value;
+        }
+
+        private static ushort ParseUShort(string value, ushort defaultValue)
+        {
+            return ushort.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out ushort parsed) ? parsed : defaultValue;
+        }
+
+        private static byte ParseByte(string value, byte defaultValue)
+        {
+            return byte.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out byte parsed) ? parsed : defaultValue;
+        }
+
+        private static bool ParseBool(string value)
+        {
+            return bool.TryParse(value, out bool parsed) && parsed;
+        }
+
+        private static bool IsExtendedArray(Texture2DArray texture)
+        {
+            return texture != null && texture.name.StartsWith("lizzies_extended_", StringComparison.Ordinal);
+        }
+
+        private static void UpdateMaterialProperty(Material material, string propertyName, Texture oldTexture, Texture newTexture)
+        {
+            if (material.HasProperty(propertyName) && material.GetTexture(propertyName) == oldTexture)
+            {
+                material.SetTexture(propertyName, newTexture);
             }
         }
     }
 
-    [HarmonyPatch(typeof(Block), "Init")]
-    public class Block_Init_Patch
+    [HarmonyPatch(typeof(BlockTexturesFromXML), "CreateBlockTextures")]
+    public class BlockTexturesFromXML_CreateBlockTextures_Patch
     {
-        private static bool _initialized = false;
-
-        public static void Postfix()
+        public static void Postfix(ref IEnumerator __result)
         {
-            if (!_initialized)
-            {
-                CustomTextureManager.InjectBlockTextureData();
-                _initialized = true;
-            }
+            __result = CustomTextureManager.RegisterAfterVanillaTextureLoad(__result);
+        }
+    }
+
+    [HarmonyPatch(typeof(BlocksFromXml), "CreateBlocks")]
+    public class BlocksFromXml_CreateBlocks_Patch
+    {
+        public static void Prefix(XmlFile _xmlFile)
+        {
+            CustomTextureManager.ResolveBlockTextureReferences(_xmlFile);
         }
     }
 
@@ -268,7 +476,7 @@ namespace LizziesMod
     {
         public static void Postfix(MeshDescription __instance)
         {
-            if (__instance.Name.ToLower() != "opaque" || CustomTextureManager.CustomTextures.Count == 0) return;
+            if (!string.Equals(__instance.Name, "opaque", StringComparison.OrdinalIgnoreCase) || CustomTextureManager.CustomTextures.Count == 0) return;
 
             ThreadManager.StartCoroutine(CustomTextureManager.WaitAndExpandTextures(__instance));
         }

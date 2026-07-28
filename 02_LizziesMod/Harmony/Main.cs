@@ -1,5 +1,4 @@
 ﻿using HarmonyLib;
-using LizziesMod.Harmony;
 using UnityEngine;
 
 namespace LizziesMod
@@ -18,8 +17,8 @@ namespace LizziesMod
 
                 Application.logMessageReceivedThreaded += ModErrorHandler.LogCallback;
 
-                // Load our custom changes
-                ModTextures.Init(modInstance);
+                // Discover custom paints before the game builds its texture atlas.
+                CustomTextureManager.LoadAllTextures();
 
                 // Load Mod Settings Manager so we get our settings first
                 ModSettingsManager.LoadAllModSettings();
