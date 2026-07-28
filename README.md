@@ -4,9 +4,28 @@ LizziesMod adds a bunch of awesome stuff and implements a powerful mod settings 
 
 **For 7 Days To Die v3.0+**
 
-## Credits & Special Thanks
+## Installation
 
-Thanks to https://github.com/OCB7D2D/OcbCustomTexturesPaints for their work on custom textures
+You can download a zip archive by going to the "clone" option, or alternatively going to the [releases](https://github.com/llydiacross/lizziesmod/releases) page.
+Afterwards, locate the *Mods* folder for 7 days to die on your respective operating system.
+
+### Windows
+
+```powershell
+C:\Program Files (x86)\Steam\steamapps\common\7 Days To Die\Mods\
+````
+
+### Linux
+
+```sh
+~/.steam/steamapps/common/7 Days To Die/Mods
+```
+
+### OSX / MacOS
+
+```sh
+~/Library/steam/steamapps/common/7 Days To Die/Mods
+ ```
 
 ## Spawnable Props
 
@@ -136,31 +155,6 @@ Custom item actions can block the scroll wheel. Add the XML opt-in to the action
 
 While UsesScrollWheel is true, LizziesMod blocks wheel item cycling, previous/next slot input, toolbelt updates, and inventory item-index changes. Missing, `false`, or malformed `UsesScrollWheel` values leave the action unlocked.
 
-## Installation
+## Credits & Special Thanks
 
-You can download a zip archive by going to the "clone" option, or alternatively going to the [releases](https://github.com/llydiacross/lizziesmod/releases) page.
-Afterwards, locate the *Mods* folder for 7 days to die on your respective operating system.
-
-### Windows
-
-```powershell
-C:\Program Files (x86)\Steam\steamapps\common\7 Days To Die\Mods\
-````
-
-### Linux
-
-```sh
-~/.steam/steamapps/common/7 Days To Die/Mods
-```
-
-### OSX / MacOS
-
-```sh
-~/Library/steam/steamapps/common/7 Days To Die/Mods
- ```
-
-## First time setup
-
-On opening the mod, you should be able to find the new "Mod Settings" page, as well as the icons for whichever mods you have installed on your system.
-If you can click into the menu, then you have successfully installed the mod! :D
-
+Thanks to https://github.com/OCB7D2D/OcbCustomTexturesPaints for their work on custom textures

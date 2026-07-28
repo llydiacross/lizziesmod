@@ -10,9 +10,6 @@
         </Page>
 
        <Page title="Deer" canvas_size="1030,540">
-            <TextArea id="deerCopy" pos="0,0" size="400,290"><![CDATA[Here is a deer.
-
-Please enjoy this deer!]]></TextArea>
             <Image id="deerImage" source="Deer.png" pos="430,0" size="580,327" />
             <TextArea id="deerFooter" pos="155,-360" size="720,100"><![CDATA[Its a cute deer, isn't it?]]></TextArea>
         </Page>
