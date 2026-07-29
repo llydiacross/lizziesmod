@@ -60,7 +60,9 @@ if (CustomInputManager.WasTriggered(
 }
 ```
 
-Inputs also expose `Held` through `WasTriggered(..., CustomInputTrigger.Held)` or `IsHeld(...)`. `category` and `description` are retained as metadata for a future controls screen. Invalid declarations are reported through the XML diagnostics window; matching key groups in separate mods are allowed but generate a warning. These bindings use the mod input registry and are not yet player-rebindable through the native game controls menu.
+Inputs also expose `Held` through `WasTriggered(..., CustomInputTrigger.Held)` or `IsHeld(...)`. Invalid declarations are reported through the XML diagnostics window; matching key groups in separate mods are allowed but generate a warning.
+
+Use **Input Bindings** from the main menu or escape menu to change a binding, or select a mod in **Mod Settings** and choose **Edit Inputs**. Rebinding captures the next non-modifier key with any held `Ctrl`, `Shift`, or `Alt` modifiers; press `Escape` to cancel. **Reset** restores the mod-provided default. User overrides are stored separately in `Application.persistentDataPath/LizziesMod/CustomInputOverrides.xml`, so no mod's `CustomInput.xml` is modified. These bindings use the mod input registry rather than the native game controls menu.
 
 ## Spawn Menu
 

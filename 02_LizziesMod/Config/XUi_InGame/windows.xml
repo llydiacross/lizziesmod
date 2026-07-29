@@ -3,6 +3,7 @@
     <append xpath="/windows/window[@name='ingameMenu']/grid">
         <simplebutton name="btnModSettings" depth="3" pos="0, -310" width="250" height="40" font_size="24" caption="MOD SETTINGS" />
         <simplebutton name="btnModLibrary" depth="3" pos="0, -350" width="250" height="40" font_size="24" caption="MOD README" />
+        <simplebutton name="btnCustomInputs" depth="3" pos="0, -390" width="250" height="40" font_size="24" caption="INPUT BINDINGS" />
     </append>
 
     <append xpath="/windows">
@@ -320,6 +321,7 @@
                 <rect depth="3" pos="0,0" height="50">
                     <sprite depth="1" sprite="menu_empty" type="sliced" color="0,0,0,255" />
                     <label depth="2" text="MOD SETTINGS" font_size="32" justify="center" pivot="center" pos="600,-25" color="255,180,0,255" upper_case="true" />
+                    <simplebutton name="btnEditInputs" depth="3" pos="1090,-7" width="230" height="36" font_size="18" caption="EDIT INPUTS" visible="false" />
                 </rect>
 
                 
@@ -395,6 +397,62 @@
                     <simplebutton name="btnSaveProfile" depth="5" pos="580,0" width="200" height="40" font_size="22" caption="SAVE PROFILE" />
       
                     <simplebutton name="btnClose" depth="5" pos="790,0" width="370" height="40" font_size="26" caption="CLOSE &amp; SAVE" />
+                </rect>
+            </rect>
+        </window>
+
+        <window name="windowCustomInputs" depth="200" width="1180" height="720" anchor="Center" cursor_area="true" lock_navigation="true" controller="LizziesMod.CustomInputBindingsUIController, LizziesMod">
+            <fullscreencollider color="0,0,0,220" />
+            <rect depth="0" pos="-590,360" width="1180" height="720">
+                <sprite depth="1" name="background" sprite="menu_empty" type="sliced" color="30,30,30,250" />
+                <sprite depth="2" name="border" sprite="menu_empty2px" type="sliced" color="255,180,0,255" fillcenter="false" />
+                <rect depth="3" pos="0,0" height="50">
+                    <sprite depth="1" sprite="menu_empty" type="sliced" color="0,0,0,255" />
+                    <label depth="2" pos="0,-10" width="1180" height="30" text="INPUT BINDINGS" font_size="32" justify="center" color="255,180,0,255" />
+                </rect>
+                <rect name="leftPanel" depth="3" pos="20,-70" width="290" height="570">
+                    <sprite depth="1" sprite="menu_empty" type="sliced" color="15,15,15,255" />
+                    <sprite depth="2" sprite="menu_empty2px" type="sliced" color="60,60,60,255" fillcenter="false" />
+                    <rect depth="3" pos="5,-5" width="280" height="560" on_scroll="true">
+                        <defaultscrollbar />
+                        <scrollview width="260" clippingsoftness="0,10">
+                            <grid name="modListGrid" pos="0,0" rows="50" cols="1" cell_width="250" cell_height="54" arrangement="vertical" repeat_content="true">
+                                <rect name="modInputEntry" controller="LizziesMod.CustomInputModEntryController, LizziesMod" width="250" height="50">
+                                    <button name="clickable" depth="2" width="250" height="50" sprite="menu_empty" type="sliced" defaultcolor="40,40,40,255" hovercolor="80,180,255,255" />
+                                    <label name="lblModName" depth="3" pos="12,-7" width="220" height="22" text="MOD NAME" font_size="18" color="255,255,255,255" />
+                                    <label name="lblInputCount" depth="3" pos="12,-29" width="220" height="16" text="0 INPUTS" font_size="14" color="180,180,180,255" />
+                                    <sprite name="sprSelected" depth="4" pos="0,-47" width="250" height="3" sprite="menu_empty" type="sliced" color="255,180,0,255" visible="false" />
+                                </rect>
+                            </grid>
+                        </scrollview>
+                    </rect>
+                </rect>
+                <rect name="rightPanel" depth="3" pos="330,-70" width="830" height="570">
+                    <sprite depth="1" sprite="menu_empty" type="sliced" color="15,15,15,255" />
+                    <sprite depth="2" sprite="menu_empty2px" type="sliced" color="60,60,60,255" fillcenter="false" />
+                    <label name="lblModTitle" depth="3" pos="10,-10" width="810" height="30" text="MOD INPUTS" font_size="26" justify="center" color="255,180,0,255" />
+                    <label name="lblInputCount" depth="3" pos="10,-43" width="810" height="20" text="0 INPUTS" font_size="16" justify="center" color="180,180,180,255" />
+                    <label name="lblCaptureStatus" depth="3" pos="10,-68" width="810" height="24" text="" font_size="16" justify="center" color="80,180,255,255" visible="false" />
+                    <rect depth="3" pos="10,-98" width="810" height="445" on_scroll="true">
+                        <defaultscrollbar />
+                        <scrollview width="790" clippingsoftness="0,10">
+                            <grid name="inputListGrid" pos="0,0" rows="50" cols="1" cell_width="790" cell_height="66" arrangement="vertical" repeat_content="true">
+                                <rect name="customInputEntry" controller="LizziesMod.CustomInputEntryController, LizziesMod" width="790" height="62">
+                                    <sprite depth="1" width="790" height="62" sprite="menu_empty" type="sliced" color="40,40,40,255" />
+                                    <label name="lblDescription" depth="2" pos="14,-7" width="330" height="24" text="INPUT DESCRIPTION" font_size="19" color="255,255,255,255" />
+                                    <label name="lblCategory" depth="2" pos="14,-32" width="330" height="18" text="CATEGORY" font_size="14" color="180,180,180,255" />
+                                    <label name="lblBinding" depth="2" pos="350,-7" width="180" height="24" text="CTRL+P" font_size="19" justify="center" color="80,180,255,255" />
+                                    <label name="lblDefault" depth="2" pos="350,-32" width="180" height="18" text="DEFAULT: CTRL+P" font_size="14" justify="center" color="180,180,180,255" />
+                                    <simplebutton name="btnRebind" depth="2" pos="545,-11" width="125" height="38" font_size="17" caption="REBIND" />
+                                    <simplebutton name="btnReset" depth="2" pos="680,-11" width="95" height="38" font_size="17" caption="RESET" />
+                                </rect>
+                            </grid>
+                        </scrollview>
+                    </rect>
+                </rect>
+                <rect depth="4" pos="20,-670" width="1140" height="40">
+                    <simplebutton name="btnCancelCapture" depth="5" pos="0,0" width="260" height="40" font_size="20" caption="CANCEL REBIND" />
+                    <simplebutton name="btnClose" depth="5" pos="280,0" width="860" height="40" font_size="24" caption="RETURN TO GAME" />
                 </rect>
             </rect>
         </window>

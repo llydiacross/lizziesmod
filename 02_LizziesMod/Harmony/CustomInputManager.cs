@@ -20,9 +20,10 @@ namespace LizziesMod
         public string Name { get; private set; }
         public string Category { get; private set; }
         public string Description { get; private set; }
+        public string DefaultChord { get; private set; }
         public string Chord { get; private set; }
 
-        internal readonly List<List<KeyCode>> KeyGroups;
+        internal List<List<KeyCode>> KeyGroups { get; private set; }
         internal bool IsHeld;
         internal bool WasPressed;
         internal bool WasReleased;
@@ -39,19 +40,36 @@ namespace LizziesMod
             Name = name;
             Category = category;
             Description = description;
-            Chord = chord;
             Id = CustomInputManager.GetInputId(modName, name);
+            DefaultChord = chord;
+            SetChord(chord, keyGroups);
+        }
+
+        internal void SetChord(string chord, List<List<KeyCode>> keyGroups)
+        {
+            Chord = chord;
             KeyGroups = keyGroups;
         }
     }
 
     public class CustomInputManager : MonoBehaviour
     {
+        private const string OverrideDirectoryName = "LizziesMod";
+        private const string OverrideFileName = "CustomInputOverrides.xml";
         private static readonly Dictionary<string, CustomInputDefinition> inputsById =
             new Dictionary<string, CustomInputDefinition>(StringComparer.OrdinalIgnoreCase);
         private static readonly Dictionary<string, Dictionary<CustomInputTrigger, List<Action>>> handlersByInputId =
             new Dictionary<string, Dictionary<CustomInputTrigger, List<Action>>>(StringComparer.OrdinalIgnoreCase);
+        private static readonly Dictionary<string, string> overridesByInputId =
+            new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        private static readonly KeyCode[] allKeyCodes = (KeyCode[])Enum.GetValues(typeof(KeyCode));
         private static bool isInitialized;
+        private static string capturedInputId;
+        private static int captureStartFrame;
+        private static bool suppressNextInputDispatch;
+
+        public static bool IsCapturing { get { return !string.IsNullOrEmpty(capturedInputId); } }
+        public static string CapturedInputId { get { return capturedInputId ?? ""; } }
 
         public static void Initialize()
         {
@@ -67,6 +85,8 @@ namespace LizziesMod
 
         public static void ReloadInputs()
         {
+            CancelRebind();
+            LoadOverrides();
             inputsById.Clear();
             int loadedCount = 0;
 
@@ -86,6 +106,87 @@ namespace LizziesMod
         public static bool HasInput(string modName, string inputName)
         {
             return inputsById.ContainsKey(GetInputId(modName, inputName));
+        }
+
+        public static CustomInputDefinition GetInput(string inputId)
+        {
+            CustomInputDefinition definition;
+            return inputsById.TryGetValue(inputId ?? "", out definition) ? definition : null;
+        }
+
+        public static List<CustomInputDefinition> GetInputsForMod(string modName)
+        {
+            List<CustomInputDefinition> result = new List<CustomInputDefinition>();
+            foreach (CustomInputDefinition definition in inputsById.Values)
+            {
+                if (definition.ModName.Equals(modName ?? "", StringComparison.OrdinalIgnoreCase))
+                {
+                    result.Add(definition);
+                }
+            }
+
+            result.Sort((left, right) => string.Compare(left.Name, right.Name, StringComparison.OrdinalIgnoreCase));
+            return result;
+        }
+
+        public static bool BeginRebind(string inputId)
+        {
+            if (!inputsById.ContainsKey(inputId ?? "")) return false;
+
+            capturedInputId = inputId;
+            captureStartFrame = Time.frameCount;
+            suppressNextInputDispatch = true;
+            ClearInputTransitions();
+            return true;
+        }
+
+        public static void CancelRebind()
+        {
+            if (!IsCapturing) return;
+
+            capturedInputId = null;
+            suppressNextInputDispatch = true;
+            ClearInputTransitions();
+        }
+
+        public static bool TryRebind(string inputId, string chord, out string error)
+        {
+            error = null;
+            CustomInputDefinition definition;
+            if (!inputsById.TryGetValue(inputId ?? "", out definition))
+            {
+                error = "The selected input no longer exists.";
+                return false;
+            }
+
+            List<List<KeyCode>> keyGroups;
+            if (!TryParseChord(chord, out keyGroups, out error)) return false;
+
+            string normalizedChord = BuildChord(keyGroups);
+            definition.SetChord(normalizedChord, keyGroups);
+            overridesByInputId[inputId] = normalizedChord;
+            SaveOverrides();
+            ReportRuntimeChordConflict(definition);
+            return true;
+        }
+
+        public static bool RestoreDefault(string inputId)
+        {
+            CustomInputDefinition definition;
+            if (!inputsById.TryGetValue(inputId ?? "", out definition)) return false;
+
+            List<List<KeyCode>> keyGroups;
+            string error;
+            if (!TryParseChord(definition.DefaultChord, out keyGroups, out error))
+            {
+                Logger.Error($"[CustomInput] Cannot restore default for '{inputId}': {error}");
+                return false;
+            }
+
+            definition.SetChord(BuildChord(keyGroups), keyGroups);
+            overridesByInputId.Remove(inputId);
+            SaveOverrides();
+            return true;
         }
 
         public static void Subscribe(string modName, string inputName, CustomInputTrigger trigger, Action handler)
@@ -180,6 +281,19 @@ namespace LizziesMod
 
         private void Update()
         {
+            if (IsCapturing)
+            {
+                UpdateCapture();
+                return;
+            }
+
+            if (suppressNextInputDispatch)
+            {
+                SynchronizeInputStates();
+                suppressNextInputDispatch = false;
+                return;
+            }
+
             List<CustomInputDefinition> definitions = new List<CustomInputDefinition>(inputsById.Values);
             foreach (CustomInputDefinition definition in definitions)
             {
@@ -231,6 +345,7 @@ namespace LizziesMod
                         continue;
                     }
 
+                    ApplyOverride(definition);
                     ReportChordConflict(definition);
                     inputsById.Add(definition.Id, definition);
                     loadedCount++;
@@ -284,7 +399,7 @@ namespace LizziesMod
                 return false;
             }
 
-            definition = new CustomInputDefinition(modName, name, category, description, chord, keyGroups);
+            definition = new CustomInputDefinition(modName, name, category, description, BuildChord(keyGroups), keyGroups);
             return true;
         }
 
@@ -388,6 +503,189 @@ namespace LizziesMod
             return true;
         }
 
+        private static void UpdateCapture()
+        {
+            if (Time.frameCount <= captureStartFrame) return;
+
+            if (Input.GetKeyDown(KeyCode.Escape))
+            {
+                CancelRebind();
+                return;
+            }
+
+            foreach (KeyCode keyCode in allKeyCodes)
+            {
+                if (!IsCapturablePrimaryKey(keyCode) || !Input.GetKeyDown(keyCode)) continue;
+
+                List<string> chordParts = new List<string>();
+                if (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)) chordParts.Add("Ctrl");
+                if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift)) chordParts.Add("Shift");
+                if (Input.GetKey(KeyCode.LeftAlt) || Input.GetKey(KeyCode.RightAlt)) chordParts.Add("Alt");
+                chordParts.Add(keyCode.ToString());
+
+                string inputId = capturedInputId;
+                string error;
+                bool rebound = TryRebind(inputId, string.Join("+", chordParts), out error);
+                if (!rebound)
+                {
+                    Logger.Warning($"[CustomInput] Could not rebind '{inputId}': {error}");
+                }
+
+                capturedInputId = null;
+                suppressNextInputDispatch = true;
+                ClearInputTransitions();
+                return;
+            }
+        }
+
+        private static bool IsCapturablePrimaryKey(KeyCode keyCode)
+        {
+            return keyCode != KeyCode.None &&
+                   keyCode != KeyCode.Escape &&
+                   !IsModifierKey(keyCode);
+        }
+
+        private static bool IsModifierKey(KeyCode keyCode)
+        {
+            return keyCode == KeyCode.LeftControl ||
+                   keyCode == KeyCode.RightControl ||
+                   keyCode == KeyCode.LeftShift ||
+                   keyCode == KeyCode.RightShift ||
+                   keyCode == KeyCode.LeftAlt ||
+                   keyCode == KeyCode.RightAlt;
+        }
+
+        private static string BuildChord(List<List<KeyCode>> keyGroups)
+        {
+            List<string> chordParts = new List<string>();
+            foreach (List<KeyCode> keyGroup in keyGroups)
+            {
+                if (IsModifierGroup(keyGroup, KeyCode.LeftControl, KeyCode.RightControl)) chordParts.Add("Ctrl");
+                else if (IsModifierGroup(keyGroup, KeyCode.LeftShift, KeyCode.RightShift)) chordParts.Add("Shift");
+                else if (IsModifierGroup(keyGroup, KeyCode.LeftAlt, KeyCode.RightAlt)) chordParts.Add("Alt");
+                else if (keyGroup.Count > 0) chordParts.Add(keyGroup[0].ToString());
+            }
+
+            return string.Join("+", chordParts);
+        }
+
+        private static bool IsModifierGroup(List<KeyCode> keyGroup, KeyCode leftKey, KeyCode rightKey)
+        {
+            return keyGroup.Count == 2 && keyGroup.Contains(leftKey) && keyGroup.Contains(rightKey);
+        }
+
+        private static void SynchronizeInputStates()
+        {
+            foreach (CustomInputDefinition definition in inputsById.Values)
+            {
+                definition.IsHeld = IsChordHeld(definition);
+                definition.WasPressed = false;
+                definition.WasReleased = false;
+            }
+        }
+
+        private static void ClearInputTransitions()
+        {
+            foreach (CustomInputDefinition definition in inputsById.Values)
+            {
+                definition.WasPressed = false;
+                definition.WasReleased = false;
+            }
+        }
+
+        private static void ApplyOverride(CustomInputDefinition definition)
+        {
+            string overrideChord;
+            if (!overridesByInputId.TryGetValue(definition.Id, out overrideChord)) return;
+
+            List<List<KeyCode>> keyGroups;
+            string error;
+            if (!TryParseChord(overrideChord, out keyGroups, out error))
+            {
+                Logger.Warning($"[CustomInput] Ignoring invalid saved override for '{definition.Id}': {error}");
+                return;
+            }
+
+            definition.SetChord(BuildChord(keyGroups), keyGroups);
+        }
+
+        private static string GetOverridePath()
+        {
+            return Path.Combine(Application.persistentDataPath, OverrideDirectoryName, OverrideFileName);
+        }
+
+        private static void LoadOverrides()
+        {
+            overridesByInputId.Clear();
+            string overridePath = GetOverridePath();
+            if (!File.Exists(overridePath)) return;
+
+            try
+            {
+                XmlDocument document = new XmlDocument();
+                document.Load(overridePath);
+                if (document.DocumentElement == null || document.DocumentElement.Name != "CustomInputOverrides")
+                {
+                    Logger.Warning($"[CustomInput] Ignoring '{overridePath}': expected <CustomInputOverrides>.");
+                    return;
+                }
+
+                XmlNodeList inputNodes = document.SelectNodes("/CustomInputOverrides/Input");
+                if (inputNodes == null) return;
+
+                foreach (XmlNode inputNode in inputNodes)
+                {
+                    string inputId = inputNode.Attributes?["id"]?.Value?.Trim();
+                    string chord = inputNode.Attributes?["keys"]?.Value?.Trim();
+                    List<List<KeyCode>> keyGroups;
+                    string error;
+                    if (string.IsNullOrEmpty(inputId) || !TryParseChord(chord, out keyGroups, out error))
+                    {
+                        Logger.Warning($"[CustomInput] Ignoring an invalid saved input override in '{overridePath}'.");
+                        continue;
+                    }
+
+                    overridesByInputId[inputId] = BuildChord(keyGroups);
+                }
+            }
+            catch (Exception exception)
+            {
+                Logger.Warning($"[CustomInput] Failed to load '{overridePath}': {exception.Message}");
+            }
+        }
+
+        private static void SaveOverrides()
+        {
+            try
+            {
+                string overridePath = GetOverridePath();
+                string overrideDirectory = Path.GetDirectoryName(overridePath);
+                if (!string.IsNullOrEmpty(overrideDirectory)) Directory.CreateDirectory(overrideDirectory);
+
+                List<string> inputIds = new List<string>(overridesByInputId.Keys);
+                inputIds.Sort(StringComparer.OrdinalIgnoreCase);
+                using (XmlWriter writer = XmlWriter.Create(overridePath, new XmlWriterSettings { Indent = true }))
+                {
+                    writer.WriteStartDocument();
+                    writer.WriteStartElement("CustomInputOverrides");
+                    foreach (string inputId in inputIds)
+                    {
+                        writer.WriteStartElement("Input");
+                        writer.WriteAttributeString("id", inputId);
+                        writer.WriteAttributeString("keys", overridesByInputId[inputId]);
+                        writer.WriteEndElement();
+                    }
+
+                    writer.WriteEndElement();
+                    writer.WriteEndDocument();
+                }
+            }
+            catch (Exception exception)
+            {
+                Logger.Error($"[CustomInput] Failed to save input overrides: {exception.Message}");
+            }
+        }
+
         private static void Dispatch(string inputId, CustomInputTrigger trigger)
         {
             Dictionary<CustomInputTrigger, List<Action>> handlersByTrigger;
@@ -422,6 +720,20 @@ namespace LizziesMod
                 ModErrorHandler.ReportXmlWarning(
                     definition.ModName,
                     $"CustomInput.xml: input '{definition.Name}' shares '{definition.Chord}' with '{existingDefinition.Id}'.");
+            }
+        }
+
+        private static void ReportRuntimeChordConflict(CustomInputDefinition definition)
+        {
+            foreach (CustomInputDefinition existingDefinition in inputsById.Values)
+            {
+                if (existingDefinition.Id.Equals(definition.Id, StringComparison.OrdinalIgnoreCase) ||
+                    !definition.Chord.Equals(existingDefinition.Chord, StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                Logger.Warning($"[CustomInput] '{definition.Id}' shares '{definition.Chord}' with '{existingDefinition.Id}'.");
             }
         }
 

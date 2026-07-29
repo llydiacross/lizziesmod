@@ -9,6 +9,9 @@
         <window_group name="windowModLibrary" actionset="true" close_comp_on_escape="true">
             <window name="windowModLibrary" />
         </window_group>
+        <window_group name="windowCustomInputs" actionset="true" close_comp_on_escape="true">
+            <window name="windowCustomInputs" />
+        </window_group>
         <window_group name="windowProfileSelector" actionset="true" close_comp_on_escape="true">
             <window name="windowProfileSelector" />
         </window_group>

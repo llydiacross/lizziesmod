@@ -8,6 +8,7 @@ namespace LizziesMod
     public class ModSettingsUIController : XUiController
     {
         public static string PreviousMenu = "";
+        public static string RequestedModName = "";
 
         private string selectedMod = "";
         public string SelectedMod => selectedMod;
@@ -22,6 +23,7 @@ namespace LizziesMod
         private XUiC_TextInput txtProfileName;
         private XUiController btnLoadProfile;
         private XUiController btnSaveProfile;
+        private XUiController btnEditInputs;
         public static string LastLoadedProfile = "";
         private bool isTransitioning = false;
 
@@ -61,6 +63,12 @@ namespace LizziesMod
                         ModSettingsManager.SaveProfile(txtProfileName.Text);
                     }
                 };
+            }
+            btnEditInputs = GetChildById("btnEditInputs");
+            if (btnEditInputs != null)
+            {
+                XUiController clickable = btnEditInputs.GetChildById("clickable") ?? btnEditInputs;
+                clickable.OnPress += (s, e) => OpenSelectedModInputs();
             }
             XUiController closeBtn = GetChildById("btnClose");
             if (closeBtn != null)
@@ -131,7 +139,13 @@ namespace LizziesMod
                 txtProfileName.Text = LastLoadedProfile;
             }
 
-            if (ModSettingsManager.AllModSettings.ContainsKey("LizziesMod"))
+            string requestedModName = RequestedModName;
+            RequestedModName = "";
+            if (!string.IsNullOrEmpty(requestedModName) && ModSettingsManager.AllModSettings.ContainsKey(requestedModName))
+            {
+                SelectMod(requestedModName);
+            }
+            else if (ModSettingsManager.AllModSettings.ContainsKey("LizziesMod"))
             {
                 SelectMod("LizziesMod");
             }
@@ -240,6 +254,7 @@ namespace LizziesMod
             }
 
             PopulateSettingsList();
+            UpdateEditInputsButton();
         }
 
         public void PopulateSettingsList()
@@ -284,6 +299,27 @@ namespace LizziesMod
                     entry.CurrentSetting.SetValue(entry.GetValue());
                 }
             }
+        }
+
+        private void UpdateEditInputsButton()
+        {
+            if (btnEditInputs?.viewComponent == null) return;
+
+            btnEditInputs.viewComponent.IsVisible = !string.IsNullOrEmpty(selectedMod) &&
+                CustomInputManager.GetInputsForMod(selectedMod).Count > 0;
+        }
+
+        private void OpenSelectedModInputs()
+        {
+            if (string.IsNullOrEmpty(selectedMod) || CustomInputManager.GetInputsForMod(selectedMod).Count == 0) return;
+
+            SaveCurrentSettingsUI();
+            isTransitioning = true;
+            RequestedModName = selectedMod;
+            CustomInputBindingsUIController.RequestedModName = selectedMod;
+            CustomInputBindingsUIController.PreviousMenu = "windowModSettings";
+            xui.playerUI.windowManager.Close("windowModSettings");
+            xui.playerUI.windowManager.Open(CustomInputBindingsUIController.WindowName, true);
         }
     }
 
