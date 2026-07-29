@@ -27,13 +27,48 @@ C:\Program Files (x86)\Steam\steamapps\common\7 Days To Die\Mods\
 ~/Library/steam/steamapps/common/7 Days To Die/Mods
  ```
 
+## Custom Inputs
+
+Every loaded mod can add `Config/CustomInput.xml`. The input is namespaced by the mod that owns the file, so names only need to be unique within that mod:
+
+```xml
+<CustomInputs>
+	<Input name="openSpawnMenu"
+		   category="Spawn Menu"
+		   description="Open the Spawn Menu"
+		   keys="Ctrl+P" />
+</CustomInputs>
+```
+
+`keys` is a `+`-separated combination of keycodes. `Ctrl`, `Shift`, and `Alt` match either left or right modifier key; all other values must be Unity `KeyCode` names such as `P`, `F5`, `Mouse0`, or `Keypad1`. Every key in the group must be held. The registry derives `Pressed` and `Released` from the full group state, so releasing either the modifier or primary key correctly ends the input.
+
+In code, subscribe to an input or query it by its owner mod and name:
+
+```csharp
+CustomInputManager.Subscribe(
+	"ExampleMod",
+	"openWorkbench",
+	CustomInputTrigger.Pressed,
+	OpenWorkbench);
+
+if (CustomInputManager.WasTriggered(
+		"ExampleMod",
+		"openWorkbench",
+		CustomInputTrigger.Released))
+{
+	CloseWorkbench();
+}
+```
+
+Inputs also expose `Held` through `WasTriggered(..., CustomInputTrigger.Held)` or `IsHeld(...)`. `category` and `description` are retained as metadata for a future controls screen. Invalid declarations are reported through the XML diagnostics window; matching key groups in separate mods are allowed but generate a warning. These bindings use the mod input registry and are not yet player-rebindable through the native game controls menu.
+
 ## Spawn Menu
 
 Enable `LizziesMod_PropSpawner`, then enter a Creative Mode world. Press `Ctrl+P` to open the Spawn Menu directly, or select its icon in the Creative Menu header. The **Props**, **Ragdolls**, and **Entities** tabs each have their own category list and search results. Select a tile to spawn it at the point you are aiming at. **Undo Last Spawn** removes your latest Spawn Menu item, while **Remove My Spawns** removes every item you created through the menu.
 
 The menu is restricted to server administrators by default. An administrator can change its spawn distance and per-player/world limits from **Mod Settings**. Props, live entities, and ragdolls have independent limits. Defaults are 30 props per player / 150 world-wide, and 10 entities or ragdolls per player / 30 world-wide. Entity and ragdoll spawning can also be disabled independently.
 
-Other mods can contribute props with `Config/SpawnableProps.xml`:
+Other mods can contribute props, entities and ragdolls with `Config/SpawnableProps.xml`:
 
 ```xml
 <SpawnableProps>
@@ -48,10 +83,18 @@ Other mods can contribute props with `Config/SpawnableProps.xml`:
 			  tags="decor,chair,wood"
 			  mass="10" />
 	</Props>
+	<EntityOverrides>
+		<Entity entity_class="exampleWorkshopGuard"
+			category="friendly"
+			ragdoll_category="friendly"
+			displayName="Workshop Guard"
+			tags="guard,friendly,custom" />
+	</EntityOverrides>
 </SpawnableProps>
 ```
 
 Each prop needs a unique `id` and the name of an existing block. The category is optional; an undeclared category is created automatically. `displayName`, `tags`, and `mass` are optional, with `tags` supporting catalog search.
+
 
 ### Spawnable Entities And Ragdolls
 
@@ -63,7 +106,7 @@ The **Entities** tab automatically includes every loaded vanilla or modded `enti
 </entity_class>
 ```
 
-The **Ragdolls** tab is generated from those same approved entities, but only includes classes that declare ragdoll support. A ragdoll entry follows the normal server-side death lifecycle; it is not a permanently frozen live NPC.
+The **Ragdolls** tab is generated from those same approved entities, but only includes classes that declare ragdoll support. A ragdoll remains alive under a hidden persistent ragdoll buff instead of using the corpse death lifecycle, so **Undo Last Spawn** and **Remove My Spawns** can remove it cleanly.
 
 An optional `Config/SpawnMenu.xml` can customize the presentation of an approved entity without changing eligibility. Categories are tab-specific, and an entity override may set `category`, `ragdoll_category`, `displayName`, and `tags`:
 

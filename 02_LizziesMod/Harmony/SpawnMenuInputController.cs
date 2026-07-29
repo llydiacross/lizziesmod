@@ -1,27 +1,24 @@
-using UnityEngine;
-
 namespace LizziesMod
 {
-    public class SpawnMenuInputController : MonoBehaviour
+    public static class SpawnMenuInputController
     {
-        private const KeyCode SpawnMenuKey = KeyCode.P;
-        private static bool isInitialized;
+        private const string OpenInputName = "openSpawnMenu";
+        private static bool isRegistered;
 
-        public static void Initialize()
+        public static void Register()
         {
-            if (isInitialized) return;
+            if (isRegistered) return;
 
-            isInitialized = true;
-            GameObject inputObject = new GameObject("LizziesSpawnMenuInput");
-            DontDestroyOnLoad(inputObject);
-            inputObject.AddComponent<SpawnMenuInputController>();
+            isRegistered = true;
+            CustomInputManager.Subscribe(
+                SpawnMenuManager.ModName,
+                OpenInputName,
+                CustomInputTrigger.Pressed,
+                OpenSpawnMenu);
         }
 
-        private void Update()
+        private static void OpenSpawnMenu()
         {
-            bool controlHeld = Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl);
-            if (!controlHeld || !Input.GetKeyDown(SpawnMenuKey)) return;
-
             EntityPlayerLocal player = GameManager.Instance?.World?.GetPrimaryPlayer();
             if (player == null || player.playerUI == null || !SpawnMenuManager.CanUse(player)) return;
 

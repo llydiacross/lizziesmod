@@ -18,6 +18,7 @@ namespace LizziesMod
         public const string ModName = "LizziesMod_PropSpawner";
 
         private const string PhysicsPropEntityClass = "lmPhysicsProp";
+        private const string PersistentRagdollBuff = "buffSpawnMenuRagdoll";
         private const float SpawnCooldownSeconds = 0.15f;
         private class SpawnedEntryRecord
         {
@@ -188,8 +189,7 @@ namespace LizziesMod
             }
 
             world.SpawnEntityInWorld(entity);
-            int lethalDamage = Mathf.Max(entity.Health, entity.GetMaxHealth()) + 1;
-            entity.DamageEntity(new DamageSource(EnumDamageSource.Internal, EnumDamageTypes.Suicide), lethalDamage, false, 0f);
+            entity.Buffs.AddBuff(PersistentRagdollBuff);
             RecordSpawn(player.entityId, entity.entityId, SpawnMenuEntryType.Ragdoll);
             Logger.Info($"[SpawnMenu] Spawned ragdoll '{definition.Id}' for player {player.entityId}.");
         }

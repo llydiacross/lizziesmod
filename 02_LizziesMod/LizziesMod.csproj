@@ -42,6 +42,7 @@
     <Compile Include="Harmony\ModPatcher.cs" />
     <Compile Include="Harmony\BlockJukebox.cs" />
     <Compile Include="Harmony\CustomAudioManager.cs" />
+    <Compile Include="Harmony\CustomInputManager.cs" />
     <Compile Include="Harmony\DynamicBackpacksUIPatch.cs" />
     <Compile Include="Harmony\CustomTexture.cs" />
     <Compile Include="Harmony\ItemActionHydraulicBlast.cs" />

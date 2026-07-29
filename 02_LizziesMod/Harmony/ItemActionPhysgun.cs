@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace LizziesMod
@@ -9,6 +10,8 @@ namespace LizziesMod
         public Rigidbody GrabbedRigidbody;
         public GameObject LaserObj;
         public LineRenderer LaserRenderer;
+        public readonly Dictionary<Rigidbody, RigidbodyConstraints> GrabbedRigidbodyConstraints =
+            new Dictionary<Rigidbody, RigidbodyConstraints>();
         public float GrabDistance;
         public bool isHolding;
 
@@ -97,6 +100,8 @@ namespace LizziesMod
                 ReleaseEntity(player, data, false);
                 return;
             }
+
+            LockGrabbedRotation(data);
 
             // freeze
             if (Input.GetMouseButtonDown(1))
@@ -202,7 +207,7 @@ namespace LizziesMod
                     data.GrabbedRigidbody.WakeUp();
                     Vector3 direction = targetPosition - data.GrabbedRigidbody.position;
                     data.GrabbedRigidbody.velocity = direction * 15f;
-                    data.GrabbedRigidbody.angularVelocity = Vector3.Lerp(data.GrabbedRigidbody.angularVelocity, Vector3.zero, Time.deltaTime * 5f);
+                    data.GrabbedRigidbody.angularVelocity = Vector3.zero;
                 }
                 else
                 {
@@ -264,6 +269,8 @@ namespace LizziesMod
                         data.GrabbedRigidbody.isKinematic = false;
                         data.GrabbedRigidbody.WakeUp();
                     }
+
+                    LockGrabbedRotation(data);
 
                     // add a nice shock effect
                     if (hitEntity is EntityAlive aliveTarget)
@@ -344,6 +351,7 @@ namespace LizziesMod
                         data.GrabbedRigidbody.isKinematic = false;
                     }
                 }
+                RestoreGrabbedRotation(data);
                 data.GrabbedEntity = null;
                 data.GrabbedRigidbody = null;
             }
@@ -356,6 +364,37 @@ namespace LizziesMod
             }
 
             data.isHolding = false;
+        }
+
+        private static void LockGrabbedRotation(ItemActionPhysgunData data)
+        {
+            if (data.GrabbedEntity == null) return;
+
+            foreach (Rigidbody rigidbody in data.GrabbedEntity.GetComponentsInChildren<Rigidbody>())
+            {
+                if (rigidbody == null) continue;
+
+                if (!data.GrabbedRigidbodyConstraints.ContainsKey(rigidbody))
+                {
+                    data.GrabbedRigidbodyConstraints.Add(rigidbody, rigidbody.constraints);
+                }
+
+                rigidbody.angularVelocity = Vector3.zero;
+                rigidbody.constraints |= RigidbodyConstraints.FreezeRotation;
+            }
+        }
+
+        private static void RestoreGrabbedRotation(ItemActionPhysgunData data)
+        {
+            foreach (KeyValuePair<Rigidbody, RigidbodyConstraints> entry in data.GrabbedRigidbodyConstraints)
+            {
+                if (entry.Key == null) continue;
+
+                entry.Key.angularVelocity = Vector3.zero;
+                entry.Key.constraints = entry.Value;
+            }
+
+            data.GrabbedRigidbodyConstraints.Clear();
         }
 
         private void UpdateLaser(EntityPlayerLocal player, ItemActionPhysgunData data)

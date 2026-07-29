@@ -1,5 +1,6 @@
 # Alpha Test 3
 
+- Added new custom input system
 - Added custom paints/texture system
 - Added a spawn menu
     - Mods can add spawnable props into the game
