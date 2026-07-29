@@ -15,6 +15,7 @@ namespace LizziesMod
         private XUiV_Label modTitleLabel;
         private XUiV_Label inputCountLabel;
         private XUiV_Label captureStatusLabel;
+        private XUiController cancelCaptureButton;
         private string selectedModName = "";
         private string previousCapturedInputId = "";
 
@@ -26,6 +27,7 @@ namespace LizziesMod
             modTitleLabel = GetChildById("lblModTitle")?.viewComponent as XUiV_Label;
             inputCountLabel = GetChildById("lblInputCount")?.viewComponent as XUiV_Label;
             captureStatusLabel = GetChildById("lblCaptureStatus")?.viewComponent as XUiV_Label;
+            cancelCaptureButton = GetChildById("btnCancelCapture");
 
             BindButton("btnClose", HandleClose);
             BindButton("btnCancelCapture", HandleCancelCapture);
@@ -163,6 +165,9 @@ namespace LizziesMod
         private void RefreshCaptureState()
         {
             string capturedInputId = CustomInputManager.CapturedInputId;
+            bool isCapturing = CustomInputManager.IsCapturing;
+            if (cancelCaptureButton != null) cancelCaptureButton.viewComponent.IsVisible = isCapturing;
+
             if (!capturedInputId.Equals(previousCapturedInputId, StringComparison.OrdinalIgnoreCase))
             {
                 previousCapturedInputId = capturedInputId;
@@ -171,7 +176,7 @@ namespace LizziesMod
 
             if (captureStatusLabel == null) return;
 
-            if (CustomInputManager.IsCapturing)
+            if (isCapturing)
             {
                 CustomInputDefinition definition = CustomInputManager.GetInput(capturedInputId);
                 captureStatusLabel.Text = definition == null
@@ -364,6 +369,27 @@ namespace LizziesMod
                 CustomInputBindingsUIController.PreviousMenu = "mainMenu";
                 CustomInputBindingsUIController.RequestedModName = "";
                 __instance.xui.playerUI.windowManager.Close("mainMenu");
+                __instance.xui.playerUI.windowManager.Open(CustomInputBindingsUIController.WindowName, true);
+            };
+        }
+    }
+
+    [HarmonyPatch(typeof(XUiC_OptionsControls), "Init")]
+    public class CustomInputOptionsControlsPatch
+    {
+        public static void Postfix(XUiC_OptionsControls __instance)
+        {
+            XUiController tabsHeader = __instance.GetChildById("tabsHeader");
+            XUiController tabButtons = tabsHeader?.GetChildById("tabButtons");
+            XUiController modsTab = tabButtons?.GetChildById("10");
+            XUiController modsButton = modsTab?.GetChildById("headerbutton");
+            if (modsButton == null) return;
+
+            modsButton.OnPress += (sender, mouseButton) =>
+            {
+                CustomInputBindingsUIController.PreviousMenu = __instance.WindowGroup.Id;
+                CustomInputBindingsUIController.RequestedModName = "";
+                __instance.xui.playerUI.windowManager.Close(__instance.WindowGroup.Id);
                 __instance.xui.playerUI.windowManager.Open(CustomInputBindingsUIController.WindowName, true);
             };
         }

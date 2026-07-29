@@ -42,5 +42,7 @@ resourceFluxCellDesc,items,Desc,,,"How the fuck do batteries even work?"
 txGroupCustom,,,,,Custom Paints
 xuiModSettings,UI,XUI,,,"Mod Settings"
 xuiModLibrary,UI,XUI,,,"Mod Readme"
+xuiModInputBindings,UI,XUI,,,"Mod Input Bindings"
+xuiOptionsControlsMods,UI,XUI,,,Mods
 dimensionalPortal,blocks,Block,,"Flux Portal"
 dimensionalPortalDesc,blocks,Block,,"An unstable artifact emitting heavy dimensional radiation. Plac

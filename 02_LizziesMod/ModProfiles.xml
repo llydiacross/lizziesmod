@@ -186,6 +186,9 @@
     </Mod>
   </Profile>
   <Profile name="Default">
+    <Mod name="TFP_Harmony" version="1.1.0.4">
+      <Setting name="Enabled" value="true" type="bool" hidden="true" />
+    </Mod>
     <Mod name="LizziesMod" version="0.0.1">
       <Setting name="StartingYear" value="1986" type="int" />
       <Setting name="EnableMechanicalPress" value="true" type="bool" />
@@ -195,9 +198,6 @@
       <Setting name="ExperimentalFeatures" value="true" type="bool" />
       <Setting name="Enabled" value="true" type="bool" hidden="true" />
       <Setting name="LastProfileName" value="Default" type="string" hidden="true" />
-    </Mod>
-    <Mod name="TFP_Harmony" version="1.1.0.4">
-      <Setting name="Enabled" value="true" type="bool" hidden="true" />
     </Mod>
     <Mod name="LizziesMod_DynamicBackpacks" version="0.0.1">
       <Setting name="BackpackGridSizeX" value="17" type="int" />
@@ -226,6 +226,12 @@
       <Setting name="AdminOnly" value="true" type="bool" />
       <Setting name="MaxPropsPerPlayer" value="30" type="int" />
       <Setting name="MaxPropsWorld" value="150" type="int" />
+      <Setting name="AllowEntitySpawning" value="true" type="bool" />
+      <Setting name="MaxEntitiesPerPlayer" value="10" type="int" />
+      <Setting name="MaxEntitiesWorld" value="30" type="int" />
+      <Setting name="AllowRagdollSpawning" value="true" type="bool" />
+      <Setting name="MaxRagdollsPerPlayer" value="10" type="int" />
+      <Setting name="MaxRagdollsWorld" value="30" type="int" />
       <Setting name="SpawnDistance" value="8" type="float" />
       <Setting name="GenerateCandidateCatalog" value="false" type="bool" />
     </Mod>

@@ -83,6 +83,7 @@ namespace LizziesMod
         public void SelectBook(string bookId)
         {
             selectedBookId = bookId;
+            PopulateBookList();
             if (ModManualManager.AllBooks.TryGetValue(bookId, out ModBook book))
             {
                 if (lblBookTitle != null) lblBookTitle.Text = book.Title;
@@ -116,8 +117,6 @@ namespace LizziesMod
         public override void OnOpen()
         {
             base.OnOpen();
-            PopulateBookList();
-
 
             var readmes = ModManualManager.AllBooks.Values.Where(b => b.IsReadme).ToList();
             if (readmes.Count > 0)
@@ -126,6 +125,7 @@ namespace LizziesMod
             }
             else
             {
+                PopulateBookList();
                 ClearReadingPane();
             }
         }
@@ -142,7 +142,7 @@ namespace LizziesMod
                 if (child is ModLibraryBookEntryController entry)
                 {
                     if (i < readmes.Count)
-                        entry.SetBook(readmes[i], this);
+                        entry.SetBook(readmes[i], this, readmes[i].ID.Equals(selectedBookId, StringComparison.OrdinalIgnoreCase));
                     else
                         entry.Clear();
                     i++;
@@ -442,24 +442,27 @@ namespace LizziesMod
         private ModLibraryUIController mainController;
         private XUiV_Label lblBookName;
         private XUiV_Label lblAuthor;
+        private XUiV_Sprite sprSelected;
 
         public override void Init()
         {
             base.Init();
             lblBookName = GetChildById("lblBookName")?.viewComponent as XUiV_Label;
             lblAuthor = GetChildById("lblAuthor")?.viewComponent as XUiV_Label;
+            sprSelected = GetChildById("sprSelected")?.viewComponent as XUiV_Sprite;
 
             XUiController clickable = GetChildById("clickable") ?? this;
             if (clickable != null) clickable.OnPress += HandlePress;
         }
 
-        public void SetBook(ModBook b, ModLibraryUIController main)
+        public void SetBook(ModBook b, ModLibraryUIController main, bool isSelected)
         {
             book = b;
             mainController = main;
 
             if (lblBookName != null) lblBookName.Text = b.Title;
             if (lblAuthor != null) lblAuthor.Text = $"By: {b.Author}";
+            if (sprSelected != null) sprSelected.IsVisible = isSelected;
 
             viewComponent.IsVisible = true;
         }
@@ -467,6 +470,7 @@ namespace LizziesMod
         public void Clear()
         {
             book = null;
+            if (sprSelected != null) sprSelected.IsVisible = false;
             viewComponent.IsVisible = false;
         }
 
