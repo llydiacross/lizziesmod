@@ -54,6 +54,7 @@ namespace LizziesMod
             if (CustomAudioManager.Instance == null || trackListGrid == null) return;
 
             trackKeys = new List<string>(CustomAudioManager.Instance.GetAvailableAudio().Keys);
+            trackKeys.Sort(CompareTracks);
 
             for (int i = 0; i < trackListGrid.Children.Count; i++)
             {
@@ -72,6 +73,22 @@ namespace LizziesMod
                     }
                 }
             }
+        }
+
+        private int CompareTracks(string leftKey, string rightKey)
+        {
+            AudioTrack left = CustomAudioManager.Instance.GetAvailableAudio()[leftKey];
+            AudioTrack right = CustomAudioManager.Instance.GetAvailableAudio()[rightKey];
+
+            int comparison = string.Compare(left.Artist, right.Artist, System.StringComparison.OrdinalIgnoreCase);
+            if (comparison != 0) return comparison;
+            comparison = string.Compare(left.Album, right.Album, System.StringComparison.OrdinalIgnoreCase);
+            if (comparison != 0) return comparison;
+            comparison = left.TrackNumber.CompareTo(right.TrackNumber);
+            if (comparison != 0) return comparison;
+            comparison = string.Compare(left.Title, right.Title, System.StringComparison.OrdinalIgnoreCase);
+            if (comparison != 0) return comparison;
+            return string.Compare(leftKey, rightKey, System.StringComparison.OrdinalIgnoreCase);
         }
 
         public void BuyAndPlayTrack(string targetTrack)

@@ -67,6 +67,9 @@ namespace LizziesMod
         private static string capturedInputId;
         private static int captureStartFrame;
         private static bool suppressNextInputDispatch;
+        private static KeyCode pendingPointerKey = KeyCode.None;
+        private static string pendingPointerInputId;
+        private static string pendingPointerChord;
 
         public static bool IsCapturing { get { return !string.IsNullOrEmpty(capturedInputId); } }
         public static string CapturedInputId { get { return capturedInputId ?? ""; } }
@@ -136,6 +139,7 @@ namespace LizziesMod
             capturedInputId = inputId;
             captureStartFrame = Time.frameCount;
             suppressNextInputDispatch = true;
+            ClearPendingPointerCapture();
             ClearInputTransitions();
             return true;
         }
@@ -146,6 +150,7 @@ namespace LizziesMod
 
             capturedInputId = null;
             suppressNextInputDispatch = true;
+            ClearPendingPointerCapture();
             ClearInputTransitions();
         }
 
@@ -507,6 +512,8 @@ namespace LizziesMod
         {
             if (Time.frameCount <= captureStartFrame) return;
 
+            if (UpdatePendingPointerCapture()) return;
+
             if (Input.GetKeyDown(KeyCode.Escape))
             {
                 CancelRebind();
@@ -517,25 +524,68 @@ namespace LizziesMod
             {
                 if (!IsCapturablePrimaryKey(keyCode) || !Input.GetKeyDown(keyCode)) continue;
 
-                List<string> chordParts = new List<string>();
-                if (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)) chordParts.Add("Ctrl");
-                if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift)) chordParts.Add("Shift");
-                if (Input.GetKey(KeyCode.LeftAlt) || Input.GetKey(KeyCode.RightAlt)) chordParts.Add("Alt");
-                chordParts.Add(keyCode.ToString());
-
                 string inputId = capturedInputId;
-                string error;
-                bool rebound = TryRebind(inputId, string.Join("+", chordParts), out error);
-                if (!rebound)
+                string chord = BuildCapturedChord(keyCode);
+                if (IsPointerKey(keyCode))
                 {
-                    Logger.Warning($"[CustomInput] Could not rebind '{inputId}': {error}");
+                    pendingPointerKey = keyCode;
+                    pendingPointerInputId = inputId;
+                    pendingPointerChord = chord;
+                    return;
                 }
 
-                capturedInputId = null;
-                suppressNextInputDispatch = true;
-                ClearInputTransitions();
+                CompleteCapture(inputId, chord);
                 return;
             }
+        }
+
+        private static bool UpdatePendingPointerCapture()
+        {
+            if (pendingPointerKey == KeyCode.None) return false;
+
+            if (!IsCapturing || !capturedInputId.Equals(pendingPointerInputId, StringComparison.OrdinalIgnoreCase))
+            {
+                ClearPendingPointerCapture();
+                return true;
+            }
+
+            if (Input.GetKey(pendingPointerKey)) return true;
+
+            string inputId = pendingPointerInputId;
+            string chord = pendingPointerChord;
+            ClearPendingPointerCapture();
+            CompleteCapture(inputId, chord);
+            return true;
+        }
+
+        private static string BuildCapturedChord(KeyCode keyCode)
+        {
+            List<string> chordParts = new List<string>();
+            if (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)) chordParts.Add("Ctrl");
+            if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift)) chordParts.Add("Shift");
+            if (Input.GetKey(KeyCode.LeftAlt) || Input.GetKey(KeyCode.RightAlt)) chordParts.Add("Alt");
+            chordParts.Add(keyCode.ToString());
+            return string.Join("+", chordParts);
+        }
+
+        private static void CompleteCapture(string inputId, string chord)
+        {
+            string error;
+            if (!TryRebind(inputId, chord, out error))
+            {
+                Logger.Warning($"[CustomInput] Could not rebind '{inputId}': {error}");
+            }
+
+            capturedInputId = null;
+            suppressNextInputDispatch = true;
+            ClearInputTransitions();
+        }
+
+        private static void ClearPendingPointerCapture()
+        {
+            pendingPointerKey = KeyCode.None;
+            pendingPointerInputId = null;
+            pendingPointerChord = null;
         }
 
         private static bool IsCapturablePrimaryKey(KeyCode keyCode)
@@ -553,6 +603,17 @@ namespace LizziesMod
                    keyCode == KeyCode.RightShift ||
                    keyCode == KeyCode.LeftAlt ||
                    keyCode == KeyCode.RightAlt;
+        }
+
+        private static bool IsPointerKey(KeyCode keyCode)
+        {
+            return keyCode == KeyCode.Mouse0 ||
+                   keyCode == KeyCode.Mouse1 ||
+                   keyCode == KeyCode.Mouse2 ||
+                   keyCode == KeyCode.Mouse3 ||
+                   keyCode == KeyCode.Mouse4 ||
+                   keyCode == KeyCode.Mouse5 ||
+                   keyCode == KeyCode.Mouse6;
         }
 
         private static string BuildChord(List<List<KeyCode>> keyGroups)

@@ -10,7 +10,8 @@ namespace LizziesMod
     {
         Spawn,
         Undo,
-        ClearOwned
+        ClearOwned,
+        GrantItem
     }
 
     public static class SpawnMenuManager
@@ -29,6 +30,7 @@ namespace LizziesMod
         private static readonly Dictionary<int, List<SpawnedEntryRecord>> spawnedEntriesByOwner =
             new Dictionary<int, List<SpawnedEntryRecord>>();
         private static readonly Dictionary<int, float> lastSpawnTimesByPlayer = new Dictionary<int, float>();
+        private static readonly Dictionary<int, float> lastGrantTimesByPlayer = new Dictionary<int, float>();
 
         public static bool CanUse(EntityPlayer player)
         {
@@ -62,6 +64,12 @@ namespace LizziesMod
             SendCommand(player, PropSpawnerCommand.ClearOwned, "");
         }
 
+        public static void RequestGrantItem(EntityPlayerLocal player, string entryId)
+        {
+            if (!CanUse(player)) return;
+            SendCommand(player, PropSpawnerCommand.GrantItem, entryId);
+        }
+
         public static void ProcessServerCommand(World world, EntityPlayer player, PropSpawnerCommand command, string entryId)
         {
             if (world == null || !CanUse(player)) return;
@@ -76,6 +84,9 @@ namespace LizziesMod
                     break;
                 case PropSpawnerCommand.ClearOwned:
                     ClearOwnedSpawns(world, player.entityId);
+                    break;
+                case PropSpawnerCommand.GrantItem:
+                    GrantPropItem(player, entryId);
                     break;
             }
         }
@@ -145,6 +156,34 @@ namespace LizziesMod
             {
                 Logger.Warning($"[SpawnMenu] Rejected invalid entry '{entryId}'.");
             }
+        }
+
+        private static void GrantPropItem(EntityPlayer player, string entryId)
+        {
+            SpawnablePropDefinition definition;
+            if (!SpawnCatalog.TryGetProp(entryId, out definition))
+            {
+                Logger.Warning($"[SpawnMenu] Rejected non-prop inventory request '{entryId}'.");
+                return;
+            }
+
+            float currentTime = Time.realtimeSinceStartup;
+            if (lastGrantTimesByPlayer.TryGetValue(player.entityId, out float lastGrantTime) &&
+                currentTime - lastGrantTime < SpawnCooldownSeconds)
+            {
+                return;
+            }
+
+            lastGrantTimesByPlayer[player.entityId] = currentTime;
+            ItemStack itemStack = definition.GetIconStack();
+            if (!player.inventory.AddItem(itemStack))
+            {
+                Logger.Warning($"[SpawnMenu] Could not add '{definition.Id}' to player {player.entityId}'s full inventory.");
+                return;
+            }
+
+            player.inventory.onInventoryChanged();
+            Logger.Info($"[SpawnMenu] Added prop item '{definition.Id}' to player {player.entityId}'s inventory.");
         }
 
         private static void SpawnProp(World world, EntityPlayer player, SpawnablePropDefinition definition, Vector3 spawnPosition)

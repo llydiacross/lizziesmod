@@ -128,7 +128,7 @@ namespace LizziesMod
                 string label = entries.Count == 1 ? GetTabSingularLabel(selectedTab) : GetTabLabel(selectedTab);
                 statusLabel.Text = entries.Count + " " + label.ToUpperInvariant();
             }
-            if (hintLabel != null) hintLabel.Text = "SELECT A " + GetTabSingularLabel(selectedTab).ToUpperInvariant() + " TO SPAWN IT";
+            if (hintLabel != null) hintLabel.Text = "SELECT TO SPAWN. SHIFT+SELECT A PROP TO ADD IT TO INVENTORY";
             UpdateTabSelection();
 
             int index = 0;
@@ -155,6 +155,16 @@ namespace LizziesMod
             if (player == null) return;
 
             SpawnMenuManager.RequestSpawn(player, definition.Id);
+        }
+
+        public void AddToInventory(SpawnMenuEntryDefinition definition)
+        {
+            if (!(definition is SpawnablePropDefinition)) return;
+
+            EntityPlayerLocal player = GameManager.Instance?.World?.GetPrimaryPlayer();
+            if (player == null) return;
+
+            SpawnMenuManager.RequestGrantItem(player, definition.Id);
         }
 
         private static string GetTabLabel(SpawnMenuTab tab)
@@ -284,18 +294,22 @@ namespace LizziesMod
                 entryNameLabel.IsVisible = true;
             }
 
-            SpawnablePropDefinition propDefinition = definition as SpawnablePropDefinition;
-            if (iconStack != null && propDefinition != null)
+            if (iconStack != null)
             {
                 iconStack.IsDragAndDrop = false;
                 iconStack.AllowDropping = false;
-                iconStack.setItemStack(propDefinition.GetIconStack());
-                iconStack.viewComponent.IsVisible = true;
-                iconStack.viewComponent.ToolTip = definition.DisplayName;
-            }
-            else if (iconStack?.viewComponent != null)
-            {
-                iconStack.viewComponent.IsVisible = false;
+                ItemStack icon = SpawnCatalog.GetIconStack(definition);
+                if (icon != null)
+                {
+                    iconStack.setItemStack(icon);
+                    iconStack.viewComponent.IsVisible = true;
+                    iconStack.viewComponent.ToolTip = definition.DisplayName;
+                }
+                else
+                {
+                    iconStack.setItemStack(new ItemStack());
+                    iconStack.viewComponent.IsVisible = false;
+                }
             }
 
             if (entryTypeLabel != null)
@@ -311,7 +325,11 @@ namespace LizziesMod
         {
             definition = null;
             mainController = null;
-            if (iconStack?.viewComponent != null) iconStack.viewComponent.IsVisible = false;
+            if (iconStack != null)
+            {
+                iconStack.setItemStack(new ItemStack());
+                iconStack.viewComponent.IsVisible = false;
+            }
             if (entryNameLabel != null) entryNameLabel.IsVisible = false;
             if (entryTypeLabel != null) entryTypeLabel.IsVisible = false;
             viewComponent.IsVisible = false;
@@ -327,6 +345,14 @@ namespace LizziesMod
         private void HandlePress(XUiController sender, int mouseButton)
         {
             if (definition == null || mainController == null) return;
+
+            bool shiftHeld = UnityEngine.Input.GetKey(UnityEngine.KeyCode.LeftShift) ||
+                             UnityEngine.Input.GetKey(UnityEngine.KeyCode.RightShift);
+            if (mouseButton == 0 && shiftHeld)
+            {
+                mainController.AddToInventory(definition);
+                return;
+            }
 
             mainController.Spawn(definition);
         }

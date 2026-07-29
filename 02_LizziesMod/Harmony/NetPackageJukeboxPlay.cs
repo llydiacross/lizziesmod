@@ -44,6 +44,12 @@ namespace LizziesMod
    
             if (SingletonMonoBehaviour<ConnectionManager>.Instance.IsServer)
             {
+                if (CustomAudioManager.Instance == null || !CustomAudioManager.Instance.HasTrack(trackName))
+                {
+                    Logger.Warning($"[CustomAudioManager] Rejected unknown jukebox track '{trackName}'.");
+                    return;
+                }
+
              
                 SingletonMonoBehaviour<ConnectionManager>.Instance.SendPackage(
                     NetPackageManager.GetPackage<NetPackageJukeboxPlay>().Setup(blockPosition, trackName),

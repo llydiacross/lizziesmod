@@ -74,6 +74,7 @@ namespace LizziesMod
 
     public static class SpawnCatalog
     {
+        private const string DefaultEntryIconItem = "resourceWood";
         private static readonly Dictionary<string, SpawnablePropDefinition> propsById =
             new Dictionary<string, SpawnablePropDefinition>(StringComparer.OrdinalIgnoreCase);
         private static readonly Dictionary<string, SpawnMenuEntryDefinition> entriesById =
@@ -153,6 +154,27 @@ namespace LizziesMod
         {
             EnsureLoaded();
             return entriesById.TryGetValue(entryId ?? "", out definition);
+        }
+
+        public static ItemStack GetIconStack(SpawnMenuEntryDefinition definition)
+        {
+            SpawnablePropDefinition propDefinition = definition as SpawnablePropDefinition;
+            if (propDefinition != null) return propDefinition.GetIconStack();
+
+            if (definition != null && !string.IsNullOrEmpty(definition.Thumbnail))
+            {
+                Block iconBlock = Block.GetBlockByName(definition.Thumbnail, false);
+                if (iconBlock != null)
+                {
+                    return new ItemStack(Block.GetBlockValue(definition.Thumbnail, false).ToItemValue(), 1);
+                }
+
+                ItemClass iconItem = ItemClass.GetItemClass(definition.Thumbnail, false);
+                if (iconItem != null) return new ItemStack(new ItemValue(iconItem.Id), 1);
+            }
+
+            ItemClass fallbackItem = ItemClass.GetItemClass(DefaultEntryIconItem, false);
+            return fallbackItem != null ? new ItemStack(new ItemValue(fallbackItem.Id), 1) : null;
         }
 
         public static List<SpawnablePropDefinition> GetProps(string categoryId, string searchText)

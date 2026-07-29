@@ -64,9 +64,30 @@ Inputs also expose `Held` through `WasTriggered(..., CustomInputTrigger.Held)` o
 
 Use **Input Bindings** from the main menu or escape menu to change a binding, or select a mod in **Mod Settings** and choose **Edit Inputs**. Rebinding captures the next non-modifier key with any held `Ctrl`, `Shift`, or `Alt` modifiers; press `Escape` to cancel. **Reset** restores the mod-provided default. User overrides are stored separately in `Application.persistentDataPath/LizziesMod/CustomInputOverrides.xml`, so no mod's `CustomInput.xml` is modified. These bindings use the mod input registry rather than the native game controls menu.
 
+## Custom Audio
+
+Mods declare playable jukebox and Walkman tracks in `Config/CustomAudio.xml`. Audio files are never discovered from filenames alone, so every track has a stable mod-namespaced ID and explicit metadata:
+
+```xml
+<CustomAudio>
+	<Track id="midnight-drive"
+				 file="CustomAudio/midnight-drive.ogg"
+				 title="Midnight Drive"
+				 artist="Example Artist"
+				 album="After Dark"
+				 track_number="3" />
+</CustomAudio>
+```
+
+`id` and `file` are required. `title`, `artist`, `album`, and `track_number` are optional; missing title and artist fall back to the ID and `Unknown Artist`. The `file` path must stay inside the owning mod and reference an existing `.ogg`, `.wav`, or `.mp3`. The runtime track key is `<mod name>:<id>`, for example `ExampleMod:midnight-drive`.
+
+Walkman items should set their `TrackName` property to that full key. The jukebox lists tracks by artist, album, track number, and title; the server rejects playback requests for undeclared tracks.
+
 ## Spawn Menu
 
 Enable `LizziesMod_PropSpawner`, then enter a Creative Mode world. Press `Ctrl+P` to open the Spawn Menu directly, or select its icon in the Creative Menu header. The **Props**, **Ragdolls**, and **Entities** tabs each have their own category list and search results. Select a tile to spawn it at the point you are aiming at. **Undo Last Spawn** removes your latest Spawn Menu item, while **Remove My Spawns** removes every item you created through the menu.
+
+Hold `Shift` while selecting a **Prop** tile to add that prop's block item to your inventory instead of spawning it. The request is validated by the server against the approved Spawn Menu catalog; entities and ragdolls cannot be added as items.
 
 The menu is restricted to server administrators by default. An administrator can change its spawn distance and per-player/world limits from **Mod Settings**. Props, live entities, and ragdolls have independent limits. Defaults are 30 props per player / 150 world-wide, and 10 entities or ragdolls per player / 30 world-wide. Entity and ragdoll spawning can also be disabled independently.
 

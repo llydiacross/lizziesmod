@@ -10,7 +10,7 @@
                 <property name="Class" value="LizziesMod.ItemActionWalkman, LizziesMod"/>
             </property>
             
-            <property name="TrackName" value="LizziesMod_JukeboxAndWalkman:LLYDIA - EXPLANATION OF AN ENTITY.ogg"/>
+            <property name="TrackName" value="LizziesMod_JukeboxAndWalkman:explanation-of-an-entity"/>
         </item>
     </append>
 </configs>

@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Xml;
 using UnityEngine;
 using UnityEngine.Networking;
 
@@ -9,9 +10,12 @@ namespace LizziesMod
 {
     public class AudioTrack
     {
+        public string Id;
         public string FilePath;
         public string Artist;
         public string Title;
+        public string Album;
+        public int TrackNumber;
         public string ModSource;
     }
 
@@ -41,51 +45,174 @@ namespace LizziesMod
             return availableAudio;
         }
 
+        public bool HasTrack(string trackId)
+        {
+            return availableAudio.ContainsKey(trackId ?? "");
+        }
+
         private void ScanForAudio()
         {
             availableAudio.Clear();
+            int trackCount = 0;
 
             foreach (Mod mod in global::ModManager.GetLoadedMods())
             {
-                string audioDir = Path.Combine(mod.Path, "CustomAudio");
-                if (Directory.Exists(audioDir))
+                if (mod != null)
                 {
-                    string[] files = Directory.GetFiles(audioDir, "*.*", SearchOption.AllDirectories);
-                    foreach (string file in files)
-                    {
-                        if (file.EndsWith(".ogg", StringComparison.OrdinalIgnoreCase) ||
-                            file.EndsWith(".wav", StringComparison.OrdinalIgnoreCase) ||
-                            file.EndsWith(".mp3", StringComparison.OrdinalIgnoreCase))
-                        {
-                            string fileName = Path.GetFileNameWithoutExtension(file);
-
-                   
-                            string artistName = "Unknown Artist";
-                            string trackTitle = fileName;
-  
-                            int splitIndex = fileName.IndexOf(" - ");
-                            if (splitIndex != -1)
-                            {
-                                artistName = fileName.Substring(0, splitIndex).Trim();
-                                trackTitle = fileName.Substring(splitIndex + 3).Trim();
-                            }
-
-                            string namespacedKey = $"{mod.Name}:{fileName}";
-
-                            AudioTrack newTrack = new AudioTrack()
-                            {
-                                FilePath = file,
-                                Artist = artistName,
-                                Title = trackTitle,
-                                ModSource = mod.Name
-                            };
-
-                            availableAudio[namespacedKey] = newTrack;
-                            Logger.Info($"[CustomAudioManager] Indexed: '{newTrack.Title}' by '{newTrack.Artist}' from {mod.Name}");
-                        }
-                    }
+                    trackCount += LoadTracksFromMod(mod);
                 }
             }
+
+            Logger.Info($"[CustomAudioManager] Loaded {trackCount} declared custom audio track(s).");
+        }
+
+        private int LoadTracksFromMod(Mod mod)
+        {
+            if (string.IsNullOrEmpty(mod.Path)) return 0;
+
+            string configPath = Path.Combine(mod.Path, "Config", "CustomAudio.xml");
+            if (!File.Exists(configPath)) return 0;
+
+            try
+            {
+                XmlDocument document = new XmlDocument();
+                document.Load(configPath);
+                if (document.DocumentElement == null || document.DocumentElement.Name != "CustomAudio")
+                {
+                    ReportAudioConfigError(mod.Name, "CustomAudio.xml must use <CustomAudio> as its root element.");
+                    return 0;
+                }
+
+                XmlNodeList trackNodes = document.SelectNodes("/CustomAudio/Track");
+                if (trackNodes == null) return 0;
+
+                int trackCount = 0;
+                foreach (XmlNode trackNode in trackNodes)
+                {
+                    AudioTrack track;
+                    string error;
+                    if (!TryCreateTrack(mod, trackNode, out track, out error))
+                    {
+                        ReportAudioConfigError(mod.Name, "CustomAudio.xml: " + error);
+                        continue;
+                    }
+
+                    if (availableAudio.ContainsKey(track.Id))
+                    {
+                        ReportAudioConfigError(mod.Name, $"CustomAudio.xml: track id '{track.Id}' is declared more than once.");
+                        continue;
+                    }
+
+                    availableAudio.Add(track.Id, track);
+                    trackCount++;
+                    Logger.Info($"[CustomAudioManager] Indexed: '{track.Title}' by '{track.Artist}' from {mod.Name}");
+                }
+
+                return trackCount;
+            }
+            catch (Exception exception)
+            {
+                ReportAudioConfigError(mod.Name, "CustomAudio.xml: " + exception.Message);
+                return 0;
+            }
+        }
+
+        private static bool TryCreateTrack(Mod mod, XmlNode trackNode, out AudioTrack track, out string error)
+        {
+            track = null;
+            error = null;
+
+            string id = trackNode.Attributes?["id"]?.Value?.Trim();
+            string file = trackNode.Attributes?["file"]?.Value?.Trim();
+            string title = trackNode.Attributes?["title"]?.Value?.Trim();
+            string artist = trackNode.Attributes?["artist"]?.Value?.Trim();
+            string album = trackNode.Attributes?["album"]?.Value?.Trim() ?? "";
+            string trackNumberText = trackNode.Attributes?["track_number"]?.Value?.Trim();
+
+            if (string.IsNullOrEmpty(id))
+            {
+                error = "each <Track> requires a non-empty id attribute.";
+                return false;
+            }
+
+            if (id.IndexOf(':') >= 0)
+            {
+                error = $"track id '{id}' cannot contain ':', because track IDs are namespaced by their mod.";
+                return false;
+            }
+
+            if (string.IsNullOrEmpty(file))
+            {
+                error = $"track '{id}' requires a non-empty file attribute.";
+                return false;
+            }
+
+            string resolvedFile;
+            if (!TryResolveTrackFile(mod.Path, file, out resolvedFile))
+            {
+                error = $"track '{id}' must reference a file inside its owning mod folder.";
+                return false;
+            }
+
+            if (!IsSupportedAudioFile(resolvedFile))
+            {
+                error = $"track '{id}' must reference an .ogg, .wav, or .mp3 file.";
+                return false;
+            }
+
+            if (!File.Exists(resolvedFile))
+            {
+                error = $"track '{id}' references missing file '{file}'.";
+                return false;
+            }
+
+            int trackNumber = 0;
+            if (!string.IsNullOrEmpty(trackNumberText) &&
+                (!int.TryParse(trackNumberText, out trackNumber) || trackNumber < 0))
+            {
+                error = $"track '{id}' has an invalid non-negative track_number attribute.";
+                return false;
+            }
+
+            track = new AudioTrack
+            {
+                Id = mod.Name + ":" + id,
+                FilePath = resolvedFile,
+                Artist = string.IsNullOrEmpty(artist) ? "Unknown Artist" : artist,
+                Title = string.IsNullOrEmpty(title) ? id : title,
+                Album = album,
+                TrackNumber = trackNumber,
+                ModSource = mod.Name
+            };
+            return true;
+        }
+
+        private static bool TryResolveTrackFile(string modPath, string configuredPath, out string resolvedPath)
+        {
+            resolvedPath = "";
+            if (string.IsNullOrEmpty(modPath) || string.IsNullOrEmpty(configuredPath)) return false;
+
+            string rootPath = Path.GetFullPath(modPath)
+                .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+            string candidatePath = Path.GetFullPath(Path.Combine(rootPath, configuredPath));
+            string rootPrefix = rootPath + Path.DirectorySeparatorChar;
+            if (!candidatePath.StartsWith(rootPrefix, StringComparison.OrdinalIgnoreCase)) return false;
+
+            resolvedPath = candidatePath;
+            return true;
+        }
+
+        private static bool IsSupportedAudioFile(string filePath)
+        {
+            return filePath.EndsWith(".ogg", StringComparison.OrdinalIgnoreCase) ||
+                   filePath.EndsWith(".wav", StringComparison.OrdinalIgnoreCase) ||
+                   filePath.EndsWith(".mp3", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static void ReportAudioConfigError(string modName, string message)
+        {
+            Logger.Error($"[CustomAudioManager] [{modName}] {message}");
+            ModErrorHandler.ReportXmlError(modName, message);
         }
 
         public void PlayJukeboxTrack(Vector3 position, string trackName)
