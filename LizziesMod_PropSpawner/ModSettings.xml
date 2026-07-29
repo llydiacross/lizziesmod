@@ -3,6 +3,12 @@
   <Setting name="AdminOnly" value="true" type="bool" requiresRestart="false" />
   <Setting name="MaxPropsPerPlayer" value="30" type="int" requiresRestart="false" />
   <Setting name="MaxPropsWorld" value="150" type="int" requiresRestart="false" />
+  <Setting name="AllowEntitySpawning" value="true" type="bool" requiresRestart="false" />
+  <Setting name="MaxEntitiesPerPlayer" value="10" type="int" requiresRestart="false" />
+  <Setting name="MaxEntitiesWorld" value="30" type="int" requiresRestart="false" />
+  <Setting name="AllowRagdollSpawning" value="true" type="bool" requiresRestart="false" />
+  <Setting name="MaxRagdollsPerPlayer" value="10" type="int" requiresRestart="false" />
+  <Setting name="MaxRagdollsWorld" value="30" type="int" requiresRestart="false" />
   <Setting name="SpawnDistance" value="8" type="float" requiresRestart="false" />
   <Setting name="GenerateCandidateCatalog" value="false" type="bool" requiresRestart="false" />
 </ModSettings>

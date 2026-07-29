@@ -63,11 +63,10 @@
     <Compile Include="Harmony\NetPackageJukeboxPlay.cs" />
     <Compile Include="Harmony\NetPackageLevelProfile.cs" />
     <Compile Include="Harmony\ProfileSelectorUIController.cs" />
-    <Compile Include="Harmony\PropCatalog.cs" />
-    <Compile Include="Harmony\PropCatalogLoader.cs" />
-    <Compile Include="Harmony\PropSpawnerInputController.cs" />
-    <Compile Include="Harmony\PropSpawnerManager.cs" />
-    <Compile Include="Harmony\PropSpawnerUIController.cs" />
+    <Compile Include="Harmony\SpawnCatalog.cs" />
+    <Compile Include="Harmony\SpawnMenuInputController.cs" />
+    <Compile Include="Harmony\SpawnMenuManager.cs" />
+    <Compile Include="Harmony\SpawnMenuUIController.cs" />
     <Compile Include="Harmony\SavePatcher.cs" />
     <Compile Include="Harmony\TeleportUIController.cs" />
     <Compile Include="Harmony\TimeManager.cs" />

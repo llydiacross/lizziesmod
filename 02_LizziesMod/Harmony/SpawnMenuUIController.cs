@@ -3,16 +3,21 @@ using System.Collections.Generic;
 
 namespace LizziesMod
 {
-    public class PropSpawnerUIController : XUiController
+    public class SpawnMenuUIController : XUiController
     {
-        public const string WindowName = "windowPropSpawner";
+        public const string WindowName = "windowSpawnMenu";
 
-        public static bool IsPropSpawnerOpen { get; private set; }
+        public static bool IsSpawnMenuOpen { get; private set; }
 
         private XUiController categoryGrid;
         private XUiController propGrid;
         private XUiC_TextInput searchInput;
         private XUiV_Label statusLabel;
+        private XUiV_Label hintLabel;
+        private XUiV_Sprite propsTabSelectedSprite;
+        private XUiV_Sprite ragdollsTabSelectedSprite;
+        private XUiV_Sprite entitiesTabSelectedSprite;
+        private SpawnMenuTab selectedTab = SpawnMenuTab.Props;
         private string selectedCategoryId = "all";
         private string lastSearchText = "";
 
@@ -23,7 +28,14 @@ namespace LizziesMod
             propGrid = GetChildById("propGrid");
             searchInput = GetChildById("txtSearch") as XUiC_TextInput;
             statusLabel = GetChildById("lblStatus")?.viewComponent as XUiV_Label;
+            hintLabel = GetChildById("lblHint")?.viewComponent as XUiV_Label;
+            propsTabSelectedSprite = GetChildById("sprTabPropsSelected")?.viewComponent as XUiV_Sprite;
+            ragdollsTabSelectedSprite = GetChildById("sprTabRagdollsSelected")?.viewComponent as XUiV_Sprite;
+            entitiesTabSelectedSprite = GetChildById("sprTabEntitiesSelected")?.viewComponent as XUiV_Sprite;
 
+            BindButton("btnTabProps", (sender, mouseButton) => SelectTab(SpawnMenuTab.Props));
+            BindButton("btnTabRagdolls", (sender, mouseButton) => SelectTab(SpawnMenuTab.Ragdolls));
+            BindButton("btnTabEntities", (sender, mouseButton) => SelectTab(SpawnMenuTab.Entities));
             BindButton("btnUndo", HandleUndo);
             BindButton("btnClearOwned", HandleClearOwned);
             BindButton("btnClose", HandleClose);
@@ -32,8 +44,9 @@ namespace LizziesMod
         public override void OnOpen()
         {
             base.OnOpen();
-            IsPropSpawnerOpen = true;
-            PropCatalog.EnsureLoaded();
+            IsSpawnMenuOpen = true;
+            SpawnCatalog.EnsureLoaded();
+            selectedTab = SpawnMenuTab.Props;
             selectedCategoryId = "all";
 
             if (searchInput != null) searchInput.Text = "";
@@ -45,7 +58,7 @@ namespace LizziesMod
         public override void OnClose()
         {
             base.OnClose();
-            IsPropSpawnerOpen = false;
+            IsSpawnMenuOpen = false;
         }
 
         public override void Update(float deltaTime)
@@ -67,15 +80,25 @@ namespace LizziesMod
             PopulateProps();
         }
 
+        public void SelectTab(SpawnMenuTab tab)
+        {
+            if (selectedTab == tab) return;
+
+            selectedTab = tab;
+            selectedCategoryId = "all";
+            PopulateCategories();
+            PopulateProps();
+        }
+
         private void PopulateCategories()
         {
             if (categoryGrid == null) return;
 
-            List<SpawnablePropCategory> categories = new List<SpawnablePropCategory>
+            List<SpawnMenuCategory> categories = new List<SpawnMenuCategory>
             {
-                new SpawnablePropCategory { Id = "all", DisplayName = "All Props", Order = 0 }
+                new SpawnMenuCategory { Id = "all", DisplayName = "All " + GetTabLabel(selectedTab), Order = 0 }
             };
-            categories.AddRange(PropCatalog.Categories);
+            categories.AddRange(SpawnCatalog.GetCategories(selectedTab));
 
             int index = 0;
             foreach (XUiController child in categoryGrid.Children)
@@ -99,11 +122,14 @@ namespace LizziesMod
         {
             if (propGrid == null) return;
 
-            List<SpawnablePropDefinition> props = PropCatalog.GetProps(selectedCategoryId, searchInput?.Text);
+            List<SpawnMenuEntryDefinition> entries = SpawnCatalog.GetEntries(selectedTab, selectedCategoryId, searchInput?.Text);
             if (statusLabel != null)
             {
-                statusLabel.Text = props.Count == 1 ? "1 PROP" : props.Count + " PROPS";
+                string label = entries.Count == 1 ? GetTabSingularLabel(selectedTab) : GetTabLabel(selectedTab);
+                statusLabel.Text = entries.Count + " " + label.ToUpperInvariant();
             }
+            if (hintLabel != null) hintLabel.Text = "SELECT A " + GetTabSingularLabel(selectedTab).ToUpperInvariant() + " TO SPAWN IT";
+            UpdateTabSelection();
 
             int index = 0;
             foreach (XUiController child in propGrid.Children)
@@ -111,9 +137,9 @@ namespace LizziesMod
                 PropSpawnEntryController entry = child as PropSpawnEntryController;
                 if (entry == null) continue;
 
-                if (index < props.Count)
+                if (index < entries.Count)
                 {
-                    entry.SetProp(props[index], this);
+                    entry.SetEntry(entries[index], this);
                     index++;
                 }
                 else
@@ -123,24 +149,45 @@ namespace LizziesMod
             }
         }
 
-        public void Spawn(SpawnablePropDefinition definition)
+        public void Spawn(SpawnMenuEntryDefinition definition)
         {
             EntityPlayerLocal player = GameManager.Instance?.World?.GetPrimaryPlayer();
             if (player == null) return;
 
-            PropSpawnerManager.RequestSpawn(player, definition.Id);
+            SpawnMenuManager.RequestSpawn(player, definition.Id);
+        }
+
+        private static string GetTabLabel(SpawnMenuTab tab)
+        {
+            if (tab == SpawnMenuTab.Entities) return "Entities";
+            if (tab == SpawnMenuTab.Ragdolls) return "Ragdolls";
+            return "Props";
+        }
+
+        private static string GetTabSingularLabel(SpawnMenuTab tab)
+        {
+            if (tab == SpawnMenuTab.Entities) return "Entity";
+            if (tab == SpawnMenuTab.Ragdolls) return "Ragdoll";
+            return "Prop";
+        }
+
+        private void UpdateTabSelection()
+        {
+            if (propsTabSelectedSprite != null) propsTabSelectedSprite.IsVisible = selectedTab == SpawnMenuTab.Props;
+            if (ragdollsTabSelectedSprite != null) ragdollsTabSelectedSprite.IsVisible = selectedTab == SpawnMenuTab.Ragdolls;
+            if (entitiesTabSelectedSprite != null) entitiesTabSelectedSprite.IsVisible = selectedTab == SpawnMenuTab.Entities;
         }
 
         private void HandleUndo(XUiController sender, int mouseButton)
         {
             EntityPlayerLocal player = GameManager.Instance?.World?.GetPrimaryPlayer();
-            if (player != null) PropSpawnerManager.RequestUndo(player);
+            if (player != null) SpawnMenuManager.RequestUndo(player);
         }
 
         private void HandleClearOwned(XUiController sender, int mouseButton)
         {
             EntityPlayerLocal player = GameManager.Instance?.World?.GetPrimaryPlayer();
-            if (player != null) PropSpawnerManager.RequestClearOwned(player);
+            if (player != null) SpawnMenuManager.RequestClearOwned(player);
         }
 
         private void HandleClose(XUiController sender, int mouseButton)
@@ -160,8 +207,8 @@ namespace LizziesMod
 
     public class PropSpawnCategoryEntryController : XUiController
     {
-        private SpawnablePropCategory category;
-        private PropSpawnerUIController mainController;
+        private SpawnMenuCategory category;
+        private SpawnMenuUIController mainController;
         private XUiV_Label nameLabel;
         private XUiV_Sprite selectedSprite;
 
@@ -175,7 +222,7 @@ namespace LizziesMod
             clickable.OnPress += HandlePress;
         }
 
-        public void SetCategory(SpawnablePropCategory value, PropSpawnerUIController controller, bool isSelected)
+        public void SetCategory(SpawnMenuCategory value, SpawnMenuUIController controller, bool isSelected)
         {
             category = value;
             mainController = controller;
@@ -201,10 +248,12 @@ namespace LizziesMod
 
     public class PropSpawnEntryController : XUiController
     {
-        private SpawnablePropDefinition definition;
-        private PropSpawnerUIController mainController;
+        private SpawnMenuEntryDefinition definition;
+        private SpawnMenuUIController mainController;
         private XUiC_ItemStack iconStack;
         private XUiView clickableView;
+        private XUiV_Label entryNameLabel;
+        private XUiV_Label entryTypeLabel;
 
         public override void Init()
         {
@@ -219,22 +268,40 @@ namespace LizziesMod
             XUiController clickable = GetChildById("clickable") ?? this;
             clickableView = clickable.viewComponent;
             clickable.OnPress += HandlePress;
+            entryNameLabel = GetChildById("lblEntryName")?.viewComponent as XUiV_Label;
+            entryTypeLabel = GetChildById("lblEntryType")?.viewComponent as XUiV_Label;
         }
 
-        public void SetProp(SpawnablePropDefinition propDefinition, PropSpawnerUIController controller)
+        public void SetEntry(SpawnMenuEntryDefinition entryDefinition, SpawnMenuUIController controller)
         {
-            definition = propDefinition;
+            definition = entryDefinition;
             mainController = controller;
 
             if (clickableView != null) clickableView.ToolTip = definition.DisplayName;
+            if (entryNameLabel != null)
+            {
+                entryNameLabel.Text = definition.DisplayName;
+                entryNameLabel.IsVisible = true;
+            }
 
-            if (iconStack != null)
+            SpawnablePropDefinition propDefinition = definition as SpawnablePropDefinition;
+            if (iconStack != null && propDefinition != null)
             {
                 iconStack.IsDragAndDrop = false;
                 iconStack.AllowDropping = false;
-                iconStack.setItemStack(definition.GetIconStack());
+                iconStack.setItemStack(propDefinition.GetIconStack());
                 iconStack.viewComponent.IsVisible = true;
                 iconStack.viewComponent.ToolTip = definition.DisplayName;
+            }
+            else if (iconStack?.viewComponent != null)
+            {
+                iconStack.viewComponent.IsVisible = false;
+            }
+
+            if (entryTypeLabel != null)
+            {
+                entryTypeLabel.Text = GetEntryTypeLabel(definition.EntryType);
+                entryTypeLabel.IsVisible = definition.EntryType != SpawnMenuEntryType.Prop;
             }
 
             viewComponent.IsVisible = true;
@@ -245,7 +312,16 @@ namespace LizziesMod
             definition = null;
             mainController = null;
             if (iconStack?.viewComponent != null) iconStack.viewComponent.IsVisible = false;
+            if (entryNameLabel != null) entryNameLabel.IsVisible = false;
+            if (entryTypeLabel != null) entryTypeLabel.IsVisible = false;
             viewComponent.IsVisible = false;
+        }
+
+        private static string GetEntryTypeLabel(SpawnMenuEntryType entryType)
+        {
+            if (entryType == SpawnMenuEntryType.Entity) return "NPC";
+            if (entryType == SpawnMenuEntryType.Ragdoll) return "RAGDOLL";
+            return "PROP";
         }
 
         private void HandlePress(XUiController sender, int mouseButton)

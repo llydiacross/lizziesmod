@@ -48,6 +48,8 @@ namespace LizziesMod
                 GameObject audioManagerGO = new GameObject("LizziesAudioManager");
                 audioManagerGO.AddComponent<CustomAudioManager>();
 
+                SpawnMenuInputController.Initialize();
+
                 // Patch Harmony
                 const string id = "uk.co.llydia.7daystodie.mods.lizziesmod";
                 var harmony = new HarmonyLib.Harmony(id);

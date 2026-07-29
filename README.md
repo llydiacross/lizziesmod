@@ -27,11 +27,11 @@ C:\Program Files (x86)\Steam\steamapps\common\7 Days To Die\Mods\
 ~/Library/steam/steamapps/common/7 Days To Die/Mods
  ```
 
-## Spawnable Props
+## Spawn Menu
 
-Enable `LizziesMod_PropSpawner`, then enter a Creative Mode world. Select the Prop Spawner icon in the Creative Menu header to open its catalog. Choose a category or search by name, then select a prop tile to spawn a physics prop at the point you are aiming at. Use **Undo Last Prop** to remove your most recently spawned prop, or **Remove My Props** to remove every prop you spawned.
+Enable `LizziesMod_PropSpawner`, then enter a Creative Mode world. Press `Ctrl+P` to open the Spawn Menu directly, or select its icon in the Creative Menu header. The **Props**, **Ragdolls**, and **Entities** tabs each have their own category list and search results. Select a tile to spawn it at the point you are aiming at. **Undo Last Spawn** removes your latest Spawn Menu item, while **Remove My Spawns** removes every item you created through the menu.
 
-The spawner is restricted to server administrators by default. An administrator can change this, the spawn distance, and the per-player/world limits from **Mod Settings**. Props are owned by the player who spawned them, and the limits default to 30 props per player and 150 props in the world.
+The menu is restricted to server administrators by default. An administrator can change its spawn distance and per-player/world limits from **Mod Settings**. Props, live entities, and ragdolls have independent limits. Defaults are 30 props per player / 150 world-wide, and 10 entities or ragdolls per player / 30 world-wide. Entity and ragdoll spawning can also be disabled independently.
 
 Other mods can contribute props with `Config/SpawnableProps.xml`:
 
@@ -52,6 +52,38 @@ Other mods can contribute props with `Config/SpawnableProps.xml`:
 ```
 
 Each prop needs a unique `id` and the name of an existing block. The category is optional; an undeclared category is created automatically. `displayName`, `tags`, and `mass` are optional, with `tags` supporting catalog search.
+
+### Spawnable Entities And Ragdolls
+
+The **Entities** tab automatically includes every loaded vanilla or modded `entity_class` whose `UserSpawnType` is `Menu`. This uses the same eligibility setting as 7 Days to Die's built-in spawn menu, so templates and internal-only entities remain unavailable:
+
+```xml
+<entity_class name="exampleWorkshopGuard" extends="zombieTemplateMale">
+	<property name="UserSpawnType" value="Menu" />
+</entity_class>
+```
+
+The **Ragdolls** tab is generated from those same approved entities, but only includes classes that declare ragdoll support. A ragdoll entry follows the normal server-side death lifecycle; it is not a permanently frozen live NPC.
+
+An optional `Config/SpawnMenu.xml` can customize the presentation of an approved entity without changing eligibility. Categories are tab-specific, and an entity override may set `category`, `ragdoll_category`, `displayName`, and `tags`:
+
+```xml
+<SpawnMenu>
+	<Categories>
+		<Category type="entities" id="friendly" name="Friendly NPCs" order="30" />
+		<Category type="ragdolls" id="friendly" name="Friendly NPCs" order="30" />
+	</Categories>
+	<EntityOverrides>
+		<Entity entity_class="exampleWorkshopGuard"
+			category="friendly"
+			ragdoll_category="friendly"
+			displayName="Workshop Guard"
+			tags="guard,friendly,custom" />
+	</EntityOverrides>
+</SpawnMenu>
+```
+
+The client only sends the selected catalog entry ID. The server re-resolves it from the approved catalog before creating an entity, so clients cannot request arbitrary entity classes.
 
 ### Custom Prop Models
 

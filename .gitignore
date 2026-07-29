@@ -1,10 +1,14 @@
 # Ignore EVERYTHING
 
 *
+
+# except
+
 !*.xml
 !*.cs
 !*.png
-!*.scv
+!*.csv
+!*.png
 
 # Only Allow these mods
 

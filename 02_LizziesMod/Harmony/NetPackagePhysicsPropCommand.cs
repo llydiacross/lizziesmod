@@ -3,31 +3,31 @@ namespace LizziesMod
     public class NetPackagePhysicsPropCommand : NetPackage
     {
         private PropSpawnerCommand command;
-        private string propId;
+        private string entryId;
 
         public override NetPackageDirection PackageDirection
         {
             get { return NetPackageDirection.ToServer; }
         }
 
-        public NetPackagePhysicsPropCommand Setup(PropSpawnerCommand commandType, string requestedPropId)
+        public NetPackagePhysicsPropCommand Setup(PropSpawnerCommand commandType, string requestedEntryId)
         {
             command = commandType;
-            propId = requestedPropId ?? "";
+            entryId = requestedEntryId ?? "";
             return this;
         }
 
         public override void read(PooledBinaryReader reader)
         {
             command = (PropSpawnerCommand)reader.ReadByte();
-            propId = reader.ReadString();
+            entryId = reader.ReadString();
         }
 
         public override void write(PooledBinaryWriter writer)
         {
             base.write(writer);
             writer.Write((byte)command);
-            writer.Write(propId ?? "");
+            writer.Write(entryId ?? "");
         }
 
         public override void ProcessPackage(World world, GameManager callbacks)
@@ -37,12 +37,12 @@ namespace LizziesMod
             EntityPlayer player = world.GetEntity(Sender.entityId) as EntityPlayer;
             if (player == null) return;
 
-            PropSpawnerManager.ProcessServerCommand(world, player, command, propId);
+            SpawnMenuManager.ProcessServerCommand(world, player, command, entryId);
         }
 
         public override int GetLength()
         {
-            return 1 + (propId != null ? propId.Length : 0);
+            return 1 + (entryId != null ? entryId.Length : 0);
         }
     }
 }

@@ -2,10 +2,9 @@
 using LizziesMod;
 using UnityEngine;
 
-// TODO: Move to its own binary
+
 namespace DynamicBackpacks
 {
-
 
     [HarmonyPatch(typeof(XUiC_BackpackWindow), "OnOpen")]
     public class BackpackWindow_OnOpen_Patch
