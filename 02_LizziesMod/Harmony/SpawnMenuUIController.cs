@@ -6,8 +6,10 @@ namespace LizziesMod
     public class SpawnMenuUIController : XUiController
     {
         public const string WindowName = "windowSpawnMenu";
+        private const string OpenInputName = "openSpawnMenu";
 
         public static bool IsSpawnMenuOpen { get; private set; }
+        private static bool isInputRegistered;
 
         private XUiController categoryGrid;
         private XUiController propGrid;
@@ -20,6 +22,18 @@ namespace LizziesMod
         private SpawnMenuTab selectedTab = SpawnMenuTab.Props;
         private string selectedCategoryId = "all";
         private string lastSearchText = "";
+
+        public static void RegisterInput()
+        {
+            if (isInputRegistered) return;
+
+            isInputRegistered = true;
+            CustomInputManager.Subscribe(
+                SpawnMenuManager.ModName,
+                OpenInputName,
+                CustomInputTrigger.Pressed,
+                OpenFromInput);
+        }
 
         public override void Init()
         {
@@ -165,6 +179,17 @@ namespace LizziesMod
             if (player == null) return;
 
             SpawnMenuManager.RequestGrantItem(player, definition.Id);
+        }
+
+        private static void OpenFromInput()
+        {
+            EntityPlayerLocal player = GameManager.Instance?.World?.GetPrimaryPlayer();
+            if (player == null || player.playerUI == null || !SpawnMenuManager.CanUse(player)) return;
+
+            XUi xui = player.playerUI.xui;
+            if (xui == null || IsSpawnMenuOpen) return;
+
+            xui.playerUI.windowManager.Open(WindowName, true);
         }
 
         private static string GetTabLabel(SpawnMenuTab tab)

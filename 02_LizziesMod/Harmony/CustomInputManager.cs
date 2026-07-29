@@ -70,6 +70,7 @@ namespace LizziesMod
         private static KeyCode pendingPointerKey = KeyCode.None;
         private static string pendingPointerInputId;
         private static string pendingPointerChord;
+        private static int pendingPointerReleaseFrame = -1;
 
         public static bool IsCapturing { get { return !string.IsNullOrEmpty(capturedInputId); } }
         public static string CapturedInputId { get { return capturedInputId ?? ""; } }
@@ -549,7 +550,19 @@ namespace LizziesMod
                 return true;
             }
 
-            if (Input.GetKey(pendingPointerKey)) return true;
+            if (Input.GetKey(pendingPointerKey))
+            {
+                pendingPointerReleaseFrame = -1;
+                return true;
+            }
+
+            if (pendingPointerReleaseFrame < 0)
+            {
+                pendingPointerReleaseFrame = Time.frameCount;
+                return true;
+            }
+
+            if (Time.frameCount <= pendingPointerReleaseFrame + 1) return true;
 
             string inputId = pendingPointerInputId;
             string chord = pendingPointerChord;
@@ -586,6 +599,7 @@ namespace LizziesMod
             pendingPointerKey = KeyCode.None;
             pendingPointerInputId = null;
             pendingPointerChord = null;
+            pendingPointerReleaseFrame = -1;
         }
 
         private static bool IsCapturablePrimaryKey(KeyCode keyCode)

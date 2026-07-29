@@ -77,12 +77,12 @@ namespace LizziesMod
         // Catches unhandled exceptions inside other mods' InitMod methods to stop bad mods from crashing the game. Logs the error and adds the mod to a list of problematic mods.
         public static Exception InitMod_Finalizer(Exception __exception, [HarmonyArgument(0)] Mod modInstance)
         {
-            if (__exception != null && modInstance != null)
-            {
-                ModErrorHandler.AddError($"[FFCC33][INIT CRASH][-]\nMod '{modInstance.Name}' threw an exception during startup:\n{__exception.Message}");
-                ModErrorHandler.ProblematicMods.Add(modInstance.Name);
-            }
-            return __exception;
+            if (__exception == null) return null;
+            if (modInstance == null) return __exception;
+
+            ModErrorHandler.AddError($"[FFCC33][INIT CRASH][-]\nMod '{modInstance.Name}' threw an exception during startup:\n{__exception.Message}");
+            ModErrorHandler.ProblematicMods.Add(modInstance.Name);
+            return null;
         }
 
         public static void GetLoadedMods_Postfix(ref List<Mod> __result)

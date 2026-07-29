@@ -7,6 +7,8 @@
     - You can undo spawned props (works on multiplayer)
 - Added detailed error in-game logging for mods
 - Fixes to the mod profile system
+- Fixes to the custom audio system
+- World saves should now back up correctly
 
 # Alpha Test 2
 

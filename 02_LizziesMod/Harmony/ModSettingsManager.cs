@@ -35,7 +35,7 @@ namespace LizziesMod
                 Value = newValue;
                 Logger.Info($"Setting '{Name}' for mod '{ModName}' changed to: {newValue} {(OnValueChanged != null ? "INVOKABLE" : "NON-INVOKABLE") }");
  
-                if (Name.Equals("Enabled", StringComparison.OrdinalIgnoreCase))
+                if (requiresRestart || Name.Equals("Enabled", StringComparison.OrdinalIgnoreCase))
                 {
                     ModSettingsManager.PendingRestart = true;
                 }

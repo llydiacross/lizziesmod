@@ -49,7 +49,7 @@ namespace LizziesMod
                 audioManagerGO.AddComponent<CustomAudioManager>();
 
                 CustomInputManager.Initialize();
-                SpawnMenuInputController.Register();
+                SpawnMenuUIController.RegisterInput();
 
                 // Patch Harmony
                 const string id = "uk.co.llydia.7daystodie.mods.lizziesmod";

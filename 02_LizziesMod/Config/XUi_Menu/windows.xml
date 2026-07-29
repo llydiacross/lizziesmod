@@ -411,9 +411,10 @@
                     <sprite depth="1" sprite="menu_empty" type="sliced" color="15,15,15,255" />
                     <sprite depth="2" sprite="menu_empty2px" type="sliced" color="60,60,60,255" fillcenter="false" />
                     <label name="lblModTitle" depth="3" pos="10,-10" width="810" height="30" text="MOD INPUTS" font_size="26" justify="center" color="255,180,0,255" />
-                    <label name="lblInputCount" depth="3" pos="10,-43" width="810" height="20" text="0 INPUTS" font_size="16" justify="center" color="180,180,180,255" />
-                    <label name="lblCaptureStatus" depth="3" pos="10,-68" width="810" height="24" text="" font_size="16" justify="center" color="80,180,255,255" visible="false" />
-                    <rect depth="3" pos="10,-98" width="810" height="445" on_scroll="true">
+                    <label depth="3" pos="14,-43" width="80" height="20" text="SEARCH" font_size="16" justify="left" color="180,180,180,255" />
+                    <textfield name="txtInputSearch" depth="3" pos="98,-42" width="345" height="28" font_size="16" backgroundcolor="20,20,20,255" textcolor="255,255,255,255" active_text_color="255,255,255,255" caret_color="255,255,255,255" max_length="50" vk_propagates_events="false" />
+                    <label name="lblCaptureStatus" depth="3" pos="10,-76" width="810" height="20" text="" font_size="16" justify="center" color="80,180,255,255" visible="false" />
+                    <rect depth="3" pos="10,-104" width="810" height="439" on_scroll="true">
                         <defaultscrollbar />
                         <scrollview width="790" clippingsoftness="0,10">
                             <grid name="inputListGrid" pos="0,0" rows="50" cols="1" cell_width="790" cell_height="66" arrangement="vertical" repeat_content="true">

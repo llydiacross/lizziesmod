@@ -13,11 +13,12 @@ namespace LizziesMod
         private XUiController modListGrid;
         private XUiController inputListGrid;
         private XUiV_Label modTitleLabel;
-        private XUiV_Label inputCountLabel;
+        private XUiC_TextInput inputSearchField;
         private XUiV_Label captureStatusLabel;
         private XUiController cancelCaptureButton;
         private string selectedModName = "";
         private string previousCapturedInputId = "";
+        private string previousSearchText = "";
 
         public override void Init()
         {
@@ -25,7 +26,7 @@ namespace LizziesMod
             modListGrid = GetChildById("modListGrid");
             inputListGrid = GetChildById("inputListGrid");
             modTitleLabel = GetChildById("lblModTitle")?.viewComponent as XUiV_Label;
-            inputCountLabel = GetChildById("lblInputCount")?.viewComponent as XUiV_Label;
+            inputSearchField = GetChildById("txtInputSearch") as XUiC_TextInput;
             captureStatusLabel = GetChildById("lblCaptureStatus")?.viewComponent as XUiV_Label;
             cancelCaptureButton = GetChildById("btnCancelCapture");
 
@@ -39,6 +40,7 @@ namespace LizziesMod
             selectedModName = RequestedModName;
             RequestedModName = "";
             EnsureSelectedMod();
+            previousSearchText = GetSearchText();
             PopulateModList();
             PopulateInputList();
             RefreshCaptureState();
@@ -61,6 +63,7 @@ namespace LizziesMod
         {
             base.Update(_dt);
             RefreshCaptureState();
+            RefreshSearchFilter();
         }
 
         public void SelectMod(string modName)
@@ -131,14 +134,15 @@ namespace LizziesMod
         private void PopulateInputList()
         {
             List<CustomInputDefinition> inputs = CustomInputManager.GetInputsForMod(selectedModName);
+            string searchText = GetSearchText();
+            if (!string.IsNullOrEmpty(searchText))
+            {
+                inputs = inputs.FindAll(input => MatchesSearch(input, searchText));
+            }
+
             if (modTitleLabel != null)
             {
                 modTitleLabel.Text = string.IsNullOrEmpty(selectedModName) ? "NO CUSTOM INPUTS" : selectedModName.ToUpperInvariant();
-            }
-
-            if (inputCountLabel != null)
-            {
-                inputCountLabel.Text = inputs.Count == 1 ? "1 INPUT" : inputs.Count + " INPUTS";
             }
 
             if (inputListGrid == null) return;
@@ -160,6 +164,30 @@ namespace LizziesMod
 
                 index++;
             }
+        }
+
+        private void RefreshSearchFilter()
+        {
+            string searchText = GetSearchText();
+            if (searchText.Equals(previousSearchText, StringComparison.Ordinal)) return;
+
+            previousSearchText = searchText;
+            PopulateInputList();
+        }
+
+        private string GetSearchText()
+        {
+            return inputSearchField == null ? "" : (inputSearchField.Text ?? "").Trim();
+        }
+
+        private static bool MatchesSearch(CustomInputDefinition input, string searchText)
+        {
+            return input.Name.IndexOf(searchText, StringComparison.OrdinalIgnoreCase) >= 0 ||
+                   input.Description.IndexOf(searchText, StringComparison.OrdinalIgnoreCase) >= 0 ||
+                   input.Category.IndexOf(searchText, StringComparison.OrdinalIgnoreCase) >= 0 ||
+                   input.Chord.IndexOf(searchText, StringComparison.OrdinalIgnoreCase) >= 0 ||
+                   input.DefaultChord.IndexOf(searchText, StringComparison.OrdinalIgnoreCase) >= 0 ||
+                   input.Id.IndexOf(searchText, StringComparison.OrdinalIgnoreCase) >= 0;
         }
 
         private void RefreshCaptureState()
