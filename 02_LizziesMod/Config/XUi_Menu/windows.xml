@@ -388,7 +388,7 @@
                 <sprite depth="2" name="border" sprite="menu_empty2px" type="sliced" color="255,180,0,255" fillcenter="false" />
                 <rect depth="3" pos="0,0" height="50">
                     <sprite depth="1" sprite="menu_empty" type="sliced" color="0,0,0,255" />
-                    <label depth="2" pos="0,-10" width="1180" height="30" text="INPUT BINDINGS" font_size="32" justify="center" color="255,180,0,255" />
+                    <label depth="2" pos="0,-10" width="1180" height="30" text="MOD INPUT BINDINGS" font_size="32" justify="center" color="255,180,0,255" />
                 </rect>
                 <rect name="leftPanel" depth="3" pos="20,-70" width="290" height="570">
                     <sprite depth="1" sprite="menu_empty" type="sliced" color="15,15,15,255" />
