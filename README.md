@@ -81,7 +81,27 @@ Mods declare playable jukebox and Walkman tracks in `Config/CustomAudio.xml`. Au
 
 `id` and `file` are required. `title`, `artist`, `album`, and `track_number` are optional; missing title and artist fall back to the ID and `Unknown Artist`. The `file` path must stay inside the owning mod and reference an existing `.ogg`, `.wav`, or `.mp3`. The runtime track key is `<mod name>:<id>`, for example `ExampleMod:midnight-drive`.
 
-Walkman items should set their `TrackName` property to that full key. The jukebox lists tracks by artist, album, track number, and title; the server rejects playback requests for undeclared tracks.
+Custom audio needs an item for each way the track is discovered. A cassette is reusable and plays from inventory when the player owns an `itemWalkman`; a disc is consumed when used while aiming at a powered Jukebox. Both reference the same stable track key:
+
+```xml
+<item name="cassette_midnightDrive" extends="resourcePaper">
+	<property class="Action1">
+		<property name="Class" value="LizziesMod.ItemActionPlayCassette, LizziesMod" />
+	</property>
+	<property name="MediaType" value="cassette" />
+	<property name="TrackName" value="ExampleMod:midnight-drive" />
+</item>
+
+<item name="musicDisc_midnightDrive" extends="resourcePaper">
+	<property class="Action1">
+		<property name="Class" value="LizziesMod.ItemActionInsertMusicDisc, LizziesMod" />
+	</property>
+	<property name="MediaType" value="disc" />
+	<property name="TrackName" value="ExampleMod:midnight-drive" />
+</item>
+```
+
+Each Jukebox keeps its own unlocked library in the world save. The first player to insert a disc becomes its owner and can set a visitor price in Dukes; playback is always free for that owner. The server verifies disc ownership, track unlocks, prices, and payment before broadcasting audio to nearby clients.
 
 ## Spawn Menu
 

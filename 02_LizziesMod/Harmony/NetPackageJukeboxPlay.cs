@@ -7,6 +7,10 @@ namespace LizziesMod
         private Vector3 blockPosition;
         private string trackName;
 
+        public override NetPackageDirection PackageDirection
+        {
+            get { return NetPackageDirection.ToClient; }
+        }
 
         public NetPackageJukeboxPlay() { }
 
@@ -39,37 +43,8 @@ namespace LizziesMod
         
         public override void ProcessPackage(World _world, GameManager _callbacks)
         {
-            if (_world == null) return;
-
-   
-            if (SingletonMonoBehaviour<ConnectionManager>.Instance.IsServer)
-            {
-                if (CustomAudioManager.Instance == null || !CustomAudioManager.Instance.HasTrack(trackName))
-                {
-                    Logger.Warning($"[CustomAudioManager] Rejected unknown jukebox track '{trackName}'.");
-                    return;
-                }
-
-             
-                SingletonMonoBehaviour<ConnectionManager>.Instance.SendPackage(
-                    NetPackageManager.GetPackage<NetPackageJukeboxPlay>().Setup(blockPosition, trackName),
-                    false, 
-                    -1, -1, -1, null);
-
-            
-                if (!GameManager.IsDedicatedServer && CustomAudioManager.Instance != null)
-                {
-                    CustomAudioManager.Instance.PlayJukeboxTrack(blockPosition, trackName);
-                }
-            }
-            else
-            {
-       
-                if (CustomAudioManager.Instance != null)
-                {
-                    CustomAudioManager.Instance.PlayJukeboxTrack(blockPosition, trackName);
-                }
-            }
+            if (_world == null || SingletonMonoBehaviour<ConnectionManager>.Instance.IsServer) return;
+            if (CustomAudioManager.Instance != null) CustomAudioManager.Instance.PlayJukeboxTrack(blockPosition, trackName);
         }
 
         public override int GetLength()

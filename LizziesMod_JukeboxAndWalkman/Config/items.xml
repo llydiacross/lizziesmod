@@ -1,16 +1,33 @@
 <configs>
     <append xpath="/items">
-		<!-- Test Track-->
-        <item name="musicDisc_TestTrack">
-            <property name="Extends" value="resourcePaper"/> 
-            <property name="CustomIcon" value="Track"/> 
-            <property name="CustomIconTint" value="0,255,0"/> 
-            
+        <item name="itemWalkman">
+            <property name="Extends" value="resourcePaper" />
+            <property name="CustomIconTint" value="255,180,0" />
+            <property name="Stacknumber" value="1" />
+        </item>
+
+        <item name="cassette_ExplanationOfAnEntity">
+            <property name="Extends" value="resourcePaper" />
+            <property name="CustomIcon" value="track" />
+            <property name="CustomIconTint" value="80,180,255" />
+            <property name="Stacknumber" value="1" />
             <property class="Action1">
-                <property name="Class" value="LizziesMod.ItemActionWalkman, LizziesMod"/>
+                <property name="Class" value="LizziesMod.ItemActionPlayCassette, LizziesMod" />
             </property>
-            
-            <property name="TrackName" value="LizziesMod_JukeboxAndWalkman:explanation-of-an-entity"/>
+            <property name="MediaType" value="cassette" />
+            <property name="TrackName" value="LizziesMod_JukeboxAndWalkman:explanation-of-an-entity" />
+        </item>
+
+        <item name="musicDisc_TestTrack">
+            <property name="Extends" value="resourcePaper" />
+            <property name="CustomIcon" value="track" />
+            <property name="CustomIconTint" value="0,255,0" />
+            <property name="Stacknumber" value="1" />
+            <property class="Action1">
+                <property name="Class" value="LizziesMod.ItemActionInsertMusicDisc, LizziesMod" />
+            </property>
+            <property name="MediaType" value="disc" />
+            <property name="TrackName" value="LizziesMod_JukeboxAndWalkman:explanation-of-an-entity" />
         </item>
     </append>
 </configs>

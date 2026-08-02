@@ -47,12 +47,15 @@
     <Compile Include="Harmony\DynamicBackpacksUIPatch.cs" />
     <Compile Include="Harmony\CustomTextureManager.cs" />
     <Compile Include="Harmony\ItemActionHydraulicBlast.cs" />
+    <Compile Include="Harmony\ItemActionInsertMusicDisc.cs" />
     <Compile Include="Harmony\ItemActionPhysgun.cs" />
     <Compile Include="Harmony\MissingProfileModsUIController.cs" />
     <Compile Include="Harmony\ScrollWheelActionData.cs" />
     <Compile Include="Harmony\ItemActionTeleport.cs" />
     <Compile Include="Harmony\ItemActionWalkman.cs" />
     <Compile Include="Harmony\JukeboxUIController.cs" />
+    <Compile Include="Harmony\JukeboxLibraryManager.cs" />
+    <Compile Include="Harmony\JukeboxManager.cs" />
     <Compile Include="Harmony\Logger.cs" />
     <Compile Include="Harmony\Main.cs" />
     <Compile Include="Harmony\MainMenuIconController.cs" />
@@ -62,6 +65,9 @@
     <Compile Include="Harmony\ModManualUIController.cs" />
     <Compile Include="Harmony\ModSettingsManager.cs" />
     <Compile Include="Harmony\ModSettingsUIController.cs" />
+    <Compile Include="Harmony\NetPackageJukeboxCommand.cs" />
+    <Compile Include="Harmony\NetPackageJukeboxFeedback.cs" />
+    <Compile Include="Harmony\NetPackageJukeboxLibrary.cs" />
     <Compile Include="Harmony\NetPackageJukeboxPlay.cs" />
     <Compile Include="Harmony\NetPackageLevelProfile.cs" />
     <Compile Include="Harmony\ProfileSelectorUIController.cs" />

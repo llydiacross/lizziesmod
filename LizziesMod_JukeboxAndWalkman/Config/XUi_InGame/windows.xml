@@ -4,7 +4,7 @@
             
             <panel name="header" height="43" depth="1">
                 <sprite depth="1" name="headerbackground" sprite="ui_game_panel_header" type="sliced" />
-                <label depth="2" name="windowName" pos="15,-8" width="400" height="32" text="JUKEBOX (COST: 1 DUKE)" font_size="28" color="[white]"/>
+                <label depth="2" name="windowName" pos="15,-8" width="500" height="32" text="JUKEBOX LIBRARY" font_size="28" color="[white]"/>
                 
                 <rect name="btnClose" pos="556,-6" width="43" height="43">
                     <sprite name="clickable" depth="3" sprite="ui_game_symbol_x" size="24,24" pos="9,-9" />
@@ -13,8 +13,13 @@
             
             <rect name="content" pos="0,-46" height="350">
                 <sprite depth="1" name="background" sprite="ui_game_filled_dark" color="0,0,0,220" type="sliced" />
+                <label name="lblLibraryStatus" depth="2" pos="60,-10" width="520" height="20" text="LOADING LIBRARY..." font_size="16" color="[grey]" />
+                <label name="lblPriceInfo" depth="2" pos="60,-32" width="290" height="20" text="PLAYBACK: FREE" font_size="16" color="[yellow]" />
+
+                <textfield name="txtPlaybackPrice" depth="2" pos="360,-31" width="90" height="28" font_size="16" justify="center" backgroundcolor="20,20,20,255" textcolor="255,255,255,255" active_text_color="255,255,255,255" caret_color="255,255,255,255" max_length="5" vk_propagates_events="false" visible="false" />
+                <simplebutton name="btnSetPrice" depth="2" pos="460,-31" width="120" height="28" font_size="14" caption="SET PRICE" visible="false" />
                 
-                <rect name="btnPageUp" pos="10, -10" width="40" height="40">
+                <rect name="btnPageUp" pos="10, -60" width="40" height="40">
                     <sprite name="clickable" depth="2" sprite="ui_game_symbol_arrow_up" size="28,28" pos="6,-6" color="[white]"/>
                 </rect>
                 
@@ -22,7 +27,7 @@
                     <sprite name="clickable" depth="2" sprite="ui_game_symbol_arrow_down" size="28,28" pos="6,-6" color="[white]"/>
                 </rect>
 
-                <grid name="trackListGrid" rows="5" cols="1" pos="60,-20" cell_width="520" cell_height="50" arrangement="vertical">
+                <grid name="trackListGrid" rows="5" cols="1" pos="60,-60" cell_width="520" cell_height="46" arrangement="vertical">
                     
                     <rect name="row1" controller="LizziesMod.JukeboxUITrackEntryController, LizziesMod" width="520" height="40">
                         <sprite name="clickable" width="520" height="40" depth="2" sprite="ui_game_filled_dark" color="60,60,60,255" type="sliced" />

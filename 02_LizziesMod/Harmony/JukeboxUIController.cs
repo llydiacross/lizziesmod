@@ -6,9 +6,16 @@ namespace LizziesMod
     public class JukeboxUIController : XUiController
     {
         public static Vector3 CurrentJukeboxPosition;
+        private static JukeboxUIController activeController;
 
         private XUiController trackListGrid;
+        private XUiC_TextInput priceInput;
+        private XUiController setPriceButton;
+        private XUiV_Label libraryStatusLabel;
+        private XUiV_Label priceInfoLabel;
         private List<string> trackKeys = new List<string>();
+        private int playbackPrice;
+        private bool isOwner;
 
         // Pagination logic
         private int currentPage = 0;
@@ -18,6 +25,10 @@ namespace LizziesMod
         {
             base.Init();
             trackListGrid = GetChildById("trackListGrid");
+            priceInput = GetChildById("txtPlaybackPrice") as XUiC_TextInput;
+            setPriceButton = GetChildById("btnSetPrice");
+            libraryStatusLabel = GetChildById("lblLibraryStatus")?.viewComponent as XUiV_Label;
+            priceInfoLabel = GetChildById("lblPriceInfo")?.viewComponent as XUiV_Label;
 
             XUiController closeBtn = GetChildById("btnClose")?.GetChildById("clickable");
             if (closeBtn != null) closeBtn.OnPress += HandleClose;
@@ -27,17 +38,49 @@ namespace LizziesMod
 
             XUiController btnPageDown = GetChildById("btnPageDown")?.GetChildById("clickable");
             if (btnPageDown != null) btnPageDown.OnPress += (s, e) => ChangePage(1);
+
+            XUiController setPriceClickable = setPriceButton?.GetChildById("clickable") ?? setPriceButton;
+            if (setPriceClickable != null) setPriceClickable.OnPress += HandleSetPrice;
         }
 
         public override void OnOpen()
         {
             base.OnOpen();
+            activeController = this;
             currentPage = 0;
+            trackKeys.Clear();
+            playbackPrice = 0;
+            isOwner = false;
             RefreshTrackList();
+            JukeboxManager.RequestLibrary(xui.mPlayerUI.localPlayer.entityPlayerLocal, CurrentJukeboxPosition);
+        }
+
+        public override void OnClose()
+        {
+            base.OnClose();
+            if (activeController == this) activeController = null;
+        }
+
+        public static void ReceiveLibrarySnapshot(Vector3 position, List<string> unlockedTrackIds, int price, bool playerIsOwner)
+        {
+            if (activeController == null || activeController.CurrentPositionDoesNotMatch(position)) return;
+
+            activeController.ApplyLibrarySnapshot(unlockedTrackIds, price, playerIsOwner);
+        }
+
+        public static void ShowFeedback(string message, bool denied)
+        {
+            EntityPlayerLocal player = GameManager.Instance?.World?.GetPrimaryPlayer();
+            if (player == null || string.IsNullOrEmpty(message)) return;
+
+            GameManager.ShowTooltip(player, message);
+            player.PlayOneShot(denied ? "ui_denied" : "vending_machine_place_item");
         }
 
         private void ChangePage(int direction)
         {
+            if (trackKeys.Count == 0) return;
+
             int maxPages = Mathf.CeilToInt((float)trackKeys.Count / itemsPerPage);
             currentPage += direction;
 
@@ -52,9 +95,6 @@ namespace LizziesMod
         private void RefreshTrackList()
         {
             if (CustomAudioManager.Instance == null || trackListGrid == null) return;
-
-            trackKeys = new List<string>(CustomAudioManager.Instance.GetAvailableAudio().Keys);
-            trackKeys.Sort(CompareTracks);
 
             for (int i = 0; i < trackListGrid.Children.Count; i++)
             {
@@ -73,6 +113,8 @@ namespace LizziesMod
                     }
                 }
             }
+
+            UpdateLibraryLabels();
         }
 
         private int CompareTracks(string leftKey, string rightKey)
@@ -96,33 +138,68 @@ namespace LizziesMod
             EntityPlayerLocal player = xui.mPlayerUI.localPlayer.entityPlayerLocal;
             if (player == null) return;
 
-            ItemClass tokenClass = ItemClass.GetItemClass("casinoCoin", false);
-            if (tokenClass == null) return;
+            JukeboxManager.RequestPlayTrack(player, CurrentJukeboxPosition, targetTrack);
+        }
 
-            ItemValue tokenValue = new ItemValue(tokenClass.Id);
-            int coinCount = player.bag.GetItemCount(tokenValue, -1, -1, true);
-            if (coinCount < 1)
+        private bool CurrentPositionDoesNotMatch(Vector3 position)
+        {
+            return (CurrentJukeboxPosition - position).sqrMagnitude > 0.01f;
+        }
+
+        private void ApplyLibrarySnapshot(List<string> unlockedTrackIds, int price, bool playerIsOwner)
+        {
+            playbackPrice = price;
+            isOwner = playerIsOwner;
+            trackKeys = unlockedTrackIds == null ? new List<string>() : new List<string>(unlockedTrackIds);
+            if (CustomAudioManager.Instance != null)
             {
-                GameManager.ShowTooltip(player, "[FF0000]Deposit required: 1 Casino Token (Duke)[-]");
-                player.PlayOneShot("ui_denied");
+                trackKeys.RemoveAll(trackId => !CustomAudioManager.Instance.HasTrack(trackId));
+            }
+            trackKeys.Sort(CompareTracks);
+            currentPage = 0;
+            RefreshTrackList();
+        }
+
+        private void UpdateLibraryLabels()
+        {
+            if (libraryStatusLabel != null)
+            {
+                libraryStatusLabel.Text = trackKeys.Count == 0
+                    ? "INSERT A MUSIC DISC TO UNLOCK TRACKS"
+                    : trackKeys.Count + (trackKeys.Count == 1 ? " TRACK UNLOCKED" : " TRACKS UNLOCKED");
+            }
+
+            if (priceInfoLabel != null)
+            {
+                priceInfoLabel.Text = isOwner
+                    ? "OWNER PLAYBACK: FREE | VISITORS: " + playbackPrice + " DUKE" + (playbackPrice == 1 ? "" : "S")
+                    : playbackPrice == 0
+                        ? "PLAYBACK: FREE"
+                        : "PLAYBACK: " + playbackPrice + " DUKE" + (playbackPrice == 1 ? "" : "S");
+            }
+
+            if (priceInput != null)
+            {
+                priceInput.Text = playbackPrice.ToString();
+                priceInput.viewComponent.IsVisible = isOwner;
+            }
+
+            if (setPriceButton != null) setPriceButton.viewComponent.IsVisible = isOwner;
+        }
+
+        private void HandleSetPrice(XUiController sender, int mouseButton)
+        {
+            if (!isOwner || priceInput == null) return;
+
+            int price;
+            if (!int.TryParse(priceInput.Text, out price) || price < 0 || price > JukeboxManager.MaxPrice)
+            {
+                ShowFeedback("[FF0000]Enter a price between 0 and " + JukeboxManager.MaxPrice + ".[-]", true);
                 return;
             }
 
-
-            player.bag.DecItem(tokenValue, 1, false, null);
-            player.inventory.onInventoryChanged();
-            player.PlayOneShot("vending_machine_place_item");
-
-
-            if (SingletonMonoBehaviour<ConnectionManager>.Instance != null)
-            {
-                SingletonMonoBehaviour<ConnectionManager>.Instance.SendToServer(
-                    NetPackageManager.GetPackage<NetPackageJukeboxPlay>().Setup(CurrentJukeboxPosition, targetTrack)
-                );
-            }
-
-
-            xui.playerUI.windowManager.Close("windowJukebox");
+            EntityPlayerLocal player = xui.mPlayerUI.localPlayer.entityPlayerLocal;
+            if (player != null) JukeboxManager.RequestSetPrice(player, CurrentJukeboxPosition, price);
         }
 
         private void HandleClose(XUiController _sender, int _mouseButton)
