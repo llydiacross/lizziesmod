@@ -54,6 +54,35 @@ Use `-MainMenu` when a save needs to be selected or created manually:
 & '.\02_LizziesMod\Launch-Playtest.ps1' -MainMenu
 ```
 
+## Dimensions
+
+Dimensions are a single-player experimental feature. The game supports one active region directory, chunk provider, and chunk cache, so entering a dimension moves the whole local session between the Overworld and one selected realm; separate per-player realms are not supported.
+
+Enable `ExperimentalFeatures` in **Mod Settings**, use a disposable normal generated or Navezgane save, then activate a Dimensional Portal. Do not use the `Playtesting` prefab world: its flat-world provider cannot reload save-backed region data. The system creates a safety backup before the first transition.
+
+Each realm has isolated region-backed terrain, blocks, tile entities, dropped items, and spawned non-player entities. Player inventory, quests, profile data, and character state remain shared. Return to the Overworld before exiting the game.
+
+The core mod owns transitions and save storage. Companion mods add dimensions by registering a generator and a definition during `IModApi.InitMod`:
+
+```csharp
+DimensionGeneratorRegistry.Register(new DimensionGeneratorDefinition(
+	"example-generated",
+	DimensionSaveMode.Generated,
+	GetEntryPosition,
+	GenerateChunk));
+DimensionRegistry.LoadDefinitions(modInstance);
+```
+
+`GenerateChunk` receives each new `Chunk`; return `true` after fully writing it to suppress normal terrain, or `false` to use the normal generator. Existing saved chunks are loaded instead of regenerated. Definitions belong to the companion mod:
+
+```xml
+<Dimensions default="ExampleDimension" defaultPriority="100">
+	<Dimension id="ExampleDimension" displayName="Example Dimension" generator="example-generated" />
+</Dimensions>
+```
+
+When several mods declare defaults, the highest `defaultPriority` wins. The included `LizziesMod_Backrooms` add-on provides the stable `backrooms` generator and `Backrooms` dimension. Its layout settings apply only to new generated chunks, so restart and recreate its realm after changing them.
+
 ## Custom Inputs
 
 Every loaded mod can add `Config/CustomInput.xml`. The input is namespaced by the mod that owns the file, so names only need to be unique within that mod:
