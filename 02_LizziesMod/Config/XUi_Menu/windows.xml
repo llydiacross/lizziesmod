@@ -523,7 +523,7 @@
                         <label name="lblPropertyValue" depth="1" pos="255,-34" width="300" height="20" text="VALUE" font_size="15" color="140,140,140,255" />
                         <rect depth="1" pos="0,-58" width="650" height="98" on_scroll="true">
                             <defaultscrollbar />
-                            <scrollview name="propertyScrollView" width="630" clippingsoftness="0,10">
+                            <scrollview name="propertyScrollView" width="780" clippingsoftness="0,10">
                                 <grid name="propertyGrid" pos="0,0" rows="24" cols="1" cell_width="780" cell_height="32" arrangement="vertical" repeat_content="true">
                                     <rect name="xmlPropertyEntry" controller="LizziesMod.XmlEditorPropertyEntryController, LizziesMod" width="780" height="28">
                                         <textfield name="txtPropertyName" depth="1" pos="150,0" width="245" height="28" font_size="16" backgroundcolor="20,20,20,255" textcolor="255,255,255,255" active_text_color="255,255,255,255" caret_color="255,255,255,255" max_length="80" vk_propagates_events="false" />
