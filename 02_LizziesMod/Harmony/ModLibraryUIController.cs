@@ -17,8 +17,10 @@ namespace LizziesMod
         private const int ReadmeScrollEndPadding = 100;
         private const int ReadmeTextAreaPoolSize = 32;
         private const int ReadmeImagePoolSize = 32;
+        private const string MainMenuWindow = "mainMenu";
 
         public static string PreviousMenu = "";
+        public static string RequestedBookId = "";
 
         private XUiController bookListGrid;
         private string selectedBookId = "";
@@ -124,7 +126,13 @@ namespace LizziesMod
             ownsGamePause = InGameUiPause.Acquire();
 
             var readmes = ModManualManager.AllBooks.Values.Where(b => b.IsReadme).ToList();
-            if (readmes.Count > 0)
+            string requestedBookId = RequestedBookId;
+            RequestedBookId = "";
+            if (!string.IsNullOrEmpty(requestedBookId) && ModManualManager.AllBooks.TryGetValue(requestedBookId, out ModBook requestedBook) && requestedBook.IsReadme)
+            {
+                SelectBook(requestedBook.ID);
+            }
+            else if (readmes.Count > 0)
             {
                 SelectBook(readmes[0].ID);
             }
@@ -187,8 +195,16 @@ namespace LizziesMod
             InGameUiPause.Release(ownsGamePause);
             ownsGamePause = false;
             ReleaseLoadedImages();
-            if (!string.IsNullOrEmpty(PreviousMenu))
-                xui.playerUI.windowManager.Open(PreviousMenu, true);
+
+            string previousMenu = PreviousMenu;
+            PreviousMenu = "";
+            if (string.IsNullOrEmpty(previousMenu) && !Main.IsPlayerInGame())
+            {
+                previousMenu = MainMenuWindow;
+            }
+
+            if (!string.IsNullOrEmpty(previousMenu))
+                xui.playerUI.windowManager.Open(previousMenu, true);
         }
 
         private void HandleClose(XUiController _sender, int _mouseButton)

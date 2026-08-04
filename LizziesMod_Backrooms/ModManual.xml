@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ModManual>
-  <Book id="readme_backrooms" is_readme="true" title="Backrooms: Technical Reference" author="llydia" icon="ui_game_symbol_book"
+  <Book id="readme_backrooms" is_readme="true" title="Backrooms" author="llydia" icon="ui_game_symbol_book"
         default_background="menu_empty" default_font="UIFontSmall" default_text_color="255,255,255,255">
     <Page title="Overview"><![CDATA[
 LizziesMod_Backrooms is a generated-dimension companion for LizziesMod. It registers the backrooms terrain generator and defines the Backrooms destination in Config/Dimensions.xml.

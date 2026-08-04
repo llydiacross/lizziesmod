@@ -58,6 +58,7 @@ namespace LizziesMod
         private XUiController btnLoadProfile;
         private XUiController btnSaveProfile;
         private XUiController btnEditInputs;
+        private XUiController btnOpenReadme;
         public static string LastLoadedProfile = "";
         private bool isTransitioning = false;
         private bool ownsGamePause;
@@ -111,6 +112,12 @@ namespace LizziesMod
             {
                 XUiController clickable = btnEditInputs.GetChildById("clickable") ?? btnEditInputs;
                 clickable.OnPress += (s, e) => OpenSelectedModInputs();
+            }
+            btnOpenReadme = GetChildById("btnOpenReadme");
+            if (btnOpenReadme != null)
+            {
+                XUiController clickable = btnOpenReadme.GetChildById("clickable") ?? btnOpenReadme;
+                clickable.OnPress += (s, e) => OpenSelectedModReadme();
             }
             XUiController closeBtn = GetChildById("btnClose");
             if (closeBtn != null)
@@ -283,6 +290,7 @@ namespace LizziesMod
 
             PopulateSettingsList();
             UpdateEditInputsButton();
+            UpdateReadmeButton();
         }
 
         public void PopulateSettingsList()
@@ -400,10 +408,26 @@ namespace LizziesMod
             {
                 xui.playerUI.windowManager.Open("windowModSettingsRestartPrompt", true);
             }
-            else if (!string.IsNullOrEmpty(PreviousMenu))
+            else
             {
-                xui.playerUI.windowManager.Open(PreviousMenu, true);
+                string returnMenu = ConsumeReturnMenu();
+                if (!string.IsNullOrEmpty(returnMenu))
+                {
+                    xui.playerUI.windowManager.Open(returnMenu, true);
+                }
             }
+        }
+
+        internal static string ConsumeReturnMenu()
+        {
+            string previousMenu = PreviousMenu;
+            PreviousMenu = "";
+            if (string.IsNullOrEmpty(previousMenu) && !Main.IsPlayerInGame())
+            {
+                return "mainMenu";
+            }
+
+            return previousMenu;
         }
 
         private void UpdateEditInputsButton()
@@ -412,6 +436,28 @@ namespace LizziesMod
 
             btnEditInputs.viewComponent.IsVisible = !string.IsNullOrEmpty(selectedMod) &&
                 CustomInputManager.GetInputsForMod(selectedMod).Count > 0;
+        }
+
+        private void UpdateReadmeButton()
+        {
+            if (btnOpenReadme?.viewComponent == null) return;
+
+            btnOpenReadme.viewComponent.IsVisible = GetSelectedReadme() != null;
+        }
+
+        private ModBook GetSelectedReadme()
+        {
+            if (string.IsNullOrEmpty(selectedMod)) return null;
+
+            foreach (ModBook book in ModManualManager.AllBooks.Values)
+            {
+                if (book.IsReadme && string.Equals(book.ModSource, selectedMod, StringComparison.OrdinalIgnoreCase))
+                {
+                    return book;
+                }
+            }
+
+            return null;
         }
 
         private void OpenSelectedModInputs()
@@ -426,6 +472,21 @@ namespace LizziesMod
                 CustomInputBindingsUIController.PreviousMenu = "windowModSettings";
                 xui.playerUI.windowManager.Close("windowModSettings");
                 xui.playerUI.windowManager.Open(CustomInputBindingsUIController.WindowName, true);
+            });
+        }
+
+        private void OpenSelectedModReadme()
+        {
+            ModBook readme = GetSelectedReadme();
+            if (readme == null) return;
+
+            SaveCurrentSettingsUI(() =>
+            {
+                isTransitioning = true;
+                ModLibraryUIController.PreviousMenu = "windowModSettings";
+                ModLibraryUIController.RequestedBookId = readme.ID;
+                xui.playerUI.windowManager.Close("windowModSettings");
+                xui.playerUI.windowManager.Open("windowModLibrary", true);
             });
         }
     }
@@ -464,8 +525,9 @@ namespace LizziesMod
             if (isQuitting) return;
 
             ModSettingsManager.PendingRestart = false;
-            if (!string.IsNullOrEmpty(ModSettingsUIController.PreviousMenu))
-                xui.playerUI.windowManager.Open(ModSettingsUIController.PreviousMenu, true);
+            string returnMenu = ModSettingsUIController.ConsumeReturnMenu();
+            if (!string.IsNullOrEmpty(returnMenu))
+                xui.playerUI.windowManager.Open(returnMenu, true);
         }
 
         public override void OnOpen()

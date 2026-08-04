@@ -187,12 +187,12 @@
     <Mod name="TFP_Harmony" version="1.1.0.4">
       <Setting name="Enabled" value="true" type="bool" hidden="true" />
     </Mod>
-    <Mod name="LizziesMod" version="0.0.1">
+    <Mod name="LizziesMod" version="0.0.4">
       <Setting name="StartingYear" value="1986" type="int" />
       <Setting name="EnableMechanicalPress" value="true" type="bool" />
       <Setting name="BrassScrapMaxDamage" value="1650" type="int" />
       <Setting name="BrassScrapStabilityGlue" value="70" type="int" />
-      <Setting name="ExperimentalFeatures" value="true" type="bool" />
+      <Setting name="ExperimentalFeatures" value="false" type="bool" warning="true" />
       <Setting name="Enabled" value="true" type="bool" hidden="true" />
       <Setting name="LastProfileName" value="Default" type="string" hidden="true" />
     </Mod>

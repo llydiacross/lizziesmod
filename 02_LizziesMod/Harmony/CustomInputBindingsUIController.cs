@@ -57,6 +57,11 @@ namespace LizziesMod
 
             string previousMenu = PreviousMenu;
             PreviousMenu = "";
+            if (string.IsNullOrEmpty(previousMenu) && !Main.IsPlayerInGame())
+            {
+                previousMenu = "mainMenu";
+            }
+
             if (!string.IsNullOrEmpty(previousMenu))
             {
                 xui.playerUI.windowManager.Open(previousMenu, true);

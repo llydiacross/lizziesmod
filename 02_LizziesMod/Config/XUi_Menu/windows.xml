@@ -251,7 +251,7 @@
 
                 </rect>
 
-                <simplebutton name="btnClose" depth="4" pos="20,-840" width="1460" height="40" font_size="26" caption="RETURN TO MAIN MENU" />
+                <simplebutton name="btnClose" depth="4" pos="20,-840" width="1460" height="40" font_size="26" caption="CLOSE README" />
             </rect>
         </window>
         
@@ -301,6 +301,7 @@
                 <rect depth="3" pos="0,0" height="50">
                     <sprite depth="1" sprite="menu_empty" type="sliced" color="0,0,0,255" />
                     <label depth="2" text="MOD SETTINGS" font_size="32" justify="center" pivot="center" pos="600,-25" color="255,180,0,255" upper_case="true" />
+                    <simplebutton name="btnOpenReadme" depth="3" pos="850,-7" width="230" height="36" font_size="18" caption="README" visible="false" />
                     <simplebutton name="btnEditInputs" depth="3" pos="1090,-7" width="230" height="36" font_size="18" caption="EDIT INPUTS" visible="false" />
                 </rect>
 

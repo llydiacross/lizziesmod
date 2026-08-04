@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ModManual>
-  <Book id="readme_pocket_dimension" is_readme="true" title="Pocket Dimension: Technical Reference" author="llydia" icon="ui_game_symbol_book"
+  <Book id="readme_pocket_dimension" is_readme="true" title="Pocket Dimension" author="llydia" icon="ui_game_symbol_book"
         default_background="menu_empty" default_font="UIFontSmall" default_text_color="255,255,255,255">
     <Page title="Overview"><![CDATA[
 LizziesMod_PocketDimension is a small generated-dimension companion and a reference implementation for the shared dimension-generator API.

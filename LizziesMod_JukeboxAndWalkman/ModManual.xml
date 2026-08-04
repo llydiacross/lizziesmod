@@ -27,7 +27,7 @@ Power the Jukebox with [FF0000]10 Watts[-], then use it to browse the tracks unl
         </Page> 
     </Book>
 
-        <Book id="readme_jukebox_and_walkman" is_readme="true" title="Jukebox And Walkman: Technical Reference" author="llydia" icon="ui_game_symbol_book"
+        <Book id="readme_jukebox_and_walkman" is_readme="true" title="Jukebox And Walkman" author="llydia" icon="ui_game_symbol_book"
           default_background="menu_empty" default_font="UIFontSmall" default_text_color="255,255,255,255">
         <Page title="Overview"><![CDATA[
     LizziesMod_JukeboxAndWalkman adds a powered Jukebox, portable Walkmans, reusable cassettes, and installable music discs. The menu library readme documents the technical behavior; the Jukebox Masterclass is the separate craftable in-world manual.
