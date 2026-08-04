@@ -21,6 +21,7 @@ $ErrorActionPreference = 'Stop'
 
 $projectPath = Join-Path $PSScriptRoot 'LizziesMod.csproj'
 $backroomsProjectPath = Join-Path (Join-Path $PSScriptRoot '..\LizziesMod_Backrooms') 'LizziesMod_Backrooms.csproj'
+$pocketDimensionProjectPath = Join-Path (Join-Path $PSScriptRoot '..\LizziesMod_PocketDimension') 'LizziesMod_PocketDimension.csproj'
 $gameExecutable = Join-Path $GameRoot '7DaysToDie.exe'
 $saveDirectory = Join-Path (Join-Path (Join-Path $env:APPDATA '7DaysToDie\Saves') $WorldName) $SaveName
 $saveMarker = Join-Path $saveDirectory 'main.ttw'
@@ -32,7 +33,7 @@ if (-not (Test-Path -LiteralPath $gameExecutable -PathType Leaf)) {
     throw "7 Days To Die was not found at '$gameExecutable'. Use -GameRoot to provide its install folder."
 }
 
-if (-not (Test-Path -LiteralPath $saveMarker -PathType Leaf)) {
+if (-not $MainMenu -and -not (Test-Path -LiteralPath $saveMarker -PathType Leaf)) {
     throw "The requested test save '$WorldName/$SaveName' does not contain main.ttw at '$saveDirectory'."
 }
 
@@ -51,6 +52,13 @@ if (-not $SkipBuild -and $PSCmdlet.ShouldProcess($projectPath, 'Build LizziesMod
         & dotnet msbuild $backroomsProjectPath /t:Build /p:Configuration=Debug /p:Platform=AnyCPU
         if ($LASTEXITCODE -ne 0) {
             throw "LizziesMod_Backrooms build failed with exit code $LASTEXITCODE."
+        }
+    }
+
+    if (Test-Path -LiteralPath $pocketDimensionProjectPath -PathType Leaf) {
+        & dotnet msbuild $pocketDimensionProjectPath /t:Build /p:Configuration=Debug /p:Platform=AnyCPU
+        if ($LASTEXITCODE -ne 0) {
+            throw "LizziesMod_PocketDimension build failed with exit code $LASTEXITCODE."
         }
     }
 }

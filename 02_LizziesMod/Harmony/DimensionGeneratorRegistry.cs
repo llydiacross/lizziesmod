@@ -117,8 +117,10 @@ namespace LizziesMod
     [HarmonyPatch(typeof(ChunkProviderGenerateWorld), "generateTerrain", new Type[] { typeof(World), typeof(Chunk), typeof(GameRandom) })]
     public class ChunkProviderGenerateWorld_DimensionTerrainPatch
     {
-        public static bool Prefix(Chunk _chunk)
+        public static bool Prefix(ChunkProviderGenerateWorld __instance, Chunk _chunk)
         {
+            if (!DimensionManager.IsProviderBoundToActiveGeneratedDimension(__instance)) return true;
+
             DimensionDefinition dimension;
             if (!DimensionRegistry.TryGet(DimensionManager.ActiveDimensionId, out dimension)) return true;
 
@@ -149,6 +151,29 @@ namespace LizziesMod
         public static void Postfix()
         {
             DimensionGeneratorRegistry.ProcessActiveGeneratorMainThread();
+        }
+    }
+
+    [HarmonyPatch(typeof(ChunkProviderGenerateWorld), "GenerateChunksThread")]
+    public class ChunkProviderGenerateWorld_DimensionGenerationGatePatch
+    {
+        public static bool Prefix(ref bool __state, ref int __result)
+        {
+            __state = false;
+            if (!DimensionManager.TryEnterChunkGeneration())
+            {
+                __result = 15;
+                return false;
+            }
+
+            __state = true;
+            return true;
+        }
+
+        public static Exception Finalizer(Exception __exception, bool __state)
+        {
+            if (__state) DimensionManager.ExitChunkGeneration();
+            return __exception;
         }
     }
 }

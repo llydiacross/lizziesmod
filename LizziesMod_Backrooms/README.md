@@ -6,6 +6,10 @@ The mod requires the core LizziesMod DLL. Its generator uses a concrete foundati
 
 `defaultPriority="100"` makes Backrooms the portal destination while this add-on is installed. Lower-priority definitions remain available but are not selected by the current portal UI.
 
+## Access Terminal
+
+The **Backrooms Access Terminal** is a direct portal to The Backrooms. Craft it at a workbench with 3 Flux Cells, 12 Electrical Parts, 8 Mechanical Parts, and 6 Forged Steel. It uses a native industrial control-panel model, and its action always targets Backrooms regardless of the currently configured default portal destination.
+
 ## Layout Settings
 
 The **LizziesMod_Backrooms** entry in Mod Settings exposes these restart-required values:

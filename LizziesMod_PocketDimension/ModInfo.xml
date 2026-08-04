@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<xml>
+  <Name value="LizziesMod_PocketDimension" />
+  <DisplayName value="Pocket Dimension" />
+  <Description value="A Flux-powered CRT television that opens a stable Pocket Dimension." />
+  <Author value="llydia" />
+  <Version value="1.0.0" />
+  <SkipWithAntiCheat value="true" />
+</xml>

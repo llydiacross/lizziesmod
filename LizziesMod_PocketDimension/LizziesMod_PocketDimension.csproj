@@ -4,10 +4,10 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{9E049434-36B6-47B4-A1A7-27D9B1686B30}</ProjectGuid>
+    <ProjectGuid>{3FE0A0CB-0C7A-45E7-BAE8-2BFC03DFB30E}</ProjectGuid>
     <OutputType>Library</OutputType>
-    <RootNamespace>LizziesMod.Backrooms</RootNamespace>
-    <AssemblyName>LizziesMod_Backrooms</AssemblyName>
+    <RootNamespace>LizziesMod.PocketDimension</RootNamespace>
+    <AssemblyName>LizziesMod_PocketDimension</AssemblyName>
     <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <NoStdLib>true</NoStdLib>
     <FileAlignment>512</FileAlignment>
@@ -25,9 +25,9 @@
     <DefineConstants>TRACE</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Harmony\BlockBackroomsPortal.cs" />
-    <Compile Include="Harmony\BackroomsChunkGenerator.cs" />
+    <Compile Include="Harmony\BlockPocketDimensionPortal.cs" />
     <Compile Include="Harmony\Main.cs" />
+    <Compile Include="Harmony\PocketDimensionGenerator.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

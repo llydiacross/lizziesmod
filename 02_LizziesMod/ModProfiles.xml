@@ -196,6 +196,14 @@
       <Setting name="Enabled" value="true" type="bool" hidden="true" />
       <Setting name="LastProfileName" value="Default" type="string" hidden="true" />
     </Mod>
+    <Mod name="LizziesMod_Backrooms" version="0.0.1">
+      <Setting name="MainFloorY" value="59" type="int" />
+      <Setting name="StoreyHeight" value="8" type="int" />
+      <Setting name="PitDepth" value="5" type="int" />
+      <Setting name="BasementCorridorHeight" value="4" type="int" />
+      <Setting name="SplitLevelDepth" value="4" type="int" />
+      <Setting name="Enabled" value="true" type="bool" hidden="true" />
+    </Mod>
     <Mod name="LizziesMod_DynamicBackpacks" version="0.0.1">
       <Setting name="BackpackGridSizeX" value="17" type="int" />
       <Setting name="BackpackGridSizeY" value="15" type="int" />
@@ -216,6 +224,10 @@
     </Mod>
     <Mod name="LizziesMod_Physgun" version="0.0.1">
       <Setting name="AdminOnly" value="false" type="bool" />
+      <Setting name="Enabled" value="true" type="bool" hidden="true" />
+    </Mod>
+    <Mod name="LizziesMod_PocketDimension" version="1.0.0">
+      <Setting name="FloorY" value="32" type="int" />
       <Setting name="Enabled" value="true" type="bool" hidden="true" />
     </Mod>
     <Mod name="LizziesMod_PropSpawner" version="0.0.1">
