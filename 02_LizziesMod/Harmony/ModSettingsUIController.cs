@@ -62,6 +62,13 @@ namespace LizziesMod
         private bool isTransitioning = false;
         private bool ownsGamePause;
 
+        private sealed class PendingSettingChange
+        {
+            public SettingEntryController Entry;
+            public ModSetting Setting;
+            public string Value;
+        }
+
         public override void Init()
         {
             base.Init();
@@ -94,8 +101,8 @@ namespace LizziesMod
                 {
                     if (txtProfileName != null && !string.IsNullOrEmpty(txtProfileName.Text))
                     {
-                        SaveCurrentSettingsUI();
-                        ModSettingsManager.SaveProfile(txtProfileName.Text);
+                        string profileName = txtProfileName.Text;
+                        SaveCurrentSettingsUI(() => ModSettingsManager.SaveProfile(profileName));
                     }
                 };
             }
@@ -125,30 +132,8 @@ namespace LizziesMod
                 return;
             }
 
-            ModPatcher.ShowDisabledMods = true;
-            SaveCurrentSettingsUI();
-
-            if (txtProfileName != null && !string.IsNullOrEmpty(txtProfileName.Text))
-            {
-                ModSettingsManager.SetSetting("LizziesMod", "LastProfileName", txtProfileName.Text, true);
-            }
-
-            foreach (var mod in ModSettingsManager.AllModSettings.Keys)
-            {
-                ModSettingsManager.SaveModSettings(mod);
-            }
-
-            ModPatcher.ShowDisabledMods = false;
-
-            if (ModSettingsManager.PendingRestart)
-            {
-                xui.playerUI.windowManager.Open("windowModSettingsRestartPrompt", true);
-            }
-            else
-            {
-                if (!string.IsNullOrEmpty(PreviousMenu))
-                    xui.playerUI.windowManager.Open(PreviousMenu, true);
-            }
+            string profileName = txtProfileName != null ? txtProfileName.Text : "";
+            SaveCurrentSettingsUI(() => FinalizeSettingsClose(profileName));
         }
 
         public override void OnOpen()
@@ -217,7 +202,11 @@ namespace LizziesMod
 
         public void SelectMod(string modName)
         {
-            SaveCurrentSettingsUI();
+            SaveCurrentSettingsUI(() => SelectModAfterSaving(modName));
+        }
+
+        private void SelectModAfterSaving(string modName)
+        {
             selectedMod = modName;
 
             ModPatcher.ShowDisabledMods = true;
@@ -328,15 +317,92 @@ namespace LizziesMod
             }
         }
 
-        private void SaveCurrentSettingsUI()
+        private void SaveCurrentSettingsUI(Action onComplete = null)
         {
-            if (string.IsNullOrEmpty(selectedMod)) return;
-            foreach (var child in settingsGrid.Children)
+            List<PendingSettingChange> changes = new List<PendingSettingChange>();
+            if (!string.IsNullOrEmpty(selectedMod))
             {
-                if (child is SettingEntryController entry && entry.CurrentSetting != null)
+                foreach (var child in settingsGrid.Children)
                 {
-                    entry.CurrentSetting.SetValue(entry.GetValue());
+                    if (child is SettingEntryController entry && entry.CurrentSetting != null)
+                    {
+                        changes.Add(new PendingSettingChange
+                        {
+                            Entry = entry,
+                            Setting = entry.CurrentSetting,
+                            Value = entry.GetValue()
+                        });
+                    }
                 }
+            }
+
+            ApplySettingChanges(changes, 0, onComplete);
+        }
+
+        private void ApplySettingChanges(List<PendingSettingChange> changes, int index, Action onComplete)
+        {
+            if (index >= changes.Count)
+            {
+                onComplete?.Invoke();
+                return;
+            }
+
+            PendingSettingChange change = changes[index];
+            if (string.Equals(change.Setting.Value, change.Value, StringComparison.Ordinal))
+            {
+                ApplySettingChanges(changes, index + 1, onComplete);
+                return;
+            }
+
+            if (!change.Setting.Warning)
+            {
+                change.Setting.SetValue(change.Value);
+                ApplySettingChanges(changes, index + 1, onComplete);
+                return;
+            }
+
+            string warningText = "Changing '" + change.Setting.Name + "' for '" + change.Setting.ModName +
+                "' can make your save incompatible or unstable.\n\nBack up your save before continuing. Do you want to apply this setting?";
+            XUiC_MessageBoxWindowGroup.ShowOkCancel(
+                xui,
+                "SETTING WARNING",
+                warningText,
+                "",
+                () =>
+                {
+                    change.Setting.SetValue(change.Value);
+                    ApplySettingChanges(changes, index + 1, onComplete);
+                },
+                () =>
+                {
+                    change.Entry.SetSetting(change.Setting);
+                    ApplySettingChanges(changes, index + 1, onComplete);
+                });
+        }
+
+        private void FinalizeSettingsClose(string profileName)
+        {
+            ModPatcher.ShowDisabledMods = true;
+
+            if (!string.IsNullOrEmpty(profileName))
+            {
+                ModSettingsManager.SetSetting("LizziesMod", "LastProfileName", profileName, true);
+            }
+
+            foreach (var mod in ModSettingsManager.AllModSettings.Keys)
+            {
+                ModSettingsManager.SaveModSettings(mod);
+            }
+
+            ModPatcher.ShowDisabledMods = false;
+
+            if (ModSettingsManager.PendingRestart)
+            {
+                xui.playerUI.windowManager.Open("windowModSettingsRestartPrompt", true);
+            }
+            else if (!string.IsNullOrEmpty(PreviousMenu))
+            {
+                xui.playerUI.windowManager.Open(PreviousMenu, true);
             }
         }
 
@@ -352,13 +418,15 @@ namespace LizziesMod
         {
             if (string.IsNullOrEmpty(selectedMod) || CustomInputManager.GetInputsForMod(selectedMod).Count == 0) return;
 
-            SaveCurrentSettingsUI();
-            isTransitioning = true;
-            RequestedModName = selectedMod;
-            CustomInputBindingsUIController.RequestedModName = selectedMod;
-            CustomInputBindingsUIController.PreviousMenu = "windowModSettings";
-            xui.playerUI.windowManager.Close("windowModSettings");
-            xui.playerUI.windowManager.Open(CustomInputBindingsUIController.WindowName, true);
+            SaveCurrentSettingsUI(() =>
+            {
+                isTransitioning = true;
+                RequestedModName = selectedMod;
+                CustomInputBindingsUIController.RequestedModName = selectedMod;
+                CustomInputBindingsUIController.PreviousMenu = "windowModSettings";
+                xui.playerUI.windowManager.Close("windowModSettings");
+                xui.playerUI.windowManager.Open(CustomInputBindingsUIController.WindowName, true);
+            });
         }
     }
 

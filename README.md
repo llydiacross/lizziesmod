@@ -27,7 +27,7 @@ C:\Program Files (x86)\Steam\steamapps\common\7 Days To Die\Mods\
 ~/Library/steam/steamapps/common/7 Days To Die/Mods
  ```
 
-## Developer Playtest Launcher
+## Launch 7 Days to Die for fast playtesting
 
 `02_LizziesMod/Launch-Playtest.ps1` rebuilds the shared DLL and starts the local
 client with the game's native `-loadsavegame=true` quick-continue preference.
@@ -41,6 +41,18 @@ The game uses its last selected local save for quick-continue. Select
 & '.\02_LizziesMod\Launch-Playtest.ps1'
 ```
 
+By default, the launcher looks for the game in `C:\Program Files (x86)\Steam\steamapps\common\7 Days To Die`. If Steam is installed on another drive or in a custom library, provide `-GameRoot` with the folder that contains `7DaysToDie.exe`:
+
+```powershell
+& '.\02_LizziesMod\Launch-Playtest.ps1' -GameRoot 'D:\SteamLibrary\steamapps\common\7 Days To Die'
+```
+
+The launcher uses this folder as the client's working directory as well. It validates the executable before building or starting the game, so a missing or incorrect path produces a direct error instead of launching from the wrong location. `-GameRoot` can be combined with any other launcher switch:
+
+```powershell
+& '.\02_LizziesMod\Launch-Playtest.ps1' -GameRoot 'E:\Games\Steam\steamapps\common\7 Days To Die' -DevMode
+```
+
 Use PowerShell's dry-run support to verify the command and paths without
 building or starting the client:
 
@@ -52,6 +64,19 @@ Use `-MainMenu` when a save needs to be selected or created manually:
 
 ```powershell
 & '.\02_LizziesMod\Launch-Playtest.ps1' -MainMenu
+```
+
+Use the companion stop script before a fresh launch when the client is still running. It force-stops `7DaysToDie` and its Easy Anti-Cheat helper, so save and exit normally when game progress matters:
+
+```powershell
+& '.\02_LizziesMod\Stop-Playtest.ps1'
+```
+
+The launch and stop scripts are designed for repeatable development loops. Automated tools, including AI coding agents, can stop a disposable client non-interactively, make and build changes, then start a new playtest:
+
+```powershell
+& '.\02_LizziesMod\Stop-Playtest.ps1' -Confirm:$false
+& '.\02_LizziesMod\Launch-Playtest.ps1' -DevMode
 ```
 
 ## Developer Settings
@@ -72,6 +97,8 @@ Committed `ModSettings.xml` files use player-safe defaults. Local development ov
 </DevSettings>
 ```
 
+Create DevSettings.xml inside of the 02_LizziesMod folder and put this inside to test this feature.
+
 Run the playtest launcher with `-DevMode` to enable the overrides for that client process:
 
 ```powershell
@@ -79,6 +106,16 @@ Run the playtest launcher with `-DevMode` to enable the overrides for that clien
 ```
 
 Overrides require a loaded mod and validate values against existing setting types. A setting name not declared by the mod is registered for that developer session using its `value` as the default; types are inferred as `bool`, `int`, `float`, or `string`, or can be declared explicitly with `type`. Developer-defined settings are locked in the Mod Settings UI and never enter `ModSettings.xml` or saved profiles. Closing that UI or changing regular settings does not write developer values back to committed configuration.
+
+## Setting Warnings
+
+Settings that can alter save behavior can require confirmation before the player applies a changed value in Mod Settings:
+
+```xml
+<Setting name="ExperimentalFeatures" value="false" type="bool" requiresRestart="true" warning="true" />
+```
+
+With `warning="true"`, the player is told that the setting can make a save incompatible or unstable and is prompted to back up the save. Selecting Cancel restores the previous value; only confirmation applies the change.
 
 ## Dimensions
 

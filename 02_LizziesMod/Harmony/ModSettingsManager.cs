@@ -20,6 +20,7 @@ namespace LizziesMod
         public bool Hidden;
         public bool ServerOnly;
         public bool inMenuOnly;
+        public bool Warning;
         private string developerOverrideValue;
         private bool developerDefined;
 
@@ -163,6 +164,10 @@ namespace LizziesMod
                                 if (node.Attributes["menuOnly"] != null)
                                     bool.TryParse(node.Attributes["menuOnly"].Value, out bMenuOnly); 
 
+                                bool bWarning = false;
+                                if (node.Attributes["warning"] != null)
+                                    bool.TryParse(node.Attributes["warning"].Value, out bWarning);
+
                                 ModSetting existingSetting = currentSettings.Find(s => s.Name.Equals(sName, StringComparison.OrdinalIgnoreCase));
                                 if (existingSetting != null)
                                 {
@@ -172,6 +177,7 @@ namespace LizziesMod
                                     existingSetting.Hidden = bHidden;
                                     existingSetting.ServerOnly = bServerOnly;
                                     existingSetting.inMenuOnly = bMenuOnly;
+                                    existingSetting.Warning = bWarning;
                                     updatedSettings.Add(existingSetting);
                                 }
                                 else
@@ -186,7 +192,8 @@ namespace LizziesMod
                                         requiresRestart = bRequiresRestart,
                                         Hidden = bHidden,
                                         inMenuOnly = bMenuOnly,
-                                        ServerOnly = bServerOnly
+                                        ServerOnly = bServerOnly,
+                                        Warning = bWarning
                                     });
                                 }
                             }
@@ -518,6 +525,7 @@ namespace LizziesMod
                     if (setting.ServerOnly) settingNode.SetAttribute("serverOnly", "true");
                     if (setting.Hidden || setting.Name.Equals("Enabled", StringComparison.OrdinalIgnoreCase)) settingNode.SetAttribute("hidden", "true");
                     if (setting.inMenuOnly) settingNode.SetAttribute("menuOnly", "true");
+                    if (setting.Warning) settingNode.SetAttribute("warning", "true");
                     modNode.AppendChild(settingNode);
                 }
 
@@ -619,6 +627,10 @@ namespace LizziesMod
                                 if (settingNode.Attributes["menuOnly"] != null)
                                     bool.TryParse(settingNode.Attributes["menuOnly"].Value, out bMenuOnly);
 
+                                bool bWarning = false;
+                                if (settingNode.Attributes["warning"] != null)
+                                    bool.TryParse(settingNode.Attributes["warning"].Value, out bWarning);
+
                                 ModSetting newSetting = new ModSetting
                                 {
                                     ModName = modName,
@@ -629,7 +641,8 @@ namespace LizziesMod
                                     requiresRestart = bRequiresRestart,
                                     Hidden = bHidden,
                                     ServerOnly = bServerOnly,
-                                    inMenuOnly = bMenuOnly
+                                    inMenuOnly = bMenuOnly,
+                                    Warning = bWarning
                                 };
                                 AllModSettings[modName].Add(newSetting);
                                 newSetting.OnValueChanged?.Invoke(sValue);
@@ -833,6 +846,7 @@ namespace LizziesMod
                 node.SetAttribute("type", setting.Type);
                 node.SetAttribute("requiresRestart", setting.requiresRestart.ToString().ToLower());
                 if (setting.Hidden) node.SetAttribute("hidden", "true");
+                if (setting.Warning) node.SetAttribute("warning", "true");
 
                 root.AppendChild(node);
             }
