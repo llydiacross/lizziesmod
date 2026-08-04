@@ -66,6 +66,9 @@ Committed `ModSettings.xml` files use player-safe defaults. Local development ov
 	<Mod name="LizziesMod_Backrooms">
 		<Setting name="MainFloorY" value="59" />
 	</Mod>
+	<Mod name="LizziesMod_PocketDimension">
+		<Setting name="EnableExperimentalLayout" value="true" type="bool" />
+	</Mod>
 </DevSettings>
 ```
 
@@ -75,7 +78,7 @@ Run the playtest launcher with `-DevMode` to enable the overrides for that clien
 & '.\02_LizziesMod\Launch-Playtest.ps1' -DevMode
 ```
 
-Overrides may target only settings already declared by loaded mods; their types are validated, unknown settings are ignored, and developer values are locked in the Mod Settings UI. Closing that UI, saving a profile, or changing regular settings does not write developer values back to `ModSettings.xml`.
+Overrides require a loaded mod and validate values against existing setting types. A setting name not declared by the mod is registered for that developer session using its `value` as the default; types are inferred as `bool`, `int`, `float`, or `string`, or can be declared explicitly with `type`. Developer-defined settings are locked in the Mod Settings UI and never enter `ModSettings.xml` or saved profiles. Closing that UI or changing regular settings does not write developer values back to committed configuration.
 
 ## Dimensions
 

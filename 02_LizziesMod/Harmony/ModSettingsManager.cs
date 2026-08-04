@@ -21,10 +21,16 @@ namespace LizziesMod
         public bool ServerOnly;
         public bool inMenuOnly;
         private string developerOverrideValue;
+        private bool developerDefined;
 
         public bool IsDeveloperOverridden
         {
             get { return developerOverrideValue != null; }
+        }
+
+        public bool IsDeveloperDefined
+        {
+            get { return developerDefined; }
         }
 
         public string ValueForPersistence
@@ -70,6 +76,14 @@ namespace LizziesMod
         {
             developerOverrideValue = value;
             Value = value;
+        }
+
+        public void InitializeDeveloperSetting(string value, string type)
+        {
+            developerDefined = true;
+            Type = type;
+            PersistedValue = value;
+            ApplyDeveloperOverride(value);
         }
     }
 
@@ -237,11 +251,27 @@ namespace LizziesMod
 
                         string settingName = settingNode.Attributes?["name"]?.Value;
                         string settingValue = settingNode.Attributes?["value"]?.Value;
-                        ModSetting setting = settings.Find(candidate => candidate.Name.Equals(settingName, StringComparison.OrdinalIgnoreCase));
-                        if (setting == null || settingValue == null)
+                        if (string.IsNullOrEmpty(settingName) || settingValue == null)
                         {
-                            Logger.Warning($"[DevSettings] Ignored unknown or incomplete override '{modName}.{settingName ?? "<missing>"}'.");
+                            Logger.Warning($"[DevSettings] Ignored incomplete override '{modName}.{settingName ?? "<missing>"}'.");
                             continue;
+                        }
+
+                        ModSetting setting = settings.Find(candidate => candidate.Name.Equals(settingName, StringComparison.OrdinalIgnoreCase));
+                        if (setting == null)
+                        {
+                            string settingType = GetDeveloperSettingType(settingNode, settingValue);
+                            setting = new ModSetting
+                            {
+                                ModName = modName,
+                                Name = settingName,
+                                Value = settingValue,
+                                PersistedValue = settingValue,
+                                Type = settingType
+                            };
+                            setting.InitializeDeveloperSetting(settingValue, settingType);
+                            settings.Add(setting);
+                            Logger.Info($"[DevSettings] Registered developer setting '{modName}.{settingName}' ({settingType}) with default '{settingValue}'.");
                         }
 
                         if (!IsValidSettingValue(setting, settingValue))
@@ -261,6 +291,26 @@ namespace LizziesMod
             {
                 Logger.Error($"[DevSettings] Failed to load '{settingsPath}': {exception.Message}");
             }
+        }
+
+        private static string GetDeveloperSettingType(XmlNode settingNode, string value)
+        {
+            string declaredType = settingNode.Attributes?["type"]?.Value;
+            if (!string.IsNullOrWhiteSpace(declaredType))
+            {
+                return declaredType.Trim().ToLowerInvariant();
+            }
+
+            bool boolValue;
+            if (bool.TryParse(value, out boolValue)) return "bool";
+
+            int intValue;
+            if (int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out intValue)) return "int";
+
+            float floatValue;
+            if (float.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out floatValue)) return "float";
+
+            return "string";
         }
 
         private static bool IsValidSettingValue(ModSetting setting, string value)
@@ -454,6 +504,8 @@ namespace LizziesMod
 
                 foreach (var setting in modKvp.Value)
                 {
+                    if (setting.IsDeveloperDefined) continue;
+
                     if (setting.Name.Equals("Enabled", StringComparison.OrdinalIgnoreCase))
                     {
                         foundEnabled = true;
@@ -461,7 +513,7 @@ namespace LizziesMod
 
                     XmlElement settingNode = xmlDoc.CreateElement("Setting");
                     settingNode.SetAttribute("name", setting.Name);
-                    settingNode.SetAttribute("value", setting.Value);
+                    settingNode.SetAttribute("value", setting.ValueForPersistence);
                     settingNode.SetAttribute("type", setting.Type);
                     if (setting.ServerOnly) settingNode.SetAttribute("serverOnly", "true");
                     if (setting.Hidden || setting.Name.Equals("Enabled", StringComparison.OrdinalIgnoreCase)) settingNode.SetAttribute("hidden", "true");
@@ -773,6 +825,8 @@ namespace LizziesMod
 
             foreach (var setting in AllModSettings[modName])
             {
+                if (setting.IsDeveloperDefined) continue;
+
                 XmlElement node = xmlDoc.CreateElement("Setting");
                 node.SetAttribute("name", setting.Name);
                 node.SetAttribute("value", setting.ValueForPersistence);
