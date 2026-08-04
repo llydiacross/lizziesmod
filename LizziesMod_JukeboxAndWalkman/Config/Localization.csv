@@ -1,8 +1,8 @@
 Key,File,Type,UsedInMainMenu,NoTranslate,English
 blockJukebox,blocks,Block,,,Jukebox
 blockJukeboxDesc,blocks,Desc,,,A jukebox so you can listen to music with your friends...
-manualJukebox,blocks,Block,,,How To Use: Jukebox & Walkman
-manualukeboxDesc,blocks,Desc,,,"README"
+manualJukebox,items,Item,,,Jukebox Masterclass
+manualJukeboxDesc,items,Desc,,,"A Flux-bound field guide to Jukeboxes, Walkmans, cassettes, and music discs. Use it to read."
 itemWalkman,items,Item,,,Walkman
 itemWalkmanDesc,items,Desc,,,A portable cassette player. Keep it in your inventory to play cassettes.
 cassette_ExplanationOfAnEntity,items,Item,,,Cassette: Explanation of an Entity

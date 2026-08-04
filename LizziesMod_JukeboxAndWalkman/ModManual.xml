@@ -8,6 +8,12 @@
 Power the Jukebox with [FF0000]10 Watts[-], then use it to browse the tracks unlocked in that machine.]]>
         </Page>
 
+        <Page title="Jukebox Masterclass">
+            <![CDATA[The Jukebox Masterclass is a craftable field guide. Make it at a workbench with 1 Flux Cell and 10 Paper, then use the book from your inventory or toolbelt to open this manual.
+
+    The Flux Cell is supplied by the core LizziesMod crafting chain. The book is reusable, so one copy can remain with your music equipment as a reference.]]>
+        </Page>
+
         <Page title="Cassettes">
             <![CDATA[Find a Walkman and keep it in your inventory. Use a cassette from your inventory to play it through the Walkman. Cassettes are reusable.]]>
         </Page>
@@ -20,4 +26,31 @@ Power the Jukebox with [FF0000]10 Watts[-], then use it to browse the tracks unl
             <![CDATA[The first player to install a disc becomes the Jukebox owner. Owners can set a Duke price for visitors from the Jukebox Library, while their own playback is always free.]]>
         </Page> 
     </Book>
+
+        <Book id="readme_jukebox_and_walkman" is_readme="true" title="Jukebox And Walkman: Technical Reference" author="llydia" icon="ui_game_symbol_book"
+          default_background="menu_empty" default_font="UIFontSmall" default_text_color="255,255,255,255">
+        <Page title="Overview"><![CDATA[
+    LizziesMod_JukeboxAndWalkman adds a powered Jukebox, portable Walkmans, reusable cassettes, and installable music discs. The menu library readme documents the technical behavior; the Jukebox Masterclass is the separate craftable in-world manual.
+
+    Audio definitions are declared in Config/CustomAudio.xml. Item and block definitions live in Config/items.xml and Config/blocks.xml.
+        ]]></Page>
+
+        <Page title="Powered Jukebox"><![CDATA[
+    blockJukebox is a powered block and requires 10 watts. Install a music disc by aiming it at a powered Jukebox and using it. The disc is consumed and its track is unlocked for that specific machine.
+
+    The first player to install a disc becomes the Jukebox owner. Owners can set a Duke price for visitors through the Jukebox Library; owner playback remains free. Unlocked tracks persist with the Jukebox across save and load.
+        ]]></Page>
+
+        <Page title="Walkmans And Cassettes"><![CDATA[
+    Keep an itemWalkman in the inventory, then use a cassette item from the inventory to play it through the Walkman. Cassettes are reusable.
+
+    The included cassette and test disc both reference the track identifier LizziesMod_JukeboxAndWalkman:explanation-of-an-entity. Media items declare their kind with MediaType (cassette or disc) and their playback source with TrackName.
+        ]]></Page>
+
+        <Page title="Settings And Diagnostics"><![CDATA[
+    VolumeLevel controls the mod's audio volume. MinJukeboxDistance and MaxJukeboxDistance define the distance range used for Jukebox audio behavior. These settings are available under LizziesMod_JukeboxAndWalkman in Mod Settings.
+
+    When adding tracks, ensure the CustomAudio definition, TrackName value, and audio asset identifier agree exactly. A missing or mismatched track name is reported in the client log and will not play.
+        ]]></Page>
+        </Book>
 </ModManual>

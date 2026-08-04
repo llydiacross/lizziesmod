@@ -1,0 +1,8 @@
+<configs>
+    <append xpath="/recipes">
+        <recipe name="manualJukebox" count="1" craft_area="workbench" craft_time="10">
+            <ingredient name="resourceFluxCell" count="1" />
+            <ingredient name="resourcePaper" count="10" />
+        </recipe>
+    </append>
+</configs>

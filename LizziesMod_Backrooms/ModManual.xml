@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ModManual>
+  <Book id="readme_backrooms" is_readme="true" title="Backrooms: Technical Reference" author="llydia" icon="ui_game_symbol_book"
+        default_background="menu_empty" default_font="UIFontSmall" default_text_color="255,255,255,255">
+    <Page title="Overview"><![CDATA[
+LizziesMod_Backrooms is a generated-dimension companion for LizziesMod. It registers the backrooms terrain generator and defines the Backrooms destination in Config/Dimensions.xml.
+
+When this companion is installed, its default priority selects Backrooms as the ordinary Dimensional Portal destination. The dimension system is experimental, single-player only, and requires ExperimentalFeatures to be enabled before a portal can activate.
+
+The generator creates persistent rooms and corridors above a concrete foundation. Generated chunks are stored separately from the Overworld save.
+    ]]></Page>
+
+    <Page title="Access Terminal"><![CDATA[
+The Backrooms Access Terminal is a direct portal: it always targets Backrooms instead of following the configurable default portal destination.
+
+Craft it at a workbench with 3 Flux Cells, 12 Electrical Parts, 8 Mechanical Parts, and 6 Forged Steel. Place and use it in the Overworld to enter the dimension. Using the terminal while already in a dimension returns the local session to the Overworld.
+
+Back up a save before testing dimension transitions. Settings marked as requiring restart apply after restarting the client.
+    ]]></Page>
+
+    <Page title="Layout Settings"><![CDATA[
+MainFloorY sets the normal room floor from 16 through 200. StoreyHeight controls room clearance and upper-storey elevation from 4 through 7.
+
+PitDepth determines the distance below MainFloorY for pit floors, from 4 through 12. BasementCorridorHeight sets clearance at pit entrances and is limited by PitDepth. SplitLevelDepth controls the deepest point of split-level rooms from 1 through 4.
+
+The pit floor is calculated as MainFloorY minus PitDepth, so those values remain consistent.
+    ]]></Page>
+
+    <Page title="Regenerating Terrain"><![CDATA[
+Layout changes affect newly generated chunks only. Restart after changing settings, then recreate the Backrooms realm before testing a new layout.
+
+For a disposable test save, delete the Backrooms Region directory below <save>_LizziesMod/Dimensions/Backrooms, or remove and recreate the entire Backrooms realm. Do not remove the Overworld Region directory.
+
+Keep the generated-realm data isolated from ordinary save maintenance and return to the Overworld before ending a session.
+    ]]></Page>
+  </Book>
+</ModManual>

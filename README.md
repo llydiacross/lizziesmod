@@ -79,6 +79,16 @@ The launch and stop scripts are designed for repeatable development loops. Autom
 & '.\02_LizziesMod\Launch-Playtest.ps1' -DevMode
 ```
 
+### Send client console commands
+
+`02_LizziesMod/Invoke-ConsoleCommand.ps1` sends one command through the F1 console of a visible local 7 Days To Die client. It activates the game window, verifies that it owns the foreground, opens the console, types the command, and presses Enter. This makes targeted XUi checks possible without manually navigating menus:
+
+```powershell
+& '.\02_LizziesMod\Invoke-ConsoleCommand.ps1' 'xui open windowModLibrary'
+```
+
+Use `-ConsoleAlreadyOpen` when the F1 console is already visible. Otherwise the helper waits 150ms after opening it before entering the command; use `-ConsoleOpenDelayMilliseconds` to adjust that handoff when needed. `-WhatIf` never sends input. The helper refuses to send anything if it cannot find or foreground the local `7DaysToDie` window, which prevents commands intended for the game from being typed into another application.
+
 ## Developer Settings
 
 Committed `ModSettings.xml` files use player-safe defaults. Local development overrides live in the ignored `02_LizziesMod/DevSettings.xml` file and apply only when the client starts in developer mode:
@@ -354,21 +364,30 @@ The physics prop uses each `MeshFilter` in the resolved model to create a convex
 
 ## Manuals
 
-Books in `ModManual.xml` with `is_readme="true"` appear in the Mod README library, available from the main menu and in-game. Legacy pages with only text and an optional `image` attribute remain supported. For a free-form scrollable layout, give a README page a `canvas_size` and add positioned `TextArea` and `Image` elements:
+Books in `ModManual.xml` with `is_readme="true"` are technical readmes and appear in the Mod README library, available from the main menu and in-game. Legacy pages with only text and an optional `image` attribute remain supported. For a free-form scrollable layout, give a README page a `canvas_size` and add positioned `TextArea` and `Image` elements:
 
 ```xml
 <Page title="Getting Started" canvas_size="1030,720">
-	<TextArea id="intro" pos="0,0" size="1010,100"><![CDATA[
+	<TextArea id="intro" pos="20,0" size="855,100"><![CDATA[
 Welcome to the mod.
 	]]></TextArea>
-	<Image id="controls" source="controls.png" pos="0,-125" size="600,338" />
-	<TextArea id="notes" pos="625,-125" size="385,338"><![CDATA[
+	<Image id="controls" source="controls.png" pos="20,-125" size="600,338" />
+	<TextArea id="notes" pos="640,-125" size="235,338"><![CDATA[
 Explain the controls beside the image.
 	]]></TextArea>
 </Page>
 ```
 
-`pos` uses XUi coordinates: positive `x` moves right and negative `y` moves down. Every element needs a unique `id`, `pos`, and positive `size`. Images must be `.png`, `.jpg`, or `.jpeg` files under the owning mod's `ManualResources` folder. The shipped reader provides up to 32 text areas and 32 images per page; extra elements are reported in the game log. The page scrolls as one canvas, and its scrollbar is hidden until the content exceeds the reading viewport.
+`pos` uses XUi coordinates: positive `x` moves right and negative `y` moves down. Every element needs a unique `id`, `pos`, and positive `size`. The reader has a fixed 1030px canvas with a visible authoring area from `x="20"` through `x="875"`, so full-width content should use `pos="20,..."` and a maximum width of `855`; wider or out-of-bounds content is automatically contained instead of overflowing or clipping at the reader pane's right edge. `canvas_size` may extend the page vertically, but not horizontally. Images must be `.png`, `.jpg`, or `.jpeg` files under the owning mod's `ManualResources` folder. The shipped reader provides up to 32 text areas and 32 images per page; extra elements are reported in the game log. The page scrolls as one canvas, and its scrollbar is hidden until the content exceeds the reading viewport.
+
+For lore or in-world guides, omit `is_readme="true"` from the book and bind its ID to a craftable item with `ItemActionOpenModManual`. Non-readme books stay out of the menu library and open only through that item:
+
+```xml
+<property class="Action0">
+	<property name="Class" value="LizziesMod.ItemActionOpenModManual, LizziesMod" />
+	<property name="BookId" value="guide_example_lore" />
+</property>
+```
 
 ## Custom Block Paints
 

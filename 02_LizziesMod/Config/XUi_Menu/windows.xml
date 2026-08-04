@@ -174,7 +174,7 @@
                             <sprite name="background" depth="0" sprite="menu_empty2px" type="sliced" color="[darkGrey]" fillcenter="false" on_press="true" on_scroll="true" gamepad_selectable="false" snap="false" />
                         </scrollbar>
                         <scrollview name="readmeScrollView" width="1030" clippingsoftness="0,10">
-                            <rect name="readmeCanvas" pos="0,0" width="1030" height="570">
+                            <rect name="readmeCanvas" pivot="topleft" pos="0,0" width="1030" height="570">
                                 <label name="readmeText01" depth="5" pos="0,0" width="730" height="80" font_size="24" color="255,255,255,255" justify="left" pivot="topleft" visible="false" />
                                 <label name="readmeText02" depth="5" pos="0,0" width="730" height="80" font_size="24" color="255,255,255,255" justify="left" pivot="topleft" visible="false" />
                                 <label name="readmeText03" depth="5" pos="0,0" width="730" height="80" font_size="24" color="255,255,255,255" justify="left" pivot="topleft" visible="false" />
