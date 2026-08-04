@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<customTextures>
+<CustomTextures>
   <opaque
     id="lizzies_bark_pine"
     name="Lizzie's Pine Bark"
@@ -11,4 +11,4 @@
     paintCost="1"
     sortIndex="255"
     hidden="false" />
-</customTextures>
+</CustomTextures>

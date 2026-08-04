@@ -1,7 +1,6 @@
 <ModSettings>
   <Setting name="StartingYear" value="1986" type="int" requiresRestart="false" />
   <Setting name="EnableMechanicalPress" value="true" type="bool" requiresRestart="false" />
-  <Setting name="EnableTimeParadox" value="true" type="bool" requiresRestart="false" />
   <Setting name="BrassScrapMaxDamage" value="1650" type="int" requiresRestart="true" />
   <Setting name="BrassScrapStabilityGlue" value="70" type="int" requiresRestart="true" />
   <Setting name="ExperimentalFeatures" value="true" type="bool" requiresRestart="true" />

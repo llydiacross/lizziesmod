@@ -8,7 +8,6 @@ namespace LizziesMod
 
         private static int startingYear = 2013;
         public static int currentYear = 0;
-        public static string currentDimension = DimensionManager.currentDimension;
 
         public static void Init(int _startingYear)
         {

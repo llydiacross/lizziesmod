@@ -9,6 +9,7 @@ namespace LizziesMod
 
         private XUiController missingModsListGrid;
         private bool isRestarting;
+        private bool ownsGamePause;
 
         public override void Init()
         {
@@ -37,12 +38,15 @@ namespace LizziesMod
         public override void OnOpen()
         {
             base.OnOpen();
+            ownsGamePause = InGameUiPause.Acquire();
             PopulateMissingMods();
         }
 
         public override void OnClose()
         {
             base.OnClose();
+            InGameUiPause.Release(ownsGamePause);
+            ownsGamePause = false;
 
             if (!isRestarting)
             {

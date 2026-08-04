@@ -19,6 +19,7 @@ namespace LizziesMod
         private string selectedModName = "";
         private string previousCapturedInputId = "";
         private string previousSearchText = "";
+        private bool ownsGamePause;
 
         public override void Init()
         {
@@ -37,6 +38,7 @@ namespace LizziesMod
         public override void OnOpen()
         {
             base.OnOpen();
+            ownsGamePause = InGameUiPause.Acquire();
             selectedModName = RequestedModName;
             RequestedModName = "";
             EnsureSelectedMod();
@@ -49,6 +51,8 @@ namespace LizziesMod
         public override void OnClose()
         {
             base.OnClose();
+            InGameUiPause.Release(ownsGamePause);
+            ownsGamePause = false;
             CustomInputManager.CancelRebind();
 
             string previousMenu = PreviousMenu;

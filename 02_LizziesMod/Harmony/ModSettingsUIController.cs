@@ -5,6 +5,40 @@ using System.Collections.Generic;
 
 namespace LizziesMod
 {
+    internal static class InGameUiPause
+    {
+        private static int pauseOwners;
+
+        public static bool Acquire()
+        {
+            ConnectionManager connectionManager = SingletonMonoBehaviour<ConnectionManager>.Instance;
+            if (GameManager.Instance == null || GameManager.Instance.World == null ||
+                connectionManager == null || !connectionManager.IsServer || connectionManager.ClientCount() > 0)
+            {
+                return false;
+            }
+
+            if (pauseOwners == 0)
+            {
+                GameManager.Instance.Pause(_bOn: true);
+            }
+
+            pauseOwners++;
+            return true;
+        }
+
+        public static void Release(bool ownsPause)
+        {
+            if (!ownsPause || pauseOwners <= 0) return;
+
+            pauseOwners--;
+            if (pauseOwners == 0 && GameManager.Instance != null)
+            {
+                GameManager.Instance.Pause(_bOn: false);
+            }
+        }
+    }
+
     public class ModSettingsUIController : XUiController
     {
         public static string PreviousMenu = "";
@@ -26,6 +60,7 @@ namespace LizziesMod
         private XUiController btnEditInputs;
         public static string LastLoadedProfile = "";
         private bool isTransitioning = false;
+        private bool ownsGamePause;
 
         public override void Init()
         {
@@ -81,6 +116,9 @@ namespace LizziesMod
         public override void OnClose()
         {
             base.OnClose();
+            InGameUiPause.Release(ownsGamePause);
+            ownsGamePause = false;
+
             if (isTransitioning)
             {
                 isTransitioning = false;
@@ -117,6 +155,7 @@ namespace LizziesMod
         {
             ModPatcher.ShowDisabledMods = true;
             base.OnOpen();
+            ownsGamePause = InGameUiPause.Acquire();
             PopulateModList();
             ModPatcher.ShowDisabledMods = false;
 
@@ -326,6 +365,7 @@ namespace LizziesMod
     public class RestartPromptUIController : XUiController
     {
         private bool isQuitting = false;
+        private bool ownsGamePause;
 
         public override void Init()
         {
@@ -351,11 +391,19 @@ namespace LizziesMod
         public override void OnClose()
         {
             base.OnClose();
+            InGameUiPause.Release(ownsGamePause);
+            ownsGamePause = false;
             if (isQuitting) return;
 
             ModSettingsManager.PendingRestart = false;
             if (!string.IsNullOrEmpty(ModSettingsUIController.PreviousMenu))
                 xui.playerUI.windowManager.Open(ModSettingsUIController.PreviousMenu, true);
+        }
+
+        public override void OnOpen()
+        {
+            base.OnOpen();
+            ownsGamePause = InGameUiPause.Acquire();
         }
     }
 

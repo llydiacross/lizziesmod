@@ -3,7 +3,6 @@
     <Mod name="LizziesMod" version="0.0.1">
       <Setting name="StartingYear" value="1986" type="int" />
       <Setting name="EnableMechanicalPress" value="true" type="bool" />
-      <Setting name="EnableTimeParadox" value="true" type="bool" />
       <Setting name="BrassScrapMaxDamage" value="1650" type="int" />
       <Setting name="BrassScrapStabilityGlue" value="70" type="int" />
       <Setting name="Enabled" value="true" type="bool" hidden="true" />
@@ -153,7 +152,6 @@
     <Mod name="LizziesMod" version="0.0.1">
       <Setting name="StartingYear" value="1986" type="int" />
       <Setting name="EnableMechanicalPress" value="true" type="bool" />
-      <Setting name="EnableTimeParadox" value="true" type="bool" />
       <Setting name="BrassScrapMaxDamage" value="1650" type="int" />
       <Setting name="BrassScrapStabilityGlue" value="70" type="int" />
       <Setting name="Enabled" value="true" type="bool" hidden="true" />
@@ -192,7 +190,6 @@
     <Mod name="LizziesMod" version="0.0.1">
       <Setting name="StartingYear" value="1986" type="int" />
       <Setting name="EnableMechanicalPress" value="true" type="bool" />
-      <Setting name="EnableTimeParadox" value="true" type="bool" />
       <Setting name="BrassScrapMaxDamage" value="1650" type="int" />
       <Setting name="BrassScrapStabilityGlue" value="70" type="int" />
       <Setting name="ExperimentalFeatures" value="true" type="bool" />

@@ -12,7 +12,33 @@
 
 # Only Allow these mods
 
-!02_LizziesMod
+!02_LizziesMod/
+!02_LizziesMod/*.csproj
+!02_LizziesMod/*.slnx
+!02_LizziesMod/*.xml
+!02_LizziesMod/*.md
+!02_LizziesMod/*.ps1
+!02_LizziesMod/*.dll
+!02_LizziesMod/Config/
+!02_LizziesMod/Config/**/
+!02_LizziesMod/Config/**/*.csv
+!02_LizziesMod/Config/**/*.xml
+!02_LizziesMod/Harmony/
+!02_LizziesMod/Harmony/*.cs
+!02_LizziesMod/Properties/
+!02_LizziesMod/Properties/*.cs
+!02_LizziesMod/Launch-Playtest.ps1
+!LizziesMod_Backrooms/
+!LizziesMod_Backrooms/*.csproj
+!LizziesMod_Backrooms/*.xml
+!LizziesMod_Backrooms/*.md
+!LizziesMod_Backrooms/*.dll
+!LizziesMod_Backrooms/Config/
+!LizziesMod_Backrooms/Config/*.xml
+!LizziesMod_Backrooms/Harmony/
+!LizziesMod_Backrooms/Harmony/*.cs
+!LizziesMod_Backrooms/Properties/
+!LizziesMod_Backrooms/Properties/*.cs
 !LizziesMod_DynamicBackpacks
 !LizziesMod_DynamicStacks
 !LizziesMod_JukeboxAndWallpapers
@@ -20,6 +46,7 @@
 !LizziesMod_PropSpawner
 !ManualResources
 !UIAtlases
+!DIMENSIONS.md
 
 # Developer build stuff
 /0_TFP_Harmony

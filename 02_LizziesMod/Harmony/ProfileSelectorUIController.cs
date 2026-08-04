@@ -16,6 +16,7 @@ namespace LizziesMod
 
         private string selectedProfileName = "";
         private bool isOpeningMissingMods;
+        private bool ownsGamePause;
 
         public override void Init()
         {
@@ -45,6 +46,7 @@ namespace LizziesMod
         public override void OnOpen()
         {
             base.OnOpen();
+            ownsGamePause = InGameUiPause.Acquire();
             selectedProfileName = "";
             PopulateProfileList();
         }
@@ -131,6 +133,8 @@ namespace LizziesMod
         public override void OnClose()
         {
             base.OnClose();
+            InGameUiPause.Release(ownsGamePause);
+            ownsGamePause = false;
 
             if (isOpeningMissingMods)
             {

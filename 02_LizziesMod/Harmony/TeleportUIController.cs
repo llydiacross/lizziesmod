@@ -1,6 +1,4 @@
-﻿using Platform;
-using System;
-using System.Collections;
+﻿using System.Collections;
 using UnityEngine;
 
 namespace LizziesMod
@@ -11,12 +9,7 @@ namespace LizziesMod
         public Vector3? previousTeleport;
         public Vector3? initialPosition;
 
-        private int targetDay = 1;
-        private int targetHours = 12;
-        private int targetMinutes = 0;
-        private int targetYear = 0;
-        private int previousYear = 0;
-        private bool isCrystalActive = false;
+        private bool usesWaypoints;
 
         public override void Init()
         {
@@ -40,27 +33,6 @@ namespace LizziesMod
             XUiController prevBtn = GetChildById("btnPreviousTeleport")?.GetChildById("clickable");
             if (prevBtn != null) prevBtn.OnPress += HandlePreviousTeleportClick;
 
-            XUiController btnDayUp = GetChildById("btnDayUp")?.GetChildById("clickable");
-            if (btnDayUp != null)
-                btnDayUp.OnPress += (s, e) => AdjustTime("day", 1);
-            XUiController btnDayDown = GetChildById("btnDayDown")?.GetChildById("clickable");
-            if (btnDayDown != null)
-                btnDayDown.OnPress += (s, e) => AdjustTime("day", -1);
-
-            XUiController btnTimeUp = GetChildById("btnTimeUp")?.GetChildById("clickable");
-            if (btnTimeUp != null)
-                btnTimeUp.OnPress += (s, e) => AdjustTime("time", 1);
-            XUiController btnTimeDown = GetChildById("btnTimeDown")?.GetChildById("clickable");
-            if (btnTimeDown != null)
-                btnTimeDown.OnPress += (s, e) => AdjustTime("time", -1);
-
-            XUiController btnYearUp = GetChildById("btnYearUp")?.GetChildById("clickable");
-            if (btnYearUp != null)
-                btnYearUp.OnPress += (s, e) => AdjustTime("year", 1);
-
-            XUiController btnYearDown = GetChildById("btnYearDown")?.GetChildById("clickable");
-            if (btnYearDown != null)
-                btnYearDown.OnPress += (s, e) => AdjustTime("year", -1);
         }
 
         public override void OnOpen()
@@ -71,28 +43,14 @@ namespace LizziesMod
 
             ItemValue heldItem = player.inventory.holdingItemItemValue;
             string itemName = heldItem != null ? heldItem.ItemClass.GetItemName() : "";
-            isCrystalActive = (itemName == "crystalFluxTeleporter");
-
-
-            ulong worldTime = GameManager.Instance.World.worldTime;
-            long totalDays = GameUtils.WorldTimeToDays(worldTime);
-
-            targetYear = 0;
-            targetDay = (int)(totalDays % 357) + 1;
-            targetHours = GameUtils.WorldTimeToHours(worldTime);
-            targetMinutes = GameUtils.WorldTimeToMinutes(worldTime);
+            usesWaypoints = itemName == "crystalFluxTeleporter";
 
             XUiController headerLabel = GetChildById("lblHeader");
             XUiController upgradeText = GetChildById("lblUpgradeText");
 
-            GetChildById("btnDayUp").viewComponent.IsVisible = isCrystalActive;
-            GetChildById("btnDayDown").viewComponent.IsVisible = isCrystalActive;
-            GetChildById("btnTimeUp").viewComponent.IsVisible = isCrystalActive;
-            GetChildById("btnTimeDown").viewComponent.IsVisible = isCrystalActive;
-            GetChildById("btnYearUp").viewComponent.IsVisible = isCrystalActive;
-            GetChildById("btnYearDown").viewComponent.IsVisible = isCrystalActive;
+            SetTimeControlsVisible(false);
 
-            if (!isCrystalActive)
+            if (!usesWaypoints)
             {
                 if (headerLabel?.viewComponent is XUiV_Label hLabel)
                 {
@@ -101,34 +59,25 @@ namespace LizziesMod
                 }
                 if (upgradeText?.viewComponent is XUiV_Label uLabel)
                 {
-                    uLabel.Text = "TIME MANIPULATION INACTIVE";
-                    uLabel.Color = new Color32(200, 50, 50, 255);
+                    uLabel.Text = "BEDROLL TELEPORTATION READY";
+                    uLabel.Color = new Color32(80, 180, 255, 255);
                 }
             }
             else
             {
                 if (headerLabel?.viewComponent is XUiV_Label hLabel)
                 {
-                    hLabel.Text = "ADVANCED FLUX TELEPORTER";
+                    hLabel.Text = "CRYSTAL FLUX TELEPORTER";
                     hLabel.Color = new Color32(255, 100, 255, 255);
                 }
                 if (upgradeText?.viewComponent is XUiV_Label uLabel)
                 {
-
-                    if (previousTeleport == null)
-                    {
-                        uLabel.Text = "TIME MANIPULATION ACTIVE";
-                        uLabel.Color = new Color32(50, 200, 50, 255);
-                    }
-                    else
-                    {
-                        uLabel.Text = "PREVIOUS TIME SELECTED";
-                        uLabel.Color = new Color32(128, 0, 128, 255);
-                    }
+                    uLabel.Text = previousTeleport == null ? "WAYPOINT TELEPORTATION READY" : "RETURN JUMP READY";
+                    uLabel.Color = new Color32(255, 100, 255, 255);
                 }
             }
 
-            UpdateTimeDisplay();
+            SetTimeLabelsVisible(false);
 
 
             for (int i = 0; i < 5; i++)
@@ -146,7 +95,7 @@ namespace LizziesMod
                         string distStr = distance >= 1000f ? $"{(distance / 1000f):F1} km" : $"{distance:F0} m";
                         string coords = $"X: {(int)target.x}, Z: {(int)target.z}";
 
-                        string locationName = isCrystalActive ? "Waypoint" : "Bedroll";
+                        string locationName = usesWaypoints ? "Waypoint" : "Bedroll";
                         string finalText = $"{locationName}: {distStr} Away  |  [{coords}]";
 
                         XUiController labelCtrl = btnRow.GetChildById("btnText");
@@ -159,65 +108,27 @@ namespace LizziesMod
             }
         }
 
-        private void AdjustTime(string type, int amount)
+        private void SetTimeControlsVisible(bool visible)
         {
-            if (!isCrystalActive) return;
-
-            xui.mPlayerUI.localPlayer.entityPlayerLocal.PlayOneShot("weapon_click");
-
-            if (type == "day")
-            {
-                targetDay += amount;
-                if (targetDay < 1)
-                {
-                    targetYear -= 1;
-                    targetDay = 357;
-                }
-                if (targetDay > 357)
-                {
-                    targetYear += 1;
-                    targetDay = 1;
-                }
-            }
-            else if (type == "time")
-            {
-                targetHours += amount;
-                if (targetHours < 0)
-                {
-                    targetDay -= 1;
-                    targetHours = 23;
-                }
-                if (targetHours > 23)
-                {
-                    targetDay += 1;
-                    targetHours = 0;
-                }
-            }
-            else if (type == "year")
-            {
-                targetYear += amount;
-            }
-
-            targetYear = Math.Max(targetYear, 0);
-
-            UpdateTimeDisplay();
+            SetVisible("btnDayUp", visible);
+            SetVisible("btnDayDown", visible);
+            SetVisible("btnTimeUp", visible);
+            SetVisible("btnTimeDown", visible);
+            SetVisible("btnYearUp", visible);
+            SetVisible("btnYearDown", visible);
         }
 
-        private void UpdateTimeDisplay()
+        private void SetTimeLabelsVisible(bool visible)
         {
-            if (!isCrystalActive)
-            {
-                if (GetChildById("lblDay")?.viewComponent is XUiV_Label dL) { dL.Text = "---"; dL.Color = new Color32(80, 80, 80, 255); }
-                if (GetChildById("lblTime")?.viewComponent is XUiV_Label tL) { tL.Text = "--:--"; tL.Color = new Color32(80, 80, 80, 255); }
-                if (GetChildById("lblYear")?.viewComponent is XUiV_Label yL) { yL.Text = "----"; yL.Color = new Color32(80, 80, 80, 255); }
-            }
-            else
-            {
-                // to normalize it to the games day setting which counts from zero
-                if (GetChildById("lblDay")?.viewComponent is XUiV_Label dL) { dL.Text = (targetDay - 1).ToString("000"); dL.Color = new Color32(0, 255, 200, 255); }
-                if (GetChildById("lblTime")?.viewComponent is XUiV_Label tL) { tL.Text = $"{targetHours:00}:{targetMinutes:00}"; tL.Color = new Color32(0, 255, 200, 255); }
-                if (GetChildById("lblYear")?.viewComponent is XUiV_Label yL) { yL.Text = (TimeManager.GetStartingYear() + targetYear).ToString("0000"); yL.Color = new Color32(0, 255, 200, 255); }
-            }
+            SetVisible("lblDay", visible);
+            SetVisible("lblTime", visible);
+            SetVisible("lblYear", visible);
+        }
+
+        private void SetVisible(string controlId, bool visible)
+        {
+            XUiController control = GetChildById(controlId);
+            if (control != null && control.viewComponent != null) control.viewComponent.IsVisible = visible;
         }
 
         public override void Update(float _dt)
@@ -230,19 +141,6 @@ namespace LizziesMod
 
             XUiController previousTeleportBtn = GetChildById("btnPreviousTeleport");
             if (previousTeleportBtn != null && player != null) previousTeleportBtn.viewComponent.IsVisible = (previousTeleport != null);
-        }
-
-        private ulong? CalculateTargetWorldTime()
-        {
-
-            uint year = (uint)targetYear * 357;
-            long totalDays = year + (targetDay - 1);
-
-            ulong newWorldTime = (ulong)(totalDays * 24000L)
-                               + (ulong)(targetHours * 1000L)
-                               + (ulong)((targetMinutes * 1000L) / 60L);
-
-            return newWorldTime;
         }
 
         private void HandleTeleportClick(XUiController _sender, int _mouseButton)
@@ -275,10 +173,9 @@ namespace LizziesMod
                             }
                             else
                             {
-                                ulong? timeToSet = CalculateTargetWorldTime();
                                 initialPosition = player.position;
                                 player.playerUI.windowManager.Open("windowFluxTeleportTimer", false);
-                                GameManager.Instance.StartCoroutine(TeleportSequence(player, target, heldItem, timeToSet));
+                                GameManager.Instance.StartCoroutine(TeleportSequence(player, target, heldItem));
                             }
                         }
                     }
@@ -296,16 +193,15 @@ namespace LizziesMod
                 ItemValue heldItem = player.inventory.holdingItemItemValue;
                 if (heldItem != null && heldItem.UseTimes < heldItem.MaxUseTimes)
                 {
-                    ulong? timeToSet = CalculateTargetWorldTime();
                     player.playerUI.windowManager.Open("windowFluxTeleportTimer", false);
-                    GameManager.Instance.StartCoroutine(TeleportSequence(player, (Vector3)previousTeleport, heldItem, timeToSet, true, true));
+                    GameManager.Instance.StartCoroutine(TeleportSequence(player, (Vector3)previousTeleport, heldItem, true, true));
                 }
             }
             player.inventory.onInventoryChanged();
             xui.playerUI.windowManager.Close("windowTeleportSelector");
         }
 
-        private IEnumerator TeleportSequence(EntityPlayerLocal player, Vector3 targetPos, ItemValue heldItem, ulong? newWorldTime = null, bool noDuration = false, bool clearPreviousTeleport = false, string targetDimension = "Overworld")
+        private IEnumerator TeleportSequence(EntityPlayerLocal player, Vector3 targetPos, ItemValue heldItem, bool noDuration = false, bool clearPreviousTeleport = false)
         {
             float duration = EffectManager.GetValue(PassiveEffects.MagazineSize, heldItem, defaultTeleportDelayTime, player, null, FastTags<TagGroup.Global>.Parse("teleportTime"));
             float elapsed = 0f;
@@ -352,68 +248,25 @@ namespace LizziesMod
             if (!clearPreviousTeleport)
             {
                 previousTeleport = initialPosition;
-                previousYear = targetYear;
             }
             else
             {
                 previousTeleport = null;
-                previousYear = 0;
             }
 
             heldItem.UseTimes += 100f;
             player.inventory.onInventoryChanged();
 
-            GameManager.Instance.SaveWorld();
-
-            player.playerUI.windowManager.Open("windowTimeTravelLoading", true);
-
             player.SetPosition(targetPos, true);
             Rigidbody playerRb = player.RootTransform.GetComponent<Rigidbody>();
             if (playerRb != null) playerRb.isKinematic = true;
 
-            if (newWorldTime.HasValue) GameManager.Instance.World.worldTime = newWorldTime.Value;
-            TimeManager.UpdateCurrentYear();
-            TimeManager.currentDimension = targetDimension;
-
-            Logger.Info("[TimeTravel] Flushing Chunk Cache to load new timeline...");
-            ChunkCluster cc = GameManager.Instance.World.ChunkCache;
-            if (cc != null)
-            {
-
-                System.Collections.Generic.List<long> chunksToRemove = new System.Collections.Generic.List<long>();
-                foreach (Chunk chunk in cc.GetChunkArray())
-                {
-                    chunksToRemove.Add(chunk.Key);
-                }
-
- 
-                foreach (long key in chunksToRemove)
-                {
-                    cc.RemoveChunkSync(key);
-                }
-            }
-
-            Logger.Info("[TimeTravel] Waiting for new timeline chunks to generate and load...");
-
-            yield return new WaitForSeconds(1.0f);
- 
-            int chunkX = World.toChunkXZ(Mathf.FloorToInt(targetPos.x));
-            int chunkZ = World.toChunkXZ(Mathf.FloorToInt(targetPos.z));                                                 
-            Chunk chunk1 = cc.GetChunk(chunkX, chunkZ);
-
-            while (cc != null && chunk1 != null && !cc.ContainsChunkSync(chunk1.Key))
-            {
-                yield return new WaitForSeconds(0.2f);
-            }
-
-            yield return new WaitForSeconds(1.5f);
+            yield return null;
 
             if (playerRb != null) playerRb.isKinematic = false;
 
-            player.playerUI.windowManager.Close("windowLizzieLoadingScreen");
-
             player.PlayOneShot("weapon_electric_charge");
-            GameManager.ShowTooltip(player, "Time jump complete!");
+            GameManager.ShowTooltip(player, "Teleport complete!");
         }
     
         private void HandleCloseClick(XUiController _sender, int _mouseButton) => xui.playerUI.windowManager.Close("windowTeleportSelector");

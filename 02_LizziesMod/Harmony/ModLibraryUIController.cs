@@ -32,6 +32,7 @@ namespace LizziesMod
         private readonly List<XUiV_Label> readmeTextAreaViews = new List<XUiV_Label>();
         private readonly List<XUiV_Texture> readmeImageViews = new List<XUiV_Texture>();
         private readonly Dictionary<string, Texture2D> loadedImages = new Dictionary<string, Texture2D>(StringComparer.OrdinalIgnoreCase);
+        private bool ownsGamePause;
 
         public override void Init()
         {
@@ -117,6 +118,7 @@ namespace LizziesMod
         public override void OnOpen()
         {
             base.OnOpen();
+            ownsGamePause = InGameUiPause.Acquire();
 
             var readmes = ModManualManager.AllBooks.Values.Where(b => b.IsReadme).ToList();
             if (readmes.Count > 0)
@@ -179,6 +181,8 @@ namespace LizziesMod
         public override void OnClose()
         {
             base.OnClose();
+            InGameUiPause.Release(ownsGamePause);
+            ownsGamePause = false;
             ReleaseLoadedImages();
             if (!string.IsNullOrEmpty(PreviousMenu))
                 xui.playerUI.windowManager.Open(PreviousMenu, true);

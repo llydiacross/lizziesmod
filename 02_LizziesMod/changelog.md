@@ -9,6 +9,8 @@
 - Fixes to the mod profile system
 - Fixes to the custom audio system
 - World saves should now back up correctly
+- Removed Flux time travel and its year-based save redirection while the dimension system is redesigned.
+- Disabled the unfinished dimensional portal transition until region and entity isolation are proven.
 
 # Alpha Test 2
 

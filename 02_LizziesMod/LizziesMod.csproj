@@ -34,7 +34,11 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Harmony\BlockDimensionPortal.cs" />
+    <Compile Include="Harmony\ConsoleCmdGetPosition.cs" />
+    <Compile Include="Harmony\DimensionGeneratorRegistry.cs" />
     <Compile Include="Harmony\DimensionManager.cs" />
+    <Compile Include="Harmony\DimensionRegistry.cs" />
+    <Compile Include="Harmony\DimensionStorage.cs" />
     <Compile Include="Harmony\EntityPhysicsProp.cs" />
     <Compile Include="Harmony\ItemActionOpenModManual.cs" />
     <Compile Include="Harmony\ModSaveManager.cs" />

@@ -27,6 +27,33 @@ C:\Program Files (x86)\Steam\steamapps\common\7 Days To Die\Mods\
 ~/Library/steam/steamapps/common/7 Days To Die/Mods
  ```
 
+## Developer Playtest Launcher
+
+`02_LizziesMod/Launch-Playtest.ps1` rebuilds the shared DLL and starts the local
+client with the game's native `-loadsavegame=true` quick-continue preference.
+It validates that the default disposable test save, `Limbo/test`, exists and
+writes a timestamped client log under `%APPDATA%\7DaysToDie\logs`.
+
+The game uses its last selected local save for quick-continue. Select
+`Limbo/test` once through its Continue screen, then run:
+
+```powershell
+& '.\02_LizziesMod\Launch-Playtest.ps1'
+```
+
+Use PowerShell's dry-run support to verify the command and paths without
+building or starting the client:
+
+```powershell
+& '.\02_LizziesMod\Launch-Playtest.ps1' -WhatIf
+```
+
+Use `-MainMenu` when a save needs to be selected or created manually:
+
+```powershell
+& '.\02_LizziesMod\Launch-Playtest.ps1' -MainMenu
+```
+
 ## Custom Inputs
 
 Every loaded mod can add `Config/CustomInput.xml`. The input is namespaced by the mod that owns the file, so names only need to be unique within that mod:
@@ -243,7 +270,7 @@ Define `example_paint` in `Config/CustomTextures.xml`:
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
-<customTextures>
+<CustomTextures>
 	<opaque
 		id="example_paint"
 		name="Example Paint"
@@ -255,7 +282,7 @@ Define `example_paint` in `Config/CustomTextures.xml`:
 		paintCost="1"
 		sortIndex="255"
 		hidden="false" />
-</customTextures>
+</CustomTextures>
 ```
 
 All three assets must be in the specified bundle. They must use the same format as the live opaque diffuse, normal, and specular arrays, and they must provide a complete compatible mip chain. The game uses 512x512 atlas slices; larger source textures are accepted when a matching 512px mip level and every lower mip level are present. Invalid assets are rejected with a channel-specific log message instead of being copied partially.
