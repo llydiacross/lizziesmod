@@ -62,6 +62,7 @@
 
 # Developer build stuff
 /0_TFP_Harmony
+/02_LizziesMod/DevSettings.xml
 obj
 .vs
 /package*.json*

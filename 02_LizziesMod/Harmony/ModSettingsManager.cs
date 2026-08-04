@@ -1,5 +1,6 @@
 ﻿using HarmonyLib;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Xml;
 using System;
@@ -12,15 +13,29 @@ namespace LizziesMod
         public string ModName;
         public string Name;
         public string Value;
+        public string PersistedValue;
         public string Type;
         public Action<string> OnValueChanged;
         public bool requiresRestart;
         public bool Hidden;
         public bool ServerOnly;
         public bool inMenuOnly;
+        private string developerOverrideValue;
+
+        public bool IsDeveloperOverridden
+        {
+            get { return developerOverrideValue != null; }
+        }
+
+        public string ValueForPersistence
+        {
+            get { return PersistedValue ?? Value; }
+        }
 
         public void SetValue(string newValue)
         {
+            if (IsDeveloperOverridden) return;
+
             bool valueChanged = !string.Equals(Value, newValue, StringComparison.Ordinal);
             if (Name.Equals("Enabled", StringComparison.OrdinalIgnoreCase) &&
                 bool.TryParse(Value, out bool currentEnabled) &&
@@ -33,6 +48,7 @@ namespace LizziesMod
             if (valueChanged)
             {
                 Value = newValue;
+                PersistedValue = newValue;
                 Logger.Info($"Setting '{Name}' for mod '{ModName}' changed to: {newValue} {(OnValueChanged != null ? "INVOKABLE" : "NON-INVOKABLE") }");
  
                 if (requiresRestart || Name.Equals("Enabled", StringComparison.OrdinalIgnoreCase))
@@ -42,6 +58,18 @@ namespace LizziesMod
 
                 OnValueChanged?.Invoke(newValue);
             }
+        }
+
+        public void SetPersistedValue(string value)
+        {
+            PersistedValue = value;
+            if (!IsDeveloperOverridden) Value = value;
+        }
+
+        public void ApplyDeveloperOverride(string value)
+        {
+            developerOverrideValue = value;
+            Value = value;
         }
     }
 
@@ -61,10 +89,16 @@ namespace LizziesMod
 
     public static class ModSettingsManager
     {
-
+        private const string DeveloperModeEnvironmentVariable = "LIZZIESMOD_DEV_MODE";
+        private const string DeveloperSettingsFileName = "DevSettings.xml";
         public static Dictionary<string, List<ModSetting>> AllModSettings = new Dictionary<string, List<ModSetting>>();
         public static bool PendingRestart = false;
         public static List<MissingProfileModInfo> LastMissingProfileMods = new List<MissingProfileModInfo>();
+
+        public static bool IsDeveloperMode
+        {
+            get { return string.Equals(Environment.GetEnvironmentVariable(DeveloperModeEnvironmentVariable), "1", StringComparison.Ordinal); }
+        }
 
         public static void LoadAllModSettings()
         {
@@ -118,7 +152,7 @@ namespace LizziesMod
                                 ModSetting existingSetting = currentSettings.Find(s => s.Name.Equals(sName, StringComparison.OrdinalIgnoreCase));
                                 if (existingSetting != null)
                                 {
-                                    existingSetting.Value = sValue;
+                                    existingSetting.SetPersistedValue(sValue);
                                     existingSetting.Type = sType;
                                     existingSetting.requiresRestart = bRequiresRestart;
                                     existingSetting.Hidden = bHidden;
@@ -133,6 +167,7 @@ namespace LizziesMod
                                         ModName = mod.Name,
                                         Name = sName,
                                         Value = sValue,
+                                        PersistedValue = sValue,
                                         Type = sType,
                                         requiresRestart = bRequiresRestart,
                                         Hidden = bHidden,
@@ -151,6 +186,104 @@ namespace LizziesMod
                     }
                 }
             }
+
+            ApplyDeveloperSettingsOverrides();
+        }
+
+        private static void ApplyDeveloperSettingsOverrides()
+        {
+            if (!IsDeveloperMode) return;
+
+            Mod coreMod = global::ModManager.GetLoadedMods().Find(mod => mod.Name.Equals("LizziesMod", StringComparison.OrdinalIgnoreCase));
+            if (coreMod == null)
+            {
+                Logger.Warning("[DevSettings] The core LizziesMod folder was unavailable; no developer overrides were applied.");
+                return;
+            }
+
+            string settingsPath = Path.Combine(coreMod.Path, DeveloperSettingsFileName);
+            if (!File.Exists(settingsPath))
+            {
+                Logger.Info($"[DevSettings] Developer mode is enabled, but '{DeveloperSettingsFileName}' was not found.");
+                return;
+            }
+
+            try
+            {
+                XmlDocument document = new XmlDocument();
+                document.Load(settingsPath);
+                XmlElement root = document.DocumentElement;
+                if (root == null || !root.Name.Equals("DevSettings", StringComparison.OrdinalIgnoreCase))
+                {
+                    Logger.Error($"[DevSettings] '{settingsPath}' must use a DevSettings root element.");
+                    return;
+                }
+
+                int appliedCount = 0;
+                foreach (XmlNode modNode in root.ChildNodes)
+                {
+                    if (modNode.Name != "Mod") continue;
+
+                    string modName = modNode.Attributes?["name"]?.Value;
+                    if (string.IsNullOrEmpty(modName) || !AllModSettings.TryGetValue(modName, out List<ModSetting> settings))
+                    {
+                        Logger.Warning($"[DevSettings] Ignored an override for unavailable mod '{modName ?? "<missing>"}'.");
+                        continue;
+                    }
+
+                    foreach (XmlNode settingNode in modNode.ChildNodes)
+                    {
+                        if (settingNode.Name != "Setting") continue;
+
+                        string settingName = settingNode.Attributes?["name"]?.Value;
+                        string settingValue = settingNode.Attributes?["value"]?.Value;
+                        ModSetting setting = settings.Find(candidate => candidate.Name.Equals(settingName, StringComparison.OrdinalIgnoreCase));
+                        if (setting == null || settingValue == null)
+                        {
+                            Logger.Warning($"[DevSettings] Ignored unknown or incomplete override '{modName}.{settingName ?? "<missing>"}'.");
+                            continue;
+                        }
+
+                        if (!IsValidSettingValue(setting, settingValue))
+                        {
+                            Logger.Warning($"[DevSettings] Ignored invalid value for '{modName}.{settingName}'.");
+                            continue;
+                        }
+
+                        setting.ApplyDeveloperOverride(settingValue);
+                        appliedCount++;
+                    }
+                }
+
+                Logger.Info($"[DevSettings] Applied {appliedCount} local developer setting override(s).");
+            }
+            catch (Exception exception)
+            {
+                Logger.Error($"[DevSettings] Failed to load '{settingsPath}': {exception.Message}");
+            }
+        }
+
+        private static bool IsValidSettingValue(ModSetting setting, string value)
+        {
+            if (setting.Type.Equals("bool", StringComparison.OrdinalIgnoreCase))
+            {
+                bool parsedValue;
+                return bool.TryParse(value, out parsedValue);
+            }
+
+            if (setting.Type.Equals("int", StringComparison.OrdinalIgnoreCase))
+            {
+                int parsedValue;
+                return int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out parsedValue);
+            }
+
+            if (setting.Type.Equals("float", StringComparison.OrdinalIgnoreCase))
+            {
+                float parsedValue;
+                return float.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out parsedValue);
+            }
+
+            return true;
         }
 
 
@@ -439,6 +572,7 @@ namespace LizziesMod
                                     ModName = modName,
                                     Name = sName,
                                     Value = sValue ?? "",
+                                    PersistedValue = sValue ?? "",
                                     Type = sType,
                                     requiresRestart = bRequiresRestart,
                                     Hidden = bHidden,
@@ -552,6 +686,7 @@ namespace LizziesMod
                     ModName = modName,
                     Name = settingName,
                     Value = newValueString,
+                    PersistedValue = newValueString,
                     Type = inferredType,
                     requiresRestart = PendingRestart,
                     Hidden = bHidden,
@@ -640,7 +775,7 @@ namespace LizziesMod
             {
                 XmlElement node = xmlDoc.CreateElement("Setting");
                 node.SetAttribute("name", setting.Name);
-                node.SetAttribute("value", setting.Value);
+                node.SetAttribute("value", setting.ValueForPersistence);
                 node.SetAttribute("type", setting.Type);
                 node.SetAttribute("requiresRestart", setting.requiresRestart.ToString().ToLower());
                 if (setting.Hidden) node.SetAttribute("hidden", "true");

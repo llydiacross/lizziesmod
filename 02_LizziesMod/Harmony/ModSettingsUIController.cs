@@ -589,12 +589,13 @@ namespace LizziesMod
 
             bool inMultiplayerAsClient = SingletonMonoBehaviour<ConnectionManager>.Instance.IsClient &&
                                         !SingletonMonoBehaviour<ConnectionManager>.Instance.IsServer;
-            isLocked = setting.ServerOnly && inMultiplayerAsClient;
+            isLocked = setting.IsDeveloperOverridden || (setting.ServerOnly && inMultiplayerAsClient);
 
             if (lblSettingName != null)
             {
                 string label = setting.Name;
-                if (isLocked) label += " [FF3333](Locked)[-]";
+                if (setting.IsDeveloperOverridden) label += " [F8C45A](Dev Override)[-]";
+                else if (isLocked) label += " [FF3333](Locked)[-]";
                 else if (setting.inMenuOnly) label += " [FF3333](Menu Only)[-]";
                 lblSettingName.Text = label;
             }

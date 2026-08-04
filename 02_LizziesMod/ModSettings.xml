@@ -3,7 +3,7 @@
   <Setting name="EnableMechanicalPress" value="true" type="bool" requiresRestart="false" />
   <Setting name="BrassScrapMaxDamage" value="1650" type="int" requiresRestart="true" />
   <Setting name="BrassScrapStabilityGlue" value="70" type="int" requiresRestart="true" />
-  <Setting name="ExperimentalFeatures" value="true" type="bool" requiresRestart="true" />
+  <Setting name="ExperimentalFeatures" value="false" type="bool" requiresRestart="true" />
   <Setting name="Enabled" value="true" type="bool" requiresRestart="false" hidden="true" />
   <Setting name="LastProfileName" value="Default" type="string" requiresRestart="true" hidden="true" />
 </ModSettings>

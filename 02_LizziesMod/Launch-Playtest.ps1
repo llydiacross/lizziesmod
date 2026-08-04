@@ -14,7 +14,8 @@ param(
     [string]$WorldName = 'Limbo',
     [string]$SaveName = 'test',
     [switch]$SkipBuild,
-    [switch]$MainMenu
+    [switch]$MainMenu,
+    [switch]$DevMode
 )
 
 $ErrorActionPreference = 'Stop'
@@ -87,10 +88,31 @@ $arguments += '-logfile'
 $arguments += ('"{0}"' -f $logPath)
 
 Write-Host "Client log: $logPath"
+if ($DevMode) {
+    Write-Host 'Developer settings overrides are enabled for this client.'
+}
 if (-not $MainMenu) {
     Write-Host "The game loads the last selected local save; select '$WorldName/$SaveName' once in Continue if this is the first launch."
 }
 
 if ($PSCmdlet.ShouldProcess($gameExecutable, $(if ($MainMenu) { 'Launch main menu' } else { "Launch $WorldName/$SaveName with native quick-continue" }))) {
-    Start-Process -FilePath $gameExecutable -ArgumentList $arguments -WorkingDirectory $GameRoot
+    $previousDevMode = $env:LIZZIESMOD_DEV_MODE
+    try {
+        if ($DevMode) {
+            $env:LIZZIESMOD_DEV_MODE = '1'
+        }
+        else {
+            Remove-Item Env:LIZZIESMOD_DEV_MODE -ErrorAction SilentlyContinue
+        }
+
+        Start-Process -FilePath $gameExecutable -ArgumentList $arguments -WorkingDirectory $GameRoot
+    }
+    finally {
+        if ($null -eq $previousDevMode) {
+            Remove-Item Env:LIZZIESMOD_DEV_MODE -ErrorAction SilentlyContinue
+        }
+        else {
+            $env:LIZZIESMOD_DEV_MODE = $previousDevMode
+        }
+    }
 }

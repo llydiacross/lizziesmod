@@ -54,6 +54,29 @@ Use `-MainMenu` when a save needs to be selected or created manually:
 & '.\02_LizziesMod\Launch-Playtest.ps1' -MainMenu
 ```
 
+## Developer Settings
+
+Committed `ModSettings.xml` files use player-safe defaults. Local development overrides live in the ignored `02_LizziesMod/DevSettings.xml` file and apply only when the client starts in developer mode:
+
+```xml
+<DevSettings>
+	<Mod name="LizziesMod">
+		<Setting name="ExperimentalFeatures" value="true" />
+	</Mod>
+	<Mod name="LizziesMod_Backrooms">
+		<Setting name="MainFloorY" value="59" />
+	</Mod>
+</DevSettings>
+```
+
+Run the playtest launcher with `-DevMode` to enable the overrides for that client process:
+
+```powershell
+& '.\02_LizziesMod\Launch-Playtest.ps1' -DevMode
+```
+
+Overrides may target only settings already declared by loaded mods; their types are validated, unknown settings are ignored, and developer values are locked in the Mod Settings UI. Closing that UI, saving a profile, or changing regular settings does not write developer values back to `ModSettings.xml`.
+
 ## Dimensions
 
 Dimensions are a single-player experimental feature. The game supports one active region directory, chunk provider, and chunk cache, so entering a dimension moves the whole local session between the Overworld and one selected realm; separate per-player realms are not supported.
@@ -86,8 +109,10 @@ public sealed class ExampleDimensionGenerator : GeneratedDimensionGeneratorBase
 	}
 }
 
+// Then, in your Main.cs
 private static readonly ExampleDimensionGenerator generator = new ExampleDimensionGenerator();
 
+// and inside of your ModInit function
 if (!DimensionGeneratorRegistry.RegisterAndLoadDefinitions(modInstance, generator))
 {
 	Logger.Error("[ExampleDimension] Generator registration failed.");
