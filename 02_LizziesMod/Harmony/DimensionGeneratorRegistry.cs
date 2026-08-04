@@ -46,6 +46,30 @@ namespace LizziesMod
                 DimensionSaveMode.Snapshot));
         }
 
+        public static bool Register(IDimensionGenerator generator)
+        {
+            if (generator == null)
+            {
+                Logger.Error("[DimensionGenerators] Rejected a null generator instance.");
+                return false;
+            }
+
+            return Register(new DimensionGeneratorDefinition(
+                generator.Id,
+                generator.SaveMode,
+                generator.GetEntryPosition,
+                generator.Generate,
+                generator.HasMainThreadWork ? new Action(generator.ProcessMainThread) : null));
+        }
+
+            public static bool RegisterAndLoadDefinitions(Mod modInstance, IDimensionGenerator generator)
+            {
+                if (!Register(generator)) return false;
+
+                DimensionRegistry.LoadDefinitions(modInstance);
+                return true;
+            }
+
         public static bool Register(DimensionGeneratorDefinition generator)
         {
             if (generator == null || string.IsNullOrEmpty(generator.Id))

@@ -36,6 +36,7 @@
     <Compile Include="Harmony\BlockDimensionPortal.cs" />
     <Compile Include="Harmony\ConsoleCmdGetPosition.cs" />
     <Compile Include="Harmony\DimensionGeneratorRegistry.cs" />
+    <Compile Include="Harmony\GeneratedDimensionGeneratorBase.cs" />
     <Compile Include="Harmony\DimensionManager.cs" />
     <Compile Include="Harmony\DimensionRegistry.cs" />
     <Compile Include="Harmony\DimensionStorage.cs" />

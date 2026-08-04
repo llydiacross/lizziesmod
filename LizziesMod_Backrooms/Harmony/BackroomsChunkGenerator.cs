@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace LizziesMod.Backrooms
 {
-    public static class BackroomsChunkGenerator
+    public sealed class BackroomsChunkGenerator : GeneratedDimensionGeneratorBase
     {
         public const string GeneratorId = "backrooms";
         private const string SettingsModName = "LizziesMod_Backrooms";
@@ -31,6 +31,15 @@ namespace LizziesMod.Backrooms
         private const int FloorPaintId = 26;
         private const int CeilingPaintId = 106;
         private const int PaintChunksPerUpdate = 1;
+        private static readonly string[] RequiredBlockNames =
+        {
+            "concreteMaster",
+            "woodMaster",
+            "ceilingLight02",
+            "officeChair01",
+            "decoComputerDeskTopPC",
+            "deskLampLight02Yellow"
+        };
 
         private static BlockValue floorBlock;
         private static BlockValue wallBlock;
@@ -39,7 +48,7 @@ namespace LizziesMod.Backrooms
         private static BlockValue officeChairBlock;
         private static BlockValue computerBlock;
         private static BlockValue deskLampBlock;
-        private static bool paletteResolved;
+        private bool paletteResolved;
         private static bool firstGeneratedChunkLogged;
         private static bool firstPaintedChunkLogged;
         private static bool paintFailureLogged;
@@ -51,6 +60,9 @@ namespace LizziesMod.Backrooms
         private static int configuredSplitLevelDepth;
         private static readonly Queue<ChunkPaintRequest> paintQueue = new Queue<ChunkPaintRequest>();
         private static readonly HashSet<long> queuedPaintChunks = new HashSet<long>();
+
+        public override string Id { get { return GeneratorId; } }
+        public override bool HasMainThreadWork { get { return true; } }
 
         public static int FloorY { get { EnsureLayout(); return configuredFloorY; } }
         private static int CeilingY { get { return FloorY + StoreyHeight; } }
@@ -108,17 +120,17 @@ namespace LizziesMod.Backrooms
                 $"split level depth={configuredSplitLevelDepth}.");
         }
 
-        private static int Clamp(int value, int minimum, int maximum)
+        protected override void Initialize()
         {
-            return Math.Max(minimum, Math.Min(value, maximum));
+            EnsureLayout();
         }
 
-        public static Vector3 GetEntryPosition(DimensionDefinition definition, Vector3 defaultPosition)
+        protected override Vector3 GetEntryPositionCore(DimensionDefinition definition, Vector3 defaultPosition)
         {
             return new Vector3(12.5f, FloorY + 1f, 12.5f);
         }
 
-        public static bool Generate(Chunk chunk)
+        protected override bool GenerateChunk(Chunk chunk)
         {
             if (!TryResolvePalette()) return false;
 
@@ -230,12 +242,13 @@ namespace LizziesMod.Backrooms
                 }
             }
 
-            chunk.ResetLights(byte.MaxValue);
-            chunk.isModified = true;
-            chunk.NeedsDecoration = false;
-            chunk.NeedsLightCalculation = true;
-            chunk.NeedsRegeneration = true;
+            FinalizeGeneratedChunk(chunk);
             return true;
+        }
+
+        public override void ProcessMainThread()
+        {
+            ProcessDeferredPainting();
         }
 
         public static void ProcessDeferredPainting()
@@ -458,31 +471,20 @@ namespace LizziesMod.Backrooms
             }
         }
 
-        private static bool TryResolvePalette()
+        private bool TryResolvePalette()
         {
-            if (paletteResolved)
-            {
-                return floorBlock.Block != null && wallBlock.Block != null && ceilingLightBlock.Block != null
-                    && officeChairBlock.Block != null && computerBlock.Block != null && deskLampBlock.Block != null;
-            }
+            if (paletteResolved) return true;
+            if (!TryResolveRequiredBlocks(RequiredBlockNames)) return false;
 
-            floorBlock = Block.GetBlockValue("concreteMaster", false);
-            wallBlock = Block.GetBlockValue("concreteMaster", false);
-            counterBlock = Block.GetBlockValue("woodMaster", false);
-            ceilingLightBlock = Block.GetBlockValue("ceilingLight02", false);
-            officeChairBlock = Block.GetBlockValue("officeChair01", false);
-            computerBlock = Block.GetBlockValue("decoComputerDeskTopPC", false);
-            deskLampBlock = Block.GetBlockValue("deskLampLight02Yellow", false);
+            floorBlock = GetRequiredBlock("concreteMaster");
+            wallBlock = floorBlock;
+            counterBlock = GetRequiredBlock("woodMaster");
+            ceilingLightBlock = GetRequiredBlock("ceilingLight02");
+            officeChairBlock = GetRequiredBlock("officeChair01");
+            computerBlock = GetRequiredBlock("decoComputerDeskTopPC");
+            deskLampBlock = GetRequiredBlock("deskLampLight02Yellow");
             paletteResolved = true;
-
-            if (floorBlock.Block != null && wallBlock.Block != null && counterBlock.Block != null && ceilingLightBlock.Block != null
-                && officeChairBlock.Block != null && computerBlock.Block != null && deskLampBlock.Block != null)
-            {
-                return true;
-            }
-
-            Logger.Error("[Backrooms] Required structural, lighting, or prop blocks are unavailable.");
-            return false;
+            return true;
         }
 
         private static bool IsWall(int worldX, int worldZ)

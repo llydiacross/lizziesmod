@@ -62,18 +62,39 @@ Enable `ExperimentalFeatures` in **Mod Settings**, use a disposable normal gener
 
 Each realm has isolated region-backed terrain, blocks, tile entities, dropped items, and spawned non-player entities. Player inventory, quests, profile data, and character state remain shared. Return to the Overworld before exiting the game.
 
-The core mod owns transitions and save storage. Companion mods add dimensions by registering a generator and a definition during `IModApi.InitMod`:
+The core mod owns transitions and save storage. Companion mods add dimensions by implementing `IDimensionGenerator` and registering it during `IModApi.InitMod`. Inherit `GeneratedDimensionGeneratorBase` for generated realms: it handles one-time initialization, required-block caching, clamped integer settings, terrain-column helpers, stability columns, and final chunk state.
 
 ```csharp
-DimensionGeneratorRegistry.Register(new DimensionGeneratorDefinition(
-	"example-generated",
-	DimensionSaveMode.Generated,
-	GetEntryPosition,
-	GenerateChunk));
-DimensionRegistry.LoadDefinitions(modInstance);
+public sealed class ExampleDimensionGenerator : GeneratedDimensionGeneratorBase
+{
+	public override string Id { get { return "example-generated"; } }
+
+	protected override void Initialize()
+	{
+		// Read settings and prepare generator state once.
+	}
+
+	protected override Vector3 GetEntryPositionCore(DimensionDefinition definition, Vector3 defaultPosition)
+	{
+		return defaultPosition;
+	}
+
+	protected override bool GenerateChunk(Chunk chunk)
+	{
+		// Write the complete chunk, then call FinalizeGeneratedChunk(chunk).
+		return true;
+	}
+}
+
+private static readonly ExampleDimensionGenerator generator = new ExampleDimensionGenerator();
+
+if (!DimensionGeneratorRegistry.RegisterAndLoadDefinitions(modInstance, generator))
+{
+	Logger.Error("[ExampleDimension] Generator registration failed.");
+}
 ```
 
-`GenerateChunk` receives each new `Chunk`; return `true` after fully writing it to suppress normal terrain, or `false` to use the normal generator. Existing saved chunks are loaded instead of regenerated. Definitions belong to the companion mod:
+`GenerateChunk` receives each new `Chunk`; return `true` after fully writing it to suppress normal terrain, or `false` to use the normal generator. Override `HasMainThreadWork` and `ProcessMainThread()` only when the generator needs main-thread work after chunk generation. Existing saved chunks are loaded instead of regenerated. Definitions belong to the companion mod:
 
 ```xml
 <Dimensions default="ExampleDimension" defaultPriority="100">

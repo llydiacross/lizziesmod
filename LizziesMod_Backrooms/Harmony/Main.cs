@@ -4,22 +4,18 @@ namespace LizziesMod.Backrooms
 {
     public class Main
     {
+        private static readonly BackroomsChunkGenerator generator = new BackroomsChunkGenerator();
+
         public class Init : IModApi
         {
             public void InitMod(Mod modInstance)
             {
-                if (!DimensionGeneratorRegistry.Register(new DimensionGeneratorDefinition(
-                    BackroomsChunkGenerator.GeneratorId,
-                    DimensionSaveMode.Generated,
-                    BackroomsChunkGenerator.GetEntryPosition,
-                    BackroomsChunkGenerator.Generate,
-                    BackroomsChunkGenerator.ProcessDeferredPainting)))
+                if (!DimensionGeneratorRegistry.RegisterAndLoadDefinitions(modInstance, generator))
                 {
                     Logger.Error("[Backrooms] Generator registration failed; definitions were not loaded.");
                     return;
                 }
 
-                DimensionRegistry.LoadDefinitions(modInstance);
                 Logger.Info("[Backrooms] Registered generated dimension support.");
             }
         }
