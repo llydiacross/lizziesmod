@@ -127,6 +127,47 @@ Settings that can alter save behavior can require confirmation before the player
 
 With `warning="true"`, the player is told that the setting can make a save incompatible or unstable and is prompted to back up the save. Selecting Cancel restores the previous value; only confirmation applies the change.
 
+## XML Definition Editor
+
+The **XML Editor** is available from the main menu and escape menu. It lists the loaded item, block, and recipe definitions with search and paging, then creates small valid generated definitions without rewriting any mod's raw `Config/*.xml` file.
+
+Generated definitions are stored locally in the ignored `02_LizziesMod/UserXmlDefinitions.xml` file and are injected into the final item, block, or recipe XML while the game loads. A restart is required after creating or removing a definition. The editor normalizes generated names under `lizziesUser_`, so entering `exampleHammer` creates `lizziesUser_exampleHammer`.
+
+Items inherit a selected existing item, blocks inherit a selected existing block, and recipes require an existing generated output item plus an existing item ingredient. The editor verifies those references before saving. Removing a generated definition only changes the local user file; it never modifies a downloaded or installed mod.
+
+Selecting a definition also shows its supported fields in a table. Items and blocks expose direct `property` `name`/`value` pairs while their `Extends` value remains the base-definition field. Recipes expose `ingredient` `name`/`count` pairs and their output count. Loaded definitions are templates: creating from one writes a separate generated definition. Selecting a generated definition enables saving changes to its base, properties, or ingredients. The editor supports up to 24 editable rows and validates property names, item/block bases, recipe outputs, ingredient references, and numeric counts before writing XML.
+
+## Mod Portal
+
+The **Mod Portal** is available from the main menu, escape menu, and Mod Settings. It is intentionally inactive until a local endpoint is configured in the ignored `02_LizziesMod/ModPortalSettings.xml` file:
+
+```xml
+<ModPortal endpoint="https://mods.example.invalid/catalog.xml" />
+```
+
+The endpoint must use HTTPS. Refreshing the catalog is a user action; a successful catalog is cached locally as `ModPortalCatalog.cache.xml`. Portal packages are limited to XML files below `Config/`, downloaded into a staging directory, parsed, checked against their SHA-256 hashes, and then installed with a generated `ModInfo.xml`. Existing folders are never overwritten unless they were previously installed by the portal.
+
+The catalog contract is:
+
+```xml
+<ModPortalCatalog version="1">
+	<Package id="ExampleXmlMod"
+					 display_name="Example XML Mod"
+					 version="1.0.0"
+					 description="A config-only mod."
+					 author="Example Author"
+					 website="https://mods.example.invalid/example"
+					 game_version="3.1">
+		<File path="Config/items.xml"
+					url="https://mods.example.invalid/files/ExampleXmlMod/items.xml"
+					sha256="0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+					size="1234" />
+	</Package>
+</ModPortalCatalog>
+```
+
+`id`, `version`, every file `path`, `url`, and `sha256` are required. Paths must stay under `Config/` and end in `.xml`; URLs must use HTTPS; SHA-256 values must contain 64 hexadecimal characters. DLLs, asset bundles, scripts, and arbitrary archives are rejected. After a successful install, restart the client. When a loaded profile has a missing mod with an exact cached portal ID and version match, its missing-mods screen exposes the matching portal package.
+
 ## Dimensions
 
 Dimensions are a single-player experimental feature. The game supports one active region directory, chunk provider, and chunk cache, so entering a dimension moves the whole local session between the Overworld and one selected realm; separate per-player realms are not supported.

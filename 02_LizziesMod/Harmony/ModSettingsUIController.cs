@@ -59,6 +59,7 @@ namespace LizziesMod
         private XUiController btnSaveProfile;
         private XUiController btnEditInputs;
         private XUiController btnOpenReadme;
+        private XUiController btnOpenModPortal;
         public static string LastLoadedProfile = "";
         private bool isTransitioning = false;
         private bool ownsGamePause;
@@ -118,6 +119,12 @@ namespace LizziesMod
             {
                 XUiController clickable = btnOpenReadme.GetChildById("clickable") ?? btnOpenReadme;
                 clickable.OnPress += (s, e) => OpenSelectedModReadme();
+            }
+            btnOpenModPortal = GetChildById("btnOpenModPortal");
+            if (btnOpenModPortal != null)
+            {
+                XUiController clickable = btnOpenModPortal.GetChildById("clickable") ?? btnOpenModPortal;
+                clickable.OnPress += (s, e) => OpenModPortal();
             }
             XUiController closeBtn = GetChildById("btnClose");
             if (closeBtn != null)
@@ -487,6 +494,19 @@ namespace LizziesMod
                 ModLibraryUIController.RequestedBookId = readme.ID;
                 xui.playerUI.windowManager.Close("windowModSettings");
                 xui.playerUI.windowManager.Open("windowModLibrary", true);
+            });
+        }
+
+        private void OpenModPortal()
+        {
+            SaveCurrentSettingsUI(() =>
+            {
+                isTransitioning = true;
+                ModPortalUIController.PreviousMenu = "windowModSettings";
+                ModPortalUIController.RequestedPackageId = "";
+                ModPortalUIController.RequestedPackageVersion = "";
+                xui.playerUI.windowManager.Close("windowModSettings");
+                xui.playerUI.windowManager.Open(ModPortalUIController.WindowName, true);
             });
         }
     }

@@ -8,8 +8,11 @@ namespace LizziesMod
         private const string WindowName = "windowProfileMissingMods";
 
         private XUiController missingModsListGrid;
+        private XUiController findInPortalButton;
         private bool isRestarting;
+        private bool isOpeningPortal;
         private bool ownsGamePause;
+        private string previousPortalStatus = "";
 
         public override void Init()
         {
@@ -33,6 +36,13 @@ namespace LizziesMod
                     Application.Quit();
                 };
             }
+
+            findInPortalButton = GetChildById("btnFindInPortal");
+            if (findInPortalButton != null)
+            {
+                XUiController clickable = findInPortalButton.GetChildById("clickable") ?? findInPortalButton;
+                clickable.OnPress += (s, e) => OpenMatchingPortalPackage();
+            }
         }
 
         public override void OnOpen()
@@ -40,6 +50,19 @@ namespace LizziesMod
             base.OnOpen();
             ownsGamePause = InGameUiPause.Acquire();
             PopulateMissingMods();
+            previousPortalStatus = ModPortalManager.Status;
+            UpdatePortalButton();
+        }
+
+        public override void Update(float deltaTime)
+        {
+            base.Update(deltaTime);
+            string portalStatus = ModPortalManager.Status;
+            if (!portalStatus.Equals(previousPortalStatus, System.StringComparison.Ordinal))
+            {
+                previousPortalStatus = portalStatus;
+                UpdatePortalButton();
+            }
         }
 
         public override void OnClose()
@@ -47,6 +70,12 @@ namespace LizziesMod
             base.OnClose();
             InGameUiPause.Release(ownsGamePause);
             ownsGamePause = false;
+
+            if (isOpeningPortal)
+            {
+                isOpeningPortal = false;
+                return;
+            }
 
             if (!isRestarting)
             {
@@ -77,6 +106,38 @@ namespace LizziesMod
                     entry.Clear();
                 }
             }
+        }
+
+        private void UpdatePortalButton()
+        {
+            if (findInPortalButton?.viewComponent != null)
+            {
+                findInPortalButton.viewComponent.IsVisible = FindMatchingPortalPackage() != null;
+            }
+        }
+
+        private ModPortalPackage FindMatchingPortalPackage()
+        {
+            foreach (MissingProfileModInfo missingMod in ModSettingsManager.LastMissingProfileMods)
+            {
+                ModPortalPackage package = ModPortalManager.FindPackage(missingMod.Name, missingMod.Version);
+                if (package != null) return package;
+            }
+
+            return null;
+        }
+
+        private void OpenMatchingPortalPackage()
+        {
+            ModPortalPackage package = FindMatchingPortalPackage();
+            if (package == null) return;
+
+            isOpeningPortal = true;
+            ModPortalUIController.PreviousMenu = WindowName;
+            ModPortalUIController.RequestedPackageId = package.Id;
+            ModPortalUIController.RequestedPackageVersion = package.Version;
+            xui.playerUI.windowManager.Close(WindowName);
+            xui.playerUI.windowManager.Open(ModPortalUIController.WindowName, true);
         }
     }
 

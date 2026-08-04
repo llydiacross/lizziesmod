@@ -126,7 +126,9 @@ namespace LizziesMod
         {
             if (__0 != null && __0.XmlDoc != null)
             {
+                UserXmlContentManager.InjectDefinitions(__0);
                 XmlTokenReplacer.ProcessXml(__0.XmlDoc);
+                UserXmlContentManager.CaptureDefinitions(__0);
             }
         }
     }

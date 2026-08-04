@@ -88,8 +88,9 @@
             </rect>
 
             <rect pos="0,-500" width="820" height="50" depth="2">
-                <simplebutton name="btnCancel" depth="3" pos="195,0" width="190" height="40" font_size="24" caption="CANCEL" />
-                <simplebutton name="btnRestart" depth="3" pos="435,0" width="190" height="40" font_size="24" caption="RESTART" />
+                <simplebutton name="btnCancel" depth="3" pos="75,0" width="190" height="40" font_size="22" caption="CANCEL" />
+                <simplebutton name="btnFindInPortal" depth="3" pos="315,0" width="190" height="40" font_size="18" caption="MOD PORTAL" visible="false" />
+                <simplebutton name="btnRestart" depth="3" pos="555,0" width="190" height="40" font_size="22" caption="RESTART" />
             </rect>
         </window>
 
@@ -377,7 +378,8 @@
                     <simplebutton name="btnLoadProfile" depth="5" pos="370,0" width="200" height="40" font_size="22" caption="LOAD PROFILE" />
                     <simplebutton name="btnSaveProfile" depth="5" pos="580,0" width="200" height="40" font_size="22" caption="SAVE PROFILE" />
       
-                    <simplebutton name="btnClose" depth="5" pos="790,0" width="370" height="40" font_size="26" caption="CLOSE &amp; SAVE" />
+                    <simplebutton name="btnOpenModPortal" depth="5" pos="790,0" width="180" height="40" font_size="18" caption="MOD PORTAL" />
+                    <simplebutton name="btnClose" depth="5" pos="980,0" width="180" height="40" font_size="18" caption="CLOSE &amp; SAVE" />
                 </rect>
             </rect>
         </window>
@@ -450,5 +452,155 @@
         <mainmenubutton name="btnModSettings" depth="3" pos="0, -310" width="250" height="40" font_size="24" caption_key="xuiModSettings" />
         <mainmenubutton name="btnModLibrary" depth="3" pos="0, -350" width="250" height="40" font_size="24" caption_key="xuiModLibrary" />
         <mainmenubutton name="btnCustomInputs" depth="3" pos="0, -390" width="250" height="40" font_size="24" caption_key="xuiModInputBindings" />
+    </append>
+
+    <insertBefore xpath="/windows/window[@name='editingTools']/rect[@name='selector']/rect/rect/table[@name='tabButtons']/gamepad_icon[@name='controllericonRight']">
+        <pagingheader_button max_width="300" name="xmlEditor" text_key="xuiXmlEditor" />
+    </insertBefore>
+
+    <append xpath="/windows">
+        <window name="windowXmlEditor" depth="200" width="1300" height="760" anchor="Center" cursor_area="true" lock_navigation="true" controller="LizziesMod.XmlEditorUIController, LizziesMod">
+            <fullscreencollider color="0,0,0,220" />
+            <rect depth="0" pos="-650,380" width="1300" height="760">
+                <sprite depth="1" sprite="menu_empty" type="sliced" color="30,30,30,250" />
+                <sprite depth="2" sprite="menu_empty2px" type="sliced" color="255,180,0,255" fillcenter="false" />
+                <rect depth="3" pos="0,0" height="50">
+                    <sprite depth="1" sprite="menu_empty" type="sliced" color="0,0,0,255" />
+                    <label depth="2" pos="0,-10" width="1300" height="30" text="XML DEFINITION EDITOR" font_size="32" justify="center" color="255,180,0,255" />
+                </rect>
+
+                <rect name="definitionListPane" depth="3" pos="20,-70" width="530" height="610">
+                    <sprite depth="1" sprite="menu_empty" type="sliced" color="15,15,15,255" />
+                    <sprite depth="2" sprite="menu_empty2px" type="sliced" color="60,60,60,255" fillcenter="false" />
+                    <simplebutton name="btnTypeItems" depth="3" pos="10,-10" width="160" height="36" font_size="18" caption="ITEMS" />
+                    <simplebutton name="btnTypeBlocks" depth="3" pos="185,-10" width="160" height="36" font_size="18" caption="BLOCKS" />
+                    <simplebutton name="btnTypeRecipes" depth="3" pos="360,-10" width="160" height="36" font_size="18" caption="RECIPES" />
+                    <sprite name="sprItemsSelected" depth="4" pos="10,-44" width="160" height="3" sprite="menu_empty" type="sliced" color="255,180,0,255" visible="false" />
+                    <sprite name="sprBlocksSelected" depth="4" pos="185,-44" width="160" height="3" sprite="menu_empty" type="sliced" color="255,180,0,255" visible="false" />
+                    <sprite name="sprRecipesSelected" depth="4" pos="360,-44" width="160" height="3" sprite="menu_empty" type="sliced" color="255,180,0,255" visible="false" />
+                    <label depth="3" pos="12,-61" width="80" height="22" text="SEARCH" font_size="16" color="180,180,180,255" />
+                    <textfield name="txtDefinitionSearch" depth="3" pos="88,-59" width="430" height="28" font_size="16" backgroundcolor="20,20,20,255" textcolor="255,255,255,255" active_text_color="255,255,255,255" caret_color="255,255,255,255" max_length="80" vk_propagates_events="false" />
+                    <rect depth="3" pos="10,-100" width="510" height="440" on_scroll="true">
+                        <defaultscrollbar />
+                        <scrollview width="490" clippingsoftness="0,10">
+                            <grid name="definitionGrid" pos="0,0" rows="50" cols="1" cell_width="480" cell_height="50" arrangement="vertical" repeat_content="true">
+                                <rect name="xmlDefinitionEntry" controller="LizziesMod.XmlEditorDefinitionEntryController, LizziesMod" width="480" height="46">
+                                    <button name="clickable" depth="1" width="480" height="46" sprite="menu_empty" type="sliced" defaultcolor="40,40,40,255" hovercolor="80,180,255,255" />
+                                    <label name="lblDefinitionName" depth="2" pos="12,-7" width="330" height="24" text="DEFINITION" font_size="18" color="255,255,255,255" />
+                                    <label name="lblDefinitionSource" depth="2" pos="345,-9" width="122" height="20" text="LOADED" font_size="14" justify="right" color="180,180,180,255" />
+                                    <sprite name="sprSelected" depth="3" pos="0,-43" width="480" height="3" sprite="menu_empty" type="sliced" color="255,180,0,255" visible="false" />
+                                </rect>
+                            </grid>
+                        </scrollview>
+                    </rect>
+                    <rect depth="3" pos="10,-560" width="510" height="38">
+                        <simplebutton name="btnPrevDefinitions" depth="4" pos="0,0" width="120" height="34" font_size="17" caption="&lt; PREV" />
+                        <label name="lblPageStatus" depth="4" pos="125,-7" width="260" height="24" text="SHOWING 0 OF 0" font_size="16" justify="center" color="200,200,200,255" />
+                        <simplebutton name="btnNextDefinitions" depth="4" pos="390,0" width="120" height="34" font_size="17" caption="NEXT &gt;" />
+                    </rect>
+                </rect>
+
+                <rect name="editorPane" depth="3" pos="570,-70" width="710" height="610">
+                    <sprite depth="1" sprite="menu_empty" type="sliced" color="15,15,15,255" />
+                    <sprite depth="2" sprite="menu_empty2px" type="sliced" color="60,60,60,255" fillcenter="false" />
+                    <label name="lblDefinitionType" depth="3" pos="15,-12" width="680" height="28" text="CREATE ITEM" font_size="24" justify="center" color="255,180,0,255" />
+                    <label name="lblSelectedDefinition" depth="3" pos="15,-48" width="680" height="24" text="NEW DEFINITION" font_size="18" justify="center" color="200,200,200,255" />
+                    <sprite depth="3" pos="20,-82" width="670" height="2" sprite="menu_empty1px" type="sliced" color="100,100,100,255" />
+                    <label depth="3" pos="30,-100" width="170" height="22" text="NAME" font_size="18" color="180,180,180,255" />
+                    <textfield name="txtDefinitionName" depth="3" pos="30,-130" width="650" height="36" font_size="20" backgroundcolor="20,20,20,255" textcolor="255,255,255,255" active_text_color="255,255,255,255" caret_color="255,255,255,255" max_length="80" vk_propagates_events="false" />
+                    <rect name="baseDefinitionArea" depth="3" pos="30,-180" width="650" height="68">
+                        <label name="lblBaseDefinition" depth="1" pos="0,0" width="300" height="22" text="BASE ITEM" font_size="18" color="180,180,180,255" />
+                        <textfield name="txtBaseDefinition" depth="1" pos="0,-30" width="650" height="36" font_size="20" backgroundcolor="20,20,20,255" textcolor="255,255,255,255" active_text_color="255,255,255,255" caret_color="255,255,255,255" max_length="80" vk_propagates_events="false" />
+                    </rect>
+                    <rect name="recipeCountArea" depth="3" pos="30,-180" width="650" height="68" visible="false">
+                        <label depth="1" pos="0,0" width="180" height="22" text="OUTPUT COUNT" font_size="18" color="180,180,180,255" />
+                        <textfield name="txtRecipeCount" depth="1" pos="0,-30" width="180" height="36" font_size="20" backgroundcolor="20,20,20,255" textcolor="255,255,255,255" active_text_color="255,255,255,255" caret_color="255,255,255,255" max_length="4" vk_propagates_events="false" />
+                    </rect>
+                    <rect name="propertyEditorArea" depth="3" pos="30,-260" width="650" height="165">
+                        <label name="lblPropertyHeading" depth="1" pos="0,0" width="470" height="24" text="PROPERTIES" font_size="18" color="180,180,180,255" />
+                        <simplebutton name="btnAddProperty" depth="1" pos="500,-2" width="150" height="28" font_size="16" caption="ADD ROW" />
+                        <label name="lblPropertyName" depth="1" pos="0,-34" width="245" height="20" text="PROPERTY" font_size="15" color="140,140,140,255" />
+                        <label name="lblPropertyValue" depth="1" pos="255,-34" width="300" height="20" text="VALUE" font_size="15" color="140,140,140,255" />
+                        <rect depth="1" pos="0,-58" width="650" height="98" on_scroll="true">
+                            <defaultscrollbar />
+                            <scrollview name="propertyScrollView" width="630" clippingsoftness="0,10">
+                                <grid name="propertyGrid" pos="0,0" rows="24" cols="1" cell_width="780" cell_height="32" arrangement="vertical" repeat_content="true">
+                                    <rect name="xmlPropertyEntry" controller="LizziesMod.XmlEditorPropertyEntryController, LizziesMod" width="780" height="28">
+                                        <textfield name="txtPropertyName" depth="1" pos="150,0" width="245" height="28" font_size="16" backgroundcolor="20,20,20,255" textcolor="255,255,255,255" active_text_color="255,255,255,255" caret_color="255,255,255,255" max_length="80" vk_propagates_events="false" />
+                                        <textfield name="txtPropertyValue" depth="1" pos="405,0" width="300" height="28" font_size="16" backgroundcolor="20,20,20,255" textcolor="255,255,255,255" active_text_color="255,255,255,255" caret_color="255,255,255,255" max_length="160" vk_propagates_events="false" />
+                                        <simplebutton name="btnRemoveProperty" depth="1" pos="715,0" width="65" height="28" font_size="16" caption="X" />
+                                    </rect>
+                                </grid>
+                            </scrollview>
+                        </rect>
+                    </rect>
+                    <label name="lblEditorStatus" depth="3" pos="30,-440" width="650" height="42" text="" font_size="17" justify="center" color="80,180,255,255" />
+                    <simplebutton name="btnCreateDefinition" depth="3" pos="30,-495" width="650" height="38" font_size="20" caption="CREATE GENERATED DEFINITION" />
+                    <simplebutton name="btnSaveDefinition" depth="3" pos="30,-495" width="650" height="38" font_size="20" caption="SAVE GENERATED DEFINITION" visible="false" />
+                    <simplebutton name="btnDeleteDefinition" depth="3" pos="30,-540" width="650" height="34" font_size="18" caption="REMOVE GENERATED DEFINITION" visible="false" />
+                </rect>
+
+                <simplebutton name="btnClose" depth="4" pos="20,-700" width="1260" height="40" font_size="24" caption="RETURN" />
+            </rect>
+        </window>
+    </append>
+
+    <append xpath="/windows">
+        <window name="windowModPortal" depth="200" width="1200" height="720" anchor="Center" cursor_area="true" lock_navigation="true" controller="LizziesMod.ModPortalUIController, LizziesMod">
+            <fullscreencollider color="0,0,0,220" />
+            <rect depth="0" pos="-600,360" width="1200" height="720">
+                <sprite depth="1" sprite="menu_empty" type="sliced" color="30,30,30,250" />
+                <sprite depth="2" sprite="menu_empty2px" type="sliced" color="255,180,0,255" fillcenter="false" />
+                <rect depth="3" pos="0,0" height="50">
+                    <sprite depth="1" sprite="menu_empty" type="sliced" color="0,0,0,255" />
+                    <label depth="2" pos="0,-10" width="1200" height="30" text="MOD PORTAL" font_size="32" justify="center" color="255,180,0,255" />
+                </rect>
+
+                <rect name="portalListPane" depth="3" pos="20,-70" width="390" height="560">
+                    <sprite depth="1" sprite="menu_empty" type="sliced" color="15,15,15,255" />
+                    <sprite depth="2" sprite="menu_empty2px" type="sliced" color="60,60,60,255" fillcenter="false" />
+                    <label depth="3" pos="12,-12" width="70" height="22" text="SEARCH" font_size="16" color="180,180,180,255" />
+                    <textfield name="txtPortalSearch" depth="3" pos="78,-10" width="300" height="28" font_size="16" backgroundcolor="20,20,20,255" textcolor="255,255,255,255" active_text_color="255,255,255,255" caret_color="255,255,255,255" max_length="80" vk_propagates_events="false" />
+                    <rect depth="3" pos="10,-52" width="370" height="440" on_scroll="true">
+                        <defaultscrollbar />
+                        <scrollview width="350" clippingsoftness="0,10">
+                            <grid name="portalPackageGrid" pos="0,0" rows="50" cols="1" cell_width="340" cell_height="54" arrangement="vertical" repeat_content="true">
+                                <rect name="portalPackageEntry" controller="LizziesMod.ModPortalPackageEntryController, LizziesMod" width="340" height="50">
+                                    <button name="clickable" depth="1" width="340" height="50" sprite="menu_empty" type="sliced" defaultcolor="40,40,40,255" hovercolor="80,180,255,255" />
+                                    <label name="lblPortalPackageName" depth="2" pos="12,-6" width="315" height="24" text="PACKAGE" font_size="18" color="255,255,255,255" />
+                                    <label name="lblPortalPackageVersion" depth="2" pos="12,-30" width="315" height="18" text="VERSION" font_size="14" color="180,180,180,255" />
+                                    <sprite name="sprSelected" depth="3" pos="0,-47" width="340" height="3" sprite="menu_empty" type="sliced" color="255,180,0,255" visible="false" />
+                                </rect>
+                            </grid>
+                        </scrollview>
+                    </rect>
+                    <rect depth="3" pos="10,-510" width="370" height="36">
+                        <simplebutton name="btnPrevPortalPackages" depth="4" pos="0,0" width="90" height="32" font_size="16" caption="&lt; PREV" />
+                        <label name="lblPortalPageStatus" depth="4" pos="95,-7" width="180" height="22" text="NO PACKAGES" font_size="14" justify="center" color="200,200,200,255" />
+                        <simplebutton name="btnNextPortalPackages" depth="4" pos="280,0" width="90" height="32" font_size="16" caption="NEXT &gt;" />
+                    </rect>
+                </rect>
+
+                <rect name="portalDetailsPane" depth="3" pos="430,-70" width="750" height="560">
+                    <sprite depth="1" sprite="menu_empty" type="sliced" color="15,15,15,255" />
+                    <sprite depth="2" sprite="menu_empty2px" type="sliced" color="60,60,60,255" fillcenter="false" />
+                    <label name="lblPortalPackageTitle" depth="3" pos="15,-12" width="720" height="30" text="NO PACKAGE SELECTED" font_size="26" justify="center" color="255,180,0,255" />
+                    <label name="lblPortalPackageMeta" depth="3" pos="15,-48" width="720" height="22" text="" font_size="16" justify="center" color="200,200,200,255" />
+                    <label name="lblPortalPackageAuthor" depth="3" pos="15,-74" width="720" height="20" text="" font_size="16" justify="center" color="180,180,180,255" />
+                    <sprite depth="3" pos="20,-105" width="710" height="2" sprite="menu_empty1px" type="sliced" color="100,100,100,255" />
+                    <rect depth="3" pos="20,-122" width="710" height="190" on_scroll="true">
+                        <defaultscrollbar />
+                        <scrollview width="690" clippingsoftness="0,10">
+                            <label name="lblPortalPackageDescription" depth="4" pos="0,0" width="670" text="" font_size="20" justify="left" pivot="topleft" color="255,255,255,255" />
+                        </scrollview>
+                    </rect>
+                    <label name="lblPortalStatus" depth="3" pos="25,-345" width="700" height="72" text="" font_size="18" justify="center" color="80,180,255,255" />
+                    <simplebutton name="btnRefreshPortal" depth="3" pos="25,-435" width="220" height="40" font_size="20" caption="REFRESH CATALOG" />
+                    <simplebutton name="btnInstallPortalPackage" depth="3" pos="260,-435" width="465" height="40" font_size="20" caption="INSTALL XML PACKAGE" visible="false" />
+                </rect>
+
+                <simplebutton name="btnClose" depth="4" pos="20,-660" width="1160" height="40" font_size="24" caption="RETURN" />
+            </rect>
+        </window>
     </append>
 </configs>

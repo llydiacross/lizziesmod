@@ -45,6 +45,8 @@
     <Compile Include="Harmony\ModSaveManager.cs" />
     <Compile Include="Harmony\ModErrorHandler.cs" />
     <Compile Include="Harmony\ModPatcher.cs" />
+    <Compile Include="Harmony\ModPortalManager.cs" />
+    <Compile Include="Harmony\ModPortalUIController.cs" />
     <Compile Include="Harmony\BlockJukebox.cs" />
     <Compile Include="Harmony\CustomAudioManager.cs" />
     <Compile Include="Harmony\CustomInputBindingsUIController.cs" />
@@ -82,6 +84,8 @@
     <Compile Include="Harmony\SavePatcher.cs" />
     <Compile Include="Harmony\TeleportUIController.cs" />
     <Compile Include="Harmony\TimeManager.cs" />
+    <Compile Include="Harmony\UserXmlContentManager.cs" />
+    <Compile Include="Harmony\XmlEditorUIController.cs" />
     <Compile Include="Harmony\XmlTokenReplacer.cs" />
     <Compile Include="Harmony\XmlValidationRunner.cs" />
     <Compile Include="Harmony\NetPackagePhysicsPropCommand.cs" />

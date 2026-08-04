@@ -22,6 +22,8 @@ namespace LizziesMod
 
                 // Load Mod Settings Manager so we get our settings first
                 ModSettingsManager.LoadAllModSettings();
+                UserXmlContentManager.Initialize(modInstance);
+                ModPortalManager.Initialize(modInstance);
                 DimensionRegistry.Load(modInstance);
 
                 // Load the manuals for mods

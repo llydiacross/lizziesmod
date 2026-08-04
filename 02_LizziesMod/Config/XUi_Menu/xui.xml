@@ -12,6 +12,12 @@
         <window_group name="windowCustomInputs" actionset="true" close_comp_on_escape="true">
             <window name="windowCustomInputs" />
         </window_group>
+        <window_group name="windowXmlEditor" actionset="true" close_comp_on_escape="true">
+            <window name="windowXmlEditor" />
+        </window_group>
+        <window_group name="windowModPortal" actionset="true" close_comp_on_escape="true">
+            <window name="windowModPortal" />
+        </window_group>
         <window_group name="windowProfileSelector" actionset="true" close_comp_on_escape="true">
             <window name="windowProfileSelector" />
         </window_group>
