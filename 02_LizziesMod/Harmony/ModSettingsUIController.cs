@@ -5,9 +5,44 @@ using System.Collections.Generic;
 
 namespace LizziesMod
 {
+    internal static class InGameUiPause
+    {
+        private static int pauseOwners;
+
+        public static bool Acquire()
+        {
+            ConnectionManager connectionManager = SingletonMonoBehaviour<ConnectionManager>.Instance;
+            if (GameManager.Instance == null || GameManager.Instance.World == null ||
+                connectionManager == null || !connectionManager.IsServer || connectionManager.ClientCount() > 0)
+            {
+                return false;
+            }
+
+            if (pauseOwners == 0)
+            {
+                GameManager.Instance.Pause(_bOn: true);
+            }
+
+            pauseOwners++;
+            return true;
+        }
+
+        public static void Release(bool ownsPause)
+        {
+            if (!ownsPause || pauseOwners <= 0) return;
+
+            pauseOwners--;
+            if (pauseOwners == 0 && GameManager.Instance != null)
+            {
+                GameManager.Instance.Pause(_bOn: false);
+            }
+        }
+    }
+
     public class ModSettingsUIController : XUiController
     {
         public static string PreviousMenu = "";
+        public static string RequestedModName = "";
 
         private string selectedMod = "";
         public string SelectedMod => selectedMod;
@@ -22,8 +57,10 @@ namespace LizziesMod
         private XUiC_TextInput txtProfileName;
         private XUiController btnLoadProfile;
         private XUiController btnSaveProfile;
+        private XUiController btnEditInputs;
         public static string LastLoadedProfile = "";
         private bool isTransitioning = false;
+        private bool ownsGamePause;
 
         public override void Init()
         {
@@ -62,6 +99,12 @@ namespace LizziesMod
                     }
                 };
             }
+            btnEditInputs = GetChildById("btnEditInputs");
+            if (btnEditInputs != null)
+            {
+                XUiController clickable = btnEditInputs.GetChildById("clickable") ?? btnEditInputs;
+                clickable.OnPress += (s, e) => OpenSelectedModInputs();
+            }
             XUiController closeBtn = GetChildById("btnClose");
             if (closeBtn != null)
             {
@@ -73,6 +116,9 @@ namespace LizziesMod
         public override void OnClose()
         {
             base.OnClose();
+            InGameUiPause.Release(ownsGamePause);
+            ownsGamePause = false;
+
             if (isTransitioning)
             {
                 isTransitioning = false;
@@ -109,6 +155,7 @@ namespace LizziesMod
         {
             ModPatcher.ShowDisabledMods = true;
             base.OnOpen();
+            ownsGamePause = InGameUiPause.Acquire();
             PopulateModList();
             ModPatcher.ShowDisabledMods = false;
 
@@ -131,7 +178,13 @@ namespace LizziesMod
                 txtProfileName.Text = LastLoadedProfile;
             }
 
-            if (ModSettingsManager.AllModSettings.ContainsKey("LizziesMod"))
+            string requestedModName = RequestedModName;
+            RequestedModName = "";
+            if (!string.IsNullOrEmpty(requestedModName) && ModSettingsManager.AllModSettings.ContainsKey(requestedModName))
+            {
+                SelectMod(requestedModName);
+            }
+            else if (ModSettingsManager.AllModSettings.ContainsKey("LizziesMod"))
             {
                 SelectMod("LizziesMod");
             }
@@ -240,6 +293,7 @@ namespace LizziesMod
             }
 
             PopulateSettingsList();
+            UpdateEditInputsButton();
         }
 
         public void PopulateSettingsList()
@@ -285,11 +339,33 @@ namespace LizziesMod
                 }
             }
         }
+
+        private void UpdateEditInputsButton()
+        {
+            if (btnEditInputs?.viewComponent == null) return;
+
+            btnEditInputs.viewComponent.IsVisible = !string.IsNullOrEmpty(selectedMod) &&
+                CustomInputManager.GetInputsForMod(selectedMod).Count > 0;
+        }
+
+        private void OpenSelectedModInputs()
+        {
+            if (string.IsNullOrEmpty(selectedMod) || CustomInputManager.GetInputsForMod(selectedMod).Count == 0) return;
+
+            SaveCurrentSettingsUI();
+            isTransitioning = true;
+            RequestedModName = selectedMod;
+            CustomInputBindingsUIController.RequestedModName = selectedMod;
+            CustomInputBindingsUIController.PreviousMenu = "windowModSettings";
+            xui.playerUI.windowManager.Close("windowModSettings");
+            xui.playerUI.windowManager.Open(CustomInputBindingsUIController.WindowName, true);
+        }
     }
 
     public class RestartPromptUIController : XUiController
     {
         private bool isQuitting = false;
+        private bool ownsGamePause;
 
         public override void Init()
         {
@@ -300,6 +376,7 @@ namespace LizziesMod
                 XUiController clickable = btnYes.GetChildById("clickable") ?? btnYes;
                 clickable.OnPress += (s, e) =>
                 {
+                    isQuitting = true;
                     UnityEngine.Application.Quit();
                 };
             }
@@ -314,11 +391,19 @@ namespace LizziesMod
         public override void OnClose()
         {
             base.OnClose();
+            InGameUiPause.Release(ownsGamePause);
+            ownsGamePause = false;
             if (isQuitting) return;
 
             ModSettingsManager.PendingRestart = false;
             if (!string.IsNullOrEmpty(ModSettingsUIController.PreviousMenu))
-                xui.playerUI.windowManager.Open(ModSettingsUIController.PreviousMenu, false);
+                xui.playerUI.windowManager.Open(ModSettingsUIController.PreviousMenu, true);
+        }
+
+        public override void OnOpen()
+        {
+            base.OnOpen();
+            ownsGamePause = InGameUiPause.Acquire();
         }
     }
 
@@ -565,6 +650,18 @@ namespace LizziesMod
                     __instance.xui.playerUI.windowManager.Open("windowModSettings", true);
                 };
             }
+
+            XUiController btnLibrary = __instance.GetChildById("btnModLibrary");
+            if (btnLibrary != null)
+            {
+                XUiController clickable = btnLibrary.GetChildById("clickable") ?? btnLibrary;
+                clickable.OnPress += (s, e) =>
+                {
+                    ModLibraryUIController.PreviousMenu = __instance.WindowGroup.Id;
+                    __instance.xui.playerUI.windowManager.Close(__instance.WindowGroup.Id);
+                    __instance.xui.playerUI.windowManager.Open("windowModLibrary", true);
+                };
+            }
         }
     }
 
@@ -596,6 +693,8 @@ namespace LizziesMod
                     __instance.xui.playerUI.windowManager.Open("windowModLibrary", true);
                 };
             }
+
+                XmlValidationRunner.Start(__instance.xui);
         }
     }
 }

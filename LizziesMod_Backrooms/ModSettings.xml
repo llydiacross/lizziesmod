@@ -1,0 +1,8 @@
+<ModSettings>
+  <Setting name="MainFloorY" value="59" type="int" requiresRestart="true" />
+  <Setting name="StoreyHeight" value="8" type="int" requiresRestart="true" />
+  <Setting name="PitDepth" value="5" type="int" requiresRestart="true" />
+  <Setting name="BasementCorridorHeight" value="4" type="int" requiresRestart="true" />
+  <Setting name="SplitLevelDepth" value="4" type="int" requiresRestart="true" />
+  <Setting name="Enabled" value="true" type="bool" requiresRestart="true" hidden="true" />
+</ModSettings>

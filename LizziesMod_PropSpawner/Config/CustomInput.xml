@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CustomInputs>
+  <Input
+      name="openSpawnMenu"
+      category="Spawn Menu"
+      description="Open the Spawn Menu"
+      keys="Ctrl+P" />
+</CustomInputs>

@@ -1,5 +1,4 @@
 ﻿using HarmonyLib;
-using LizziesMod.Harmony;
 using UnityEngine;
 
 namespace LizziesMod
@@ -18,11 +17,12 @@ namespace LizziesMod
 
                 Application.logMessageReceivedThreaded += ModErrorHandler.LogCallback;
 
-                // Load our custom changes
-                ModTextures.Init(modInstance);
+                // Discover custom paints before the game builds its texture atlas.
+                CustomTextureManager.LoadAllTextures();
 
                 // Load Mod Settings Manager so we get our settings first
                 ModSettingsManager.LoadAllModSettings();
+                DimensionRegistry.Load(modInstance);
 
                 // Load the manuals for mods
                 ModManualManager.LoadAllManuals();
@@ -33,6 +33,7 @@ namespace LizziesMod
                     if (int.TryParse(newValue, out int parsed))
                     {
                         TimeManager.Init(parsed);
+                        YearHUDUIController.RequestDisplayFade();
                         try
                         {
                             TimeManager.UpdateCurrentYear();
@@ -47,6 +48,9 @@ namespace LizziesMod
                 // Create the audio manager game object and add the CustomAudioManager component
                 GameObject audioManagerGO = new GameObject("LizziesAudioManager");
                 audioManagerGO.AddComponent<CustomAudioManager>();
+
+                CustomInputManager.Initialize();
+                SpawnMenuUIController.RegisterInput();
 
                 // Patch Harmony
                 const string id = "uk.co.llydia.7daystodie.mods.lizziesmod";

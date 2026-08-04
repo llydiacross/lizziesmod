@@ -1,0 +1,100 @@
+<SpawnableProps>
+    <Categories>
+        <Category id="industrial" name="Industrial" order="10" />
+        <Category id="furniture" name="Furniture" order="20" />
+        <Category id="debris" name="Debris" order="30" />
+    </Categories>
+    <Props>
+          <Prop id="industrial.metalBarrel"
+              block="cntBarrelMetalMaster"
+              category="industrial"
+              displayName="Metal Barrel"
+              tags="industrial,barrel,metal"
+              mass="18"
+              thumbnail="cntBarrelMetalMaster" />
+          <Prop id="industrial.plasticBarrel"
+              block="cntBarrelPlasticSingle00"
+              category="industrial"
+              displayName="Plastic Barrel"
+              tags="industrial,barrel,plastic"
+              mass="8"
+              thumbnail="cntBarrelPlasticSingle00" />
+          <Prop id="industrial.wineBarrel"
+              block="wineBarrel"
+              category="industrial"
+              displayName="Wine Barrel"
+              tags="industrial,barrel,wood"
+              mass="20"
+              thumbnail="wineBarrel" />
+          <Prop id="industrial.reptileTerrarium"
+              block="decoReptileTerrarium"
+              category="industrial"
+              displayName="Reptile Terrarium"
+              tags="industrial,glass,decor"
+              mass="15"
+              thumbnail="decoReptileTerrarium" />
+          <Prop id="furniture.endTable"
+              block="endTable"
+              category="furniture"
+              displayName="End Table"
+              tags="furniture,table,wood"
+              mass="14"
+              thumbnail="endTable" />
+          <Prop id="furniture.diningTable"
+              block="diningTable01"
+              category="furniture"
+              displayName="Dining Table"
+              tags="furniture,table,wood"
+              mass="28"
+              thumbnail="diningTable01" />
+          <Prop id="furniture.picnicTable"
+              block="decoPicnicTable"
+              category="furniture"
+              displayName="Picnic Table"
+              tags="furniture,table,outdoor"
+              mass="32"
+              thumbnail="decoPicnicTable" />
+          <Prop id="furniture.officeChair"
+              block="officeChair01"
+              category="furniture"
+              displayName="Office Chair"
+              tags="furniture,chair,office"
+              mass="12"
+              thumbnail="officeChair01" />
+          <Prop id="furniture.woodChair"
+              block="chairWood01"
+              category="furniture"
+              displayName="Wooden Chair"
+              tags="furniture,chair,wood"
+              mass="10"
+              thumbnail="chairWood01" />
+          <Prop id="furniture.campingChair"
+              block="chairCampingWhite"
+              category="furniture"
+              displayName="Camping Chair"
+              tags="furniture,chair,camping"
+              mass="7"
+              thumbnail="chairCampingWhite" />
+          <Prop id="furniture.wheelchair"
+              block="wheelchairWhite"
+              category="furniture"
+              displayName="Wheelchair"
+              tags="furniture,medical,wheels"
+              mass="18"
+              thumbnail="wheelchairWhite" />
+          <Prop id="debris.garbagePile"
+              block="garbage_decor1"
+              category="debris"
+              displayName="Garbage Pile"
+              tags="debris,garbage,trash"
+              mass="6"
+              thumbnail="garbage_decor1" />
+          <Prop id="debris.trashPile"
+              block="garbage_decor3"
+              category="debris"
+              displayName="Trash Pile"
+              tags="debris,garbage,trash"
+              mass="6"
+              thumbnail="garbage_decor3" />
+    </Props>
+</SpawnableProps>

@@ -18,23 +18,6 @@ namespace LizziesMod
             string itemName = itemValue != null ? itemValue.ItemClass.GetItemName() : "";
 
 
-            if (itemName == "crystalFluxTeleporter")
-            {
-                if (!SingletonMonoBehaviour<ConnectionManager>.Instance.IsServer || SingletonMonoBehaviour<ConnectionManager>.Instance.ClientCount() > 0)
-                {
-                    GameManager.ShowTooltip(player, "Temporal shifts are too unstable for Multiplayer! Single player only.");
-                    player.PlayOneShot("ui_denied");
-                    return;
-                }
-            }
-
-            if (!ModSettingsManager.GetSetting<bool>("LizziesMod", "EnableTimeParadox"))
-            {
-                GameManager.ShowTooltip(player, "Time Travel paradoxes are disabled!");
-                player.PlayOneShot("ui_denied");
-                return;
-            }
-
             if (itemValue.UseTimes >= itemValue.MaxUseTimes)
             {
                 GameManager.ShowTooltip(player, "Device out of charge!");

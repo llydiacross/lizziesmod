@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<xml>
+    <Name value="LizziesMod_PropSpawner" />
+    <DisplayName value="Spawn Menu" />
+    <Description value="Adds a categorized prop, ragdoll, and NPC spawn menu for LizziesMod." />
+    <Author value="llydia" />
+    <Version value="0.0.1" />
+    <Website value="https://llydia.gen-sys.uk" />
+    <SkipWithAntiCheat value="true" />
+</xml>

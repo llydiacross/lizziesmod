@@ -3,7 +3,7 @@
 
 		<!-- Portal to hell -->
 		<block name="dimensionalPortal">
-			<property name="Class" value="LizziesMod.DimensionalPortal, LizziesMod" />
+			<property name="Class" value="LizziesMod.BlockDimensionalPortal, LizziesMod" />
 			<property name="Material" value="Mmetal" />
 			<property name="Shape" value="ModelEntity" />
 			<property name="Model" value="#Entities/LootContainers?weapon_bags_largePrefab.prefab" /> <!-- Use your custom portal model here later -->

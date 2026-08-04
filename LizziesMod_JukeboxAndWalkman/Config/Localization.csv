@@ -3,3 +3,9 @@ blockJukebox,blocks,Block,,,Jukebox
 blockJukeboxDesc,blocks,Desc,,,A jukebox so you can listen to music with your friends...
 manualJukebox,blocks,Block,,,How To Use: Jukebox & Walkman
 manualukeboxDesc,blocks,Desc,,,"README"
+itemWalkman,items,Item,,,Walkman
+itemWalkmanDesc,items,Desc,,,A portable cassette player. Keep it in your inventory to play cassettes.
+cassette_ExplanationOfAnEntity,items,Item,,,Cassette: Explanation of an Entity
+cassette_ExplanationOfAnEntityDesc,items,Desc,,,A reusable cassette by LLYDIA.
+musicDisc_TestTrack,items,Item,,,Music Disc: Explanation of an Entity
+musicDisc_TestTrackDesc,items,Desc,,,Insert this disc into a powered Jukebox to unlock its track.

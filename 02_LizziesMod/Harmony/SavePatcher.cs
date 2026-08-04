@@ -1,27 +1,31 @@
 ﻿using HarmonyLib;
-using System.IO;
+using System;
 
 namespace LizziesMod
 {
-    [HarmonyPatch(typeof(GameIO), "GetSaveGameRegionDir")]
-    public class GameIO_GetSaveGameRegionDir_Patch
+    [HarmonyPatch(typeof(GameIO), "GetSaveGameDir", new Type[0])]
+    public class GameIO_GetSaveGameDir_Patch
     {
         public static void Postfix(ref string __result)
         {
 
-            if (TimeManager.currentYear != 0 || TimeManager.currentDimension != "Overworld")
+            if (!LizziesMod.ModSettingsManager.GetSetting<bool>("LizziesMod", "ExperimentalFeatures") ||
+                DimensionManager.IsOverworld(DimensionManager.ActiveDimensionId))
             {
-                string yearStr = TimeManager.GetGameYear().ToString();
-                string dimStr = TimeManager.currentDimension;
-
-                __result = __result + "_" + dimStr + "_" + yearStr;
-
-                if (!Directory.Exists(__result))
-                {
-                    Directory.CreateDirectory(__result);
-                    Logger.Info($"[DimensionManager] Timeline/Dimension diverging. Created new region directory: {__result}");
-                }
+                return;
             }
+
+            string dimensionSaveDirectory;
+            if (DimensionStorage.TryGetDimensionSaveDirectory(
+                __result,
+                DimensionManager.ActiveDimensionId,
+                out dimensionSaveDirectory))
+            {
+                __result = dimensionSaveDirectory;
+                return;
+            }
+
+            Logger.Error($"[DimensionManager] No verified save snapshot exists for '{DimensionManager.ActiveDimensionId}'. Keeping the Overworld save directory.");
         }
     }
 }

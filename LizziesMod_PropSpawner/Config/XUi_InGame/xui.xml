@@ -1,0 +1,7 @@
+<configs>
+    <append xpath="/xui">
+        <window_group name="windowSpawnMenu" actionset="true" close_comp_on_escape="true">
+            <window name="windowSpawnMenu" />
+        </window_group>
+    </append>
+</configs>

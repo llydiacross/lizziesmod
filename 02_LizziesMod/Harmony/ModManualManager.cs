@@ -20,6 +20,29 @@ namespace LizziesMod
         public Vector2i? ImageSize;
         public Vector2i? TextPos;
         public Vector2i? TextSize;
+        public Vector2i? CanvasSize;
+        public List<ReadmeTextArea> TextAreas = new List<ReadmeTextArea>();
+        public List<ReadmeImage> Images = new List<ReadmeImage>();
+
+        public bool UsesReadmeLayout => TextAreas.Count > 0 || Images.Count > 0;
+    }
+
+    public class ReadmeTextArea
+    {
+        public string Id;
+        public string Text;
+        public string Font;
+        public string TextColor;
+        public Vector2i Position;
+        public Vector2i Size;
+    }
+
+    public class ReadmeImage
+    {
+        public string Id;
+        public string Source;
+        public Vector2i Position;
+        public Vector2i Size;
     }
 
     public class ModBook
@@ -114,7 +137,6 @@ namespace LizziesMod
                             {
                                 Title = pageNode.Attributes["title"]?.Value ?? "",
                                 ImageName = pageNode.Attributes["image"]?.Value ?? "",
-                                Text = pageNode.InnerText?.Trim() ?? "",
 
                                 Background = pageNode.Attributes["background"]?.Value ?? book.DefaultBackground,
                                 Font = pageNode.Attributes["font"]?.Value ?? book.DefaultFont,
@@ -125,6 +147,14 @@ namespace LizziesMod
                                 TextPos = ParseVector2i(pageNode.Attributes["text_pos"]?.Value),
                                 TextSize = ParseVector2i(pageNode.Attributes["text_size"]?.Value)
                             };
+
+                            if (book.IsReadme)
+                            {
+                                page.CanvasSize = ParseVector2i(pageNode.Attributes["canvas_size"]?.Value);
+                                ParseReadmeLayout(pageNode, page, manualPath, book);
+                            }
+
+                            page.Text = page.UsesReadmeLayout ? "" : pageNode.InnerText?.Trim() ?? "";
 
                             book.Pages.Add(page);
                         }
@@ -141,6 +171,82 @@ namespace LizziesMod
                     Logger.Error($"[ModManualManager] Failed to parse ModManual.xml for {mod.Name}: {e.Message}");
                 }
             }
+        }
+
+        private static void ParseReadmeLayout(XmlNode pageNode, ModPage page, string manualPath, ModBook book)
+        {
+            HashSet<string> elementIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            int textAreaIndex = 0;
+            int imageIndex = 0;
+
+            foreach (XmlNode elementNode in pageNode.ChildNodes)
+            {
+                if (elementNode.Name == "TextArea")
+                {
+                    string id = elementNode.Attributes["id"]?.Value ?? "text-" + (++textAreaIndex);
+                    if (!elementIds.Add(id))
+                    {
+                        Logger.Warning($"[ModLibrary] Ignoring duplicate README element id '{id}' in '{manualPath}'.");
+                        continue;
+                    }
+
+                    if (!TryParseReadmeElementBounds(elementNode, manualPath, id, out Vector2i position, out Vector2i size)) continue;
+
+                    page.TextAreas.Add(new ReadmeTextArea
+                    {
+                        Id = id,
+                        Text = elementNode.InnerText?.Trim() ?? "",
+                        Font = elementNode.Attributes["font"]?.Value ?? page.Font ?? book.DefaultFont,
+                        TextColor = elementNode.Attributes["text_color"]?.Value ?? page.TextColor ?? book.DefaultTextColor,
+                        Position = position,
+                        Size = size
+                    });
+                }
+                else if (elementNode.Name == "Image")
+                {
+                    string id = elementNode.Attributes["id"]?.Value ?? "image-" + (++imageIndex);
+                    if (!elementIds.Add(id))
+                    {
+                        Logger.Warning($"[ModLibrary] Ignoring duplicate README element id '{id}' in '{manualPath}'.");
+                        continue;
+                    }
+
+                    string source = elementNode.Attributes["source"]?.Value ?? "";
+                    if (string.IsNullOrWhiteSpace(source))
+                    {
+                        Logger.Warning($"[ModLibrary] Ignoring README image '{id}' in '{manualPath}' because source is missing.");
+                        continue;
+                    }
+
+                    if (!TryParseReadmeElementBounds(elementNode, manualPath, id, out Vector2i position, out Vector2i size)) continue;
+
+                    page.Images.Add(new ReadmeImage
+                    {
+                        Id = id,
+                        Source = source,
+                        Position = position,
+                        Size = size
+                    });
+                }
+            }
+        }
+
+        private static bool TryParseReadmeElementBounds(XmlNode elementNode, string manualPath, string elementId, out Vector2i position, out Vector2i size)
+        {
+            position = default(Vector2i);
+            size = default(Vector2i);
+
+            Vector2i? parsedPosition = ParseVector2i(elementNode.Attributes["pos"]?.Value);
+            Vector2i? parsedSize = ParseVector2i(elementNode.Attributes["size"]?.Value);
+            if (!parsedPosition.HasValue || !parsedSize.HasValue || parsedSize.Value.x <= 0 || parsedSize.Value.y <= 0)
+            {
+                Logger.Warning($"[ModLibrary] Ignoring README element '{elementId}' in '{manualPath}' because it needs valid pos and positive size attributes.");
+                return false;
+            }
+
+            position = parsedPosition.Value;
+            size = parsedSize.Value;
+            return true;
         }
     }
 }

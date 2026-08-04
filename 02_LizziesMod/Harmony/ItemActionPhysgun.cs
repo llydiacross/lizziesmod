@@ -1,28 +1,36 @@
-﻿using HarmonyLib;
-using System;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace LizziesMod
 {
-    public class ItemActionPhysgunData : ItemActionData
+    public class ItemActionPhysgunData : ScrollWheelActionData
     {
         public Entity GrabbedEntity;
         public Rigidbody GrabbedRigidbody;
         public GameObject LaserObj;
         public LineRenderer LaserRenderer;
+        public readonly Dictionary<Rigidbody, RigidbodyConstraints> GrabbedRigidbodyConstraints =
+            new Dictionary<Rigidbody, RigidbodyConstraints>();
         public float GrabDistance;
         public bool isHolding;
 
-        public ItemActionPhysgunData(ItemInventoryData _invData, int _indexInEntityOfAction) : base(_invData, _indexInEntityOfAction)
+        public ItemActionPhysgunData(ItemInventoryData _invData, int _indexInEntityOfAction, bool usesScrollWheel)
+            : base(_invData, _indexInEntityOfAction, usesScrollWheel)
         {
+        }
+
+        public override bool IsScrollWheelCaptureActive
+        {
+            get { return UsesScrollWheel && isHolding && GrabbedEntity != null; }
         }
     }
 
-    public class ItemActionPhysgun : ItemAction
+    public class ItemActionPhysgun : ItemActionWithScrollWheel
     {
         public override ItemActionData CreateModifierData(ItemInventoryData _invData, int _indexInEntityOfAction)
         {
-            return new ItemActionPhysgunData(_invData, _indexInEntityOfAction);
+            return new ItemActionPhysgunData(_invData, _indexInEntityOfAction, UsesScrollWheel);
         }
 
         public override void ExecuteAction(ItemActionData _actionData, bool _bReleased)
@@ -92,6 +100,8 @@ namespace LizziesMod
                 ReleaseEntity(player, data, false);
                 return;
             }
+
+            LockGrabbedRotation(data);
 
             // freeze
             if (Input.GetMouseButtonDown(1))
@@ -197,7 +207,7 @@ namespace LizziesMod
                     data.GrabbedRigidbody.WakeUp();
                     Vector3 direction = targetPosition - data.GrabbedRigidbody.position;
                     data.GrabbedRigidbody.velocity = direction * 15f;
-                    data.GrabbedRigidbody.angularVelocity = Vector3.Lerp(data.GrabbedRigidbody.angularVelocity, Vector3.zero, Time.deltaTime * 5f);
+                    data.GrabbedRigidbody.angularVelocity = Vector3.zero;
                 }
                 else
                 {
@@ -260,6 +270,8 @@ namespace LizziesMod
                         data.GrabbedRigidbody.WakeUp();
                     }
 
+                    LockGrabbedRotation(data);
+
                     // add a nice shock effect
                     if (hitEntity is EntityAlive aliveTarget)
                     {
@@ -282,7 +294,6 @@ namespace LizziesMod
                     }
 
                     data.isHolding = true;
-                    SetWeaponScrollEnabled(player, false);
 
                     // drain charge a bit
                     if (itemValue != null)
@@ -298,28 +309,8 @@ namespace LizziesMod
             }
         }
 
-        // disables the weapon from being able to scroll
-        private void SetWeaponScrollEnabled(EntityPlayerLocal player, bool enabled)
-        {
-            if (player != null && player.playerInput != null)
-            {
-
-                if (player.playerInput.InventorySlotLeft != null)
-                    player.playerInput.InventorySlotLeft.Enabled = enabled;
-
-                if (player.playerInput.InventorySlotRight != null)
-                    player.playerInput.InventorySlotRight.Enabled = enabled;
-
-                player.playerInput.Scroll.Enabled = enabled;
-            }
-        }
-
         private void ReleaseEntity(EntityPlayerLocal player, ItemActionPhysgunData data, bool isFrozen, bool removeBuff = true)
         {
-
-            // allow scrolling
-            SetWeaponScrollEnabled(player, true);
-
             if (data.GrabbedEntity != null)
             {
 
@@ -360,6 +351,7 @@ namespace LizziesMod
                         data.GrabbedRigidbody.isKinematic = false;
                     }
                 }
+                RestoreGrabbedRotation(data);
                 data.GrabbedEntity = null;
                 data.GrabbedRigidbody = null;
             }
@@ -372,6 +364,37 @@ namespace LizziesMod
             }
 
             data.isHolding = false;
+        }
+
+        private static void LockGrabbedRotation(ItemActionPhysgunData data)
+        {
+            if (data.GrabbedEntity == null) return;
+
+            foreach (Rigidbody rigidbody in data.GrabbedEntity.GetComponentsInChildren<Rigidbody>())
+            {
+                if (rigidbody == null) continue;
+
+                if (!data.GrabbedRigidbodyConstraints.ContainsKey(rigidbody))
+                {
+                    data.GrabbedRigidbodyConstraints.Add(rigidbody, rigidbody.constraints);
+                }
+
+                rigidbody.angularVelocity = Vector3.zero;
+                rigidbody.constraints |= RigidbodyConstraints.FreezeRotation;
+            }
+        }
+
+        private static void RestoreGrabbedRotation(ItemActionPhysgunData data)
+        {
+            foreach (KeyValuePair<Rigidbody, RigidbodyConstraints> entry in data.GrabbedRigidbodyConstraints)
+            {
+                if (entry.Key == null) continue;
+
+                entry.Key.angularVelocity = Vector3.zero;
+                entry.Key.constraints = entry.Value;
+            }
+
+            data.GrabbedRigidbodyConstraints.Clear();
         }
 
         private void UpdateLaser(EntityPlayerLocal player, ItemActionPhysgunData data)
@@ -407,55 +430,6 @@ namespace LizziesMod
                 data.LaserRenderer.SetPosition(0, startPos);
                 data.LaserRenderer.SetPosition(1, endPos);
             }
-        }
-    }
-
-    // disable scrolling for this weapon
-
-    [HarmonyPatch(typeof(XUiC_Toolbelt), "Update")]
-    public class XUiC_Toolbelt_Update_Patch
-    {
-        public static bool Prefix(XUiC_Toolbelt __instance)
-        {
-            var player = __instance.xui?.playerUI?.entityPlayer;
-            if (player != null && player.inventory != null)
-            {
-                var holdingData = player.inventory.holdingItemData;
-                if (holdingData != null && holdingData.actionData != null && holdingData.actionData.Count > 0)
-                {
-                    var physgunData = holdingData.actionData[0] as ItemActionPhysgunData;
-                    if (physgunData != null && physgunData.GrabbedEntity != null && physgunData.isHolding)
-                    {
-                        
-                        return false;
-                    }
-                }
-            }
-            return true;
-        }
-    }
-    
-    // further disabling of scrolling
-
-    [HarmonyPatch(typeof(Inventory), "SetHoldingItemIdx")]
-    public class Inventory_SetHoldingItemIdx_Patch
-    {
-        public static bool Prefix(Inventory __instance)
-        {
-            if (__instance.entity is EntityPlayerLocal)
-            {
-                if (__instance.holdingItemData != null &&
-                    __instance.holdingItemData.actionData != null &&
-                    __instance.holdingItemData.actionData.Count > 0)
-                {
-                    var physgunData = __instance.holdingItemData.actionData[0] as ItemActionPhysgunData;
-                    if (physgunData != null && physgunData.GrabbedEntity != null && physgunData.isHolding)
-                    {
-                        return false;
-                    }
-                }
-            }
-            return true;
         }
     }
 }

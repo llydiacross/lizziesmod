@@ -1,0 +1,8 @@
+<configs>
+    <append xpath="/entity_classes">
+        <entity_class name="lmPhysicsProp" extends="fallingBlock">
+            <property name="Class" value="LizziesMod.EntityPhysicsProp, LizziesMod" />
+            <property name="UserSpawnType" value="None" />
+        </entity_class>
+    </append>
+</configs>

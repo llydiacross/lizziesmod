@@ -16,6 +16,7 @@ namespace LizziesMod
         private XUiV_Label lblPageTitle;
         private XUiV_Label lblPageText;
         private XUiV_Texture imgPageDiagram;
+        private bool ownsGamePause;
 
         public override void Init()
         {
@@ -34,6 +35,7 @@ namespace LizziesMod
         public override void OnOpen()
         {
             base.OnOpen();
+            ownsGamePause = InGameUiPause.Acquire();
 
             if (!ModManualManager.AllBooks.TryGetValue(CurrentBookID, out currentBook))
             {
@@ -47,6 +49,13 @@ namespace LizziesMod
             currentPageIndex = currentBook.StartPage;
             PopulatePageList();
             SelectPage(currentPageIndex);
+        }
+
+        public override void OnClose()
+        {
+            base.OnClose();
+            InGameUiPause.Release(ownsGamePause);
+            ownsGamePause = false;
         }
 
         public void PopulatePageList()

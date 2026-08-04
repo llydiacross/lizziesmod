@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomAudio>
+  <Track id="explanation-of-an-entity"
+         file="CustomAudio/LLYDIA - EXPLANATION OF AN ENTITY.ogg"
+         title="Explanation of an Entity"
+         artist="LLYDIA"
+         album="Singles"
+         track_number="1" />
+</CustomAudio>

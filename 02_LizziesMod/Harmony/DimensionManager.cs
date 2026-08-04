@@ -1,79 +1,700 @@
-﻿using HarmonyLib;
-using InControl;
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Reflection;
+using HarmonyLib;
 using UnityEngine;
 
 namespace LizziesMod
 {
-
-    public class DimensionManager
+    public static class DimensionManager
     {
-        public static string currentDimension = "Overworld";
-        public static void SetCurrentDimension(string dimension)
+        public const string OverworldDimensionId = "Overworld";
+        private const float ChunkLoadTimeoutSeconds = 15f;
+        private const float ChunkCollisionTimeoutSeconds = 30f;
+        private const int ProviderSearchDepth = 3;
+        private const int ProviderSearchDiagnosticLimit = 24;
+
+        private static string activeDimensionId = OverworldDimensionId;
+        private static bool transitionInProgress;
+        private static ChunkProviderGenerateWorld storageBindingProvider;
+        private static readonly Dictionary<string, RegionStorageBinding> regionStorageBindings =
+            new Dictionary<string, RegionStorageBinding>(StringComparer.OrdinalIgnoreCase);
+
+        public static string ActiveDimensionId
         {
-            currentDimension = dimension;
-            Logger.Info($"[DimensionManager] Current dimension set to: {currentDimension}");
+            get { return activeDimensionId; }
         }
-        public static string GetCurrentDimension()
+
+        public static bool IsOverworld(string dimensionId)
         {
-            return currentDimension;
+            return OverworldDimensionId.Equals(dimensionId, System.StringComparison.OrdinalIgnoreCase);
         }
-    }
 
-    [HarmonyPatch(typeof(ChunkProviderGenerateWorld), "GenerateSingleChunk")]
-    public class HellDimension_ChunkGen_Patch
-    {
-        public static void Postfix(ChunkCluster cc, long key)
+        public static bool IsTransitionInProgress
         {
+            get { return transitionInProgress; }
+        }
 
+        public static bool IsActiveGenerator(string generatorId)
+        {
+            return !IsOverworld(activeDimensionId) && DimensionRegistry.UsesGenerator(activeDimensionId, generatorId);
+        }
 
-            Chunk chunk = cc.GetChunkSync(key);
-            if (chunk == null || TimeManager.currentDimension != "Hell") return;
+        public static string GetPortalActivationText()
+        {
+            if (transitionInProgress) return "Dimension Transition In Progress";
+            return IsOverworld(activeDimensionId)
+                ? "Enter " + DimensionRegistry.GetDefaultDefinition().DisplayName
+                : "Return to Overworld";
+        }
 
-            int idDirt = Block.GetBlockByName("terrDirt", true).blockID;
-            int idGrass = Block.GetBlockByName("terrForestGround", true).blockID;
-            int idSnow = Block.GetBlockByName("terrSnow", true).blockID;
-            int idSand = Block.GetBlockByName("terrDesertGround", true).blockID;
-            int idStone = Block.GetBlockByName("terrStone", true).blockID;
-            int idWater = Block.GetBlockByName("water", true).blockID;
-
-            BlockValue hellGround = Block.GetBlockValue("terrBurntForestGround");
-            BlockValue hellStone = Block.GetBlockValue("terrDestroyedStone");
-
-
-            BlockValue hellLiquid = Block.GetBlockValue("terrDestroyedWoodDebris");
-
-
-            for (int x = 0; x < 16; x++)
+        public static bool TrySetActiveDimension(string dimensionId)
+        {
+            DimensionDefinition definition;
+            if (!IsOverworld(dimensionId) && (!DimensionRegistry.TryGet(dimensionId, out definition) || !definition.IsSupported))
             {
-                for (int z = 0; z < 16; z++)
+                Logger.Error($"[DimensionManager] Rejected unsupported dimension '{dimensionId}'.");
+                return false;
+            }
+
+            activeDimensionId = IsOverworld(dimensionId) ? OverworldDimensionId : dimensionId;
+            Logger.Info($"[DimensionManager] Active dimension set to '{activeDimensionId}'.");
+            return true;
+        }
+
+        public static bool TryStartConfiguredDimension(EntityPlayerLocal player)
+        {
+            if (player == null) return false;
+
+            if (!ModSettingsManager.GetSetting<bool>("LizziesMod", "ExperimentalFeatures"))
+            {
+                GameManager.ShowTooltip(player, "Enable Experimental Features before testing dimensions.");
+                player.PlayOneShot("ui_denied");
+                return false;
+            }
+
+            ConnectionManager connectionManager = SingletonMonoBehaviour<ConnectionManager>.Instance;
+            if (connectionManager == null || !connectionManager.IsServer || connectionManager.ClientCount() > 0)
+            {
+                GameManager.ShowTooltip(player, "The save snapshot test is single-player only.");
+                player.PlayOneShot("ui_denied");
+                return false;
+            }
+
+            if (transitionInProgress)
+            {
+                GameManager.ShowTooltip(player, "A dimension transition is already in progress.");
+                player.PlayOneShot("ui_denied");
+                return false;
+            }
+
+            DimensionDefinition defaultDefinition = DimensionRegistry.GetDefaultDefinition();
+            if (!defaultDefinition.IsSupported)
+            {
+                GameManager.ShowTooltip(player, $"The '{defaultDefinition.DisplayName}' generator is not implemented yet.");
+                player.PlayOneShot("ui_denied");
+                return false;
+            }
+
+            string targetDimension = IsOverworld(activeDimensionId)
+                ? defaultDefinition.Id
+                : OverworldDimensionId;
+
+            GameManager.Instance.StartCoroutine(SwitchDimension(player, player.position, targetDimension));
+            return true;
+        }
+
+        private static IEnumerator SwitchDimension(EntityPlayerLocal player, Vector3 destination, string targetDimension)
+        {
+            string previousDimension = activeDimensionId;
+            Vector3 previousPosition = player.position;
+            ChunkCluster chunkCache = null;
+            IChunkProvider chunkProvider = null;
+            ChunkProviderRebuildContext providerRebuildContext = null;
+            vp_FPController playerController = null;
+            bool playerControllerWasEnabled = false;
+            bool changedDimension = false;
+            string error = "";
+
+            transitionInProgress = true;
+            player.Buffs.AddBuff("buffFluxTeleporting");
+            GameManager.ShowTooltip(player, "Preparing dimension transition...");
+
+            try
+            {
+                chunkCache = GameManager.Instance.World != null ? GameManager.Instance.World.ChunkCache : null;
+                if (chunkCache == null)
                 {
-
-                    int terrainHeight = chunk.GetTerrainHeight(x, z);
-
-                    for (int y = 0; y <= terrainHeight; y++)
+                    error = "The world chunk cache is unavailable.";
+                }
+                else
+                {
+                    chunkProvider = GetActiveChunkProvider(chunkCache);
+                    if (chunkProvider == null)
                     {
-                        BlockValue currentBlock = chunk.GetBlock(x, y, z);
+                        error = "The active world did not expose a chunk provider. No chunks were changed.";
+                    }
+                    else if (!TryCreateProviderRebuildContext(chunkCache, chunkProvider, out providerRebuildContext, out error))
+                    {
+                        Logger.Error("[DimensionManager] " + error);
+                    }
+                }
+            }
+            catch (Exception exception)
+            {
+                error = exception.Message;
+                Logger.Error($"[DimensionManager] Could not prepare the chunk provider rebuild: {exception}");
+            }
 
-                        if (currentBlock.type == idGrass || currentBlock.type == idDirt ||
-                            currentBlock.type == idSnow || currentBlock.type == idSand)
+            try
+            {
+                if (string.IsNullOrEmpty(error)) GameManager.Instance.SaveWorld();
+            }
+            catch (Exception exception)
+            {
+                error = exception.Message;
+                Logger.Error($"[DimensionManager] Could not save before the save snapshot transition: {exception}");
+            }
+
+            if (string.IsNullOrEmpty(error)) yield return null;
+
+            if (string.IsNullOrEmpty(error))
+            {
+                if (IsOverworld(previousDimension) && !IsOverworld(targetDimension))
+                {
+                    string overworldSaveDirectory = GameIO.GetSaveGameDir();
+                    DimensionDefinition targetDefinition;
+                    DimensionGeneratorDefinition targetGenerator;
+                    if (!DimensionRegistry.TryGet(targetDimension, out targetDefinition) ||
+                        !DimensionGeneratorRegistry.TryGet(targetDefinition.GeneratorId, out targetGenerator))
+                    {
+                        error = "The target dimension definition is unavailable.";
+                    }
+                    else if (!DimensionStorage.HasSaveSnapshot(overworldSaveDirectory, targetDimension))
+                    {
+                        if (!ModSaveManager.BackupSaveDirectory(overworldSaveDirectory, "Before save snapshot dimension test"))
                         {
-                            chunk.SetBlock(GameManager.Instance.World, x, y, z, hellGround);
+                            error = "Could not create a safety backup before the save snapshot test.";
                         }
-
-                        else if (currentBlock.type == idStone)
+                        else if (!(targetGenerator.SaveMode == DimensionSaveMode.Generated
+                            ? DimensionStorage.TryCreateGeneratedDimensionSave(overworldSaveDirectory, targetDimension, out error)
+                            : DimensionStorage.TryCreateSaveSnapshot(overworldSaveDirectory, targetDimension, out error)))
                         {
-                            chunk.SetBlock(GameManager.Instance.World, x, y, z, hellStone);
-                        }
-
-                        else if (currentBlock.type == idWater)
-                        {
-                            chunk.SetBlock(GameManager.Instance.World, x, y, z, hellLiquid);
+                            error = "Could not create the dimension save: " + error;
                         }
                     }
                 }
             }
 
-            Logger.Info($"[DimensionManager] Successfully corrupted Chunk ({chunk.X}, {chunk.Z}).");
+            if (string.IsNullOrEmpty(error))
+            {
+                try
+                {
+                    playerController = player.m_vp_FPController;
+                    if (playerController != null)
+                    {
+                        playerControllerWasEnabled = playerController.enabled;
+                        playerController.enabled = false;
+                    }
+                    player.SetControllable(false);
+
+                    if (!TryUnloadActiveChunks(chunkCache, out error))
+                    {
+                    }
+                    else if (!TrySetActiveDimension(targetDimension))
+                    {
+                        error = "The target dimension ID was rejected.";
+                    }
+                    else
+                    {
+                        changedDimension = true;
+                    }
+                }
+                catch (Exception exception)
+                {
+                    error = exception.Message;
+                    Logger.Error($"[DimensionManager] Could not initialize the destination save snapshot: {exception}");
+                }
+            }
+
+            if (string.IsNullOrEmpty(error) && changedDimension)
+            {
+                yield return RebuildChunkCache(providerRebuildContext);
+                if (!string.IsNullOrEmpty(providerRebuildContext.Error))
+                {
+                    error = providerRebuildContext.Error;
+                }
+                else
+                {
+                    try
+                    {
+                        chunkProvider = providerRebuildContext.ChunkProvider;
+                        Vector3 destinationPosition = GetDestinationPosition(targetDimension, destination);
+                        player.SetPosition(destinationPosition, true);
+
+                        int chunkX = World.toChunkXZ(Mathf.FloorToInt(destinationPosition.x));
+                        int chunkZ = World.toChunkXZ(Mathf.FloorToInt(destinationPosition.z));
+                        RequestChunk(chunkProvider, chunkX, chunkZ);
+                    }
+                    catch (Exception exception)
+                    {
+                        error = exception.Message;
+                        Logger.Error($"[DimensionManager] Could not request the destination chunk: {exception}");
+                    }
+                }
+            }
+
+            if (string.IsNullOrEmpty(error) && chunkCache != null)
+            {
+                Vector3 destinationPosition = GetDestinationPosition(targetDimension, destination);
+                int chunkX = World.toChunkXZ(Mathf.FloorToInt(destinationPosition.x));
+                int chunkZ = World.toChunkXZ(Mathf.FloorToInt(destinationPosition.z));
+                float timeoutAt = Time.realtimeSinceStartup + ChunkLoadTimeoutSeconds;
+                Chunk destinationChunk = null;
+                while ((destinationChunk = chunkCache.GetChunkSync(chunkX, chunkZ)) == null && Time.realtimeSinceStartup < timeoutAt)
+                {
+                    yield return null;
+                }
+
+                if (destinationChunk == null)
+                {
+                    error = "The destination chunk did not load before the timeout.";
+                }
+                else
+                {
+                    timeoutAt = Time.realtimeSinceStartup + ChunkCollisionTimeoutSeconds;
+                    while (!destinationChunk.IsCollisionMeshGenerated && Time.realtimeSinceStartup < timeoutAt)
+                    {
+                        yield return null;
+                    }
+
+                    if (!destinationChunk.IsCollisionMeshGenerated)
+                    {
+                        error = "The destination chunk did not build collision before the timeout.";
+                    }
+                }
+            }
+
+            if (!string.IsNullOrEmpty(error) && changedDimension)
+            {
+                bool rollbackChunkRequested = false;
+                int rollbackChunkX = 0;
+                int rollbackChunkZ = 0;
+                TrySetActiveDimension(previousDimension);
+                yield return RebuildChunkCache(providerRebuildContext);
+                if (string.IsNullOrEmpty(providerRebuildContext.Error))
+                {
+                    try
+                    {
+                        chunkProvider = providerRebuildContext.ChunkProvider;
+                        player.SetPosition(previousPosition, true);
+
+                        rollbackChunkX = World.toChunkXZ(Mathf.FloorToInt(previousPosition.x));
+                        rollbackChunkZ = World.toChunkXZ(Mathf.FloorToInt(previousPosition.z));
+                        RequestChunk(chunkProvider, rollbackChunkX, rollbackChunkZ);
+                        rollbackChunkRequested = true;
+                    }
+                    catch (Exception exception)
+                    {
+                        Logger.Error($"[DimensionManager] Could not request the rollback chunk: {exception}");
+                    }
+                }
+                else
+                {
+                    Logger.Error($"[DimensionManager] Could not rebuild the Overworld provider during rollback: {providerRebuildContext.Error}");
+                }
+
+                if (rollbackChunkRequested)
+                {
+                    float rollbackTimeoutAt = Time.realtimeSinceStartup + ChunkLoadTimeoutSeconds;
+                    while (chunkCache.GetChunkSync(rollbackChunkX, rollbackChunkZ) == null && Time.realtimeSinceStartup < rollbackTimeoutAt)
+                    {
+                        yield return null;
+                    }
+
+                    if (chunkCache.GetChunkSync(rollbackChunkX, rollbackChunkZ) == null)
+                    {
+                        Logger.Error("[DimensionManager] The Overworld rollback chunk did not load before the timeout.");
+                    }
+                }
+            }
+
+            if (playerController != null) playerController.enabled = playerControllerWasEnabled;
+            player.SetControllable(true);
+            player.Buffs.RemoveBuff("buffFluxTeleporting");
+            transitionInProgress = false;
+
+            if (string.IsNullOrEmpty(error))
+            {
+                player.PlayOneShot("weapon_electric_charge");
+                string message = IsOverworld(activeDimensionId)
+                    ? "Returned to the Overworld save."
+                    : GetActiveDimensionDisplayName() + " loaded. Realm blocks and world entities are isolated.";
+                GameManager.ShowTooltip(player, message);
+            }
+            else
+            {
+                player.PlayOneShot("ui_denied");
+                GameManager.ShowTooltip(player, "Dimension transition failed: " + error);
+            }
+        }
+
+        private static bool TryCreateProviderRebuildContext(ChunkCluster chunkCache, IChunkProvider chunkProvider, out ChunkProviderRebuildContext rebuildContext, out string error)
+        {
+            rebuildContext = null;
+            error = "";
+
+            ChunkProviderGenerateWorld generatedWorldProvider = chunkProvider as ChunkProviderGenerateWorld;
+            if (generatedWorldProvider == null || chunkProvider.GetProviderId() == EnumChunkProviderId.FlatWorld)
+            {
+                error = "This world provider cannot rebuild save-backed chunks. Use a disposable normal world, not Playtesting.";
+                return false;
+            }
+
+            if (generatedWorldProvider.worldLocation == null)
+            {
+                error = "The active world provider did not expose its world location.";
+                return false;
+            }
+
+            if (!ReferenceEquals(storageBindingProvider, generatedWorldProvider))
+            {
+                regionStorageBindings.Clear();
+                storageBindingProvider = generatedWorldProvider;
+            }
+
+            regionStorageBindings[activeDimensionId] = new RegionStorageBinding(
+                generatedWorldProvider.m_RegionFileManager,
+                generatedWorldProvider.eventPrefabs);
+            rebuildContext = new ChunkProviderRebuildContext(chunkCache, generatedWorldProvider);
+            return true;
+        }
+
+        private static IEnumerator RebuildChunkCache(ChunkProviderRebuildContext rebuildContext)
+        {
+            rebuildContext.Error = "";
+            rebuildContext.ChunkProvider = null;
+
+            try
+            {
+                RegionStorageBinding storageBinding;
+                if (!regionStorageBindings.TryGetValue(activeDimensionId, out storageBinding))
+                {
+                    World world = GameManager.Instance.World;
+                    string regionDirectory = GameIO.GetSaveGameRegionDir();
+                    if (string.IsNullOrEmpty(regionDirectory))
+                    {
+                        rebuildContext.Error = "The destination region directory is unavailable.";
+                        yield break;
+                    }
+
+                    RegionFileManager regionFileManager = new RegionFileManager(
+                        regionDirectory,
+                        regionDirectory,
+                        0,
+                        !world.IsEditor());
+                    storageBinding = new RegionStorageBinding(
+                        regionFileManager,
+                        new EventPrefabs(world, rebuildContext.GeneratedWorldProvider.prefabDecorator, regionFileManager));
+                    regionStorageBindings[activeDimensionId] = storageBinding;
+                }
+
+                MultiBlockManager.Instance.Cleanup();
+                rebuildContext.GeneratedWorldProvider.m_RegionFileManager = storageBinding.RegionFileManager;
+                rebuildContext.GeneratedWorldProvider.eventPrefabs = storageBinding.EventPrefabs;
+                rebuildContext.GeneratedWorldProvider.bDecorationsEnabled = !IsActiveGeneratedDimension();
+                MultiBlockManager.Instance.Initialize(storageBinding.RegionFileManager);
+                rebuildContext.GeneratedWorldProvider.ReloadAllChunks();
+                rebuildContext.ChunkProvider = rebuildContext.GeneratedWorldProvider;
+                Logger.Info($"[DimensionManager] Rebound region storage for '{activeDimensionId}' through '{rebuildContext.ChunkProvider.GetType().Name}'.");
+            }
+            catch (Exception exception)
+            {
+                rebuildContext.Error = "The active region storage could not be rebound: " + exception.Message;
+                yield break;
+            }
+
+            yield break;
+        }
+
+        private static Vector3 GetDestinationPosition(string dimensionId, Vector3 defaultPosition)
+        {
+            DimensionDefinition definition;
+            DimensionGeneratorDefinition generator;
+            if (!DimensionRegistry.TryGet(dimensionId, out definition) ||
+                !DimensionGeneratorRegistry.TryGet(definition.GeneratorId, out generator) ||
+                generator.GetEntryPosition == null)
+            {
+                return defaultPosition;
+            }
+
+            try
+            {
+                return generator.GetEntryPosition(definition, defaultPosition);
+            }
+            catch (Exception exception)
+            {
+                Logger.Error($"[DimensionManager] Generator '{generator.Id}' could not resolve its entry position: {exception}");
+                return defaultPosition;
+            }
+        }
+
+        private static bool IsActiveGeneratedDimension()
+        {
+            DimensionDefinition definition;
+            DimensionGeneratorDefinition generator;
+            return !IsOverworld(activeDimensionId) &&
+                DimensionRegistry.TryGet(activeDimensionId, out definition) &&
+                DimensionGeneratorRegistry.TryGet(definition.GeneratorId, out generator) &&
+                generator.SaveMode == DimensionSaveMode.Generated;
+        }
+
+        private static string GetActiveDimensionDisplayName()
+        {
+            DimensionDefinition definition;
+            return DimensionRegistry.TryGet(activeDimensionId, out definition)
+                ? definition.DisplayName
+                : activeDimensionId;
+        }
+
+        private static bool TryUnloadActiveChunks(ChunkCluster chunkCache, out string error)
+        {
+            error = "";
+
+            try
+            {
+                World world = GameManager.Instance.World;
+                List<Chunk> activeChunks = new List<Chunk>(chunkCache.GetChunkArrayCopySync());
+                int forcedEntityUnloads = 0;
+                foreach (Chunk chunk in activeChunks)
+                {
+                    chunkCache.RemoveChunk(chunk);
+                    forcedEntityUnloads += UnloadRemainingNonPlayerEntities(world, chunk);
+                    chunkCache.UnloadChunk(chunk);
+                }
+
+                world.m_ChunkManager.ClearChunksForAllObservers(chunkCache);
+                ClearDisplayedChunkGameObjects(chunkCache);
+                Logger.Info($"[DimensionManager] Unloaded {activeChunks.Count} active chunks and {forcedEntityUnloads} remaining non-player entities before rebinding region storage.");
+                return true;
+            }
+            catch (Exception exception)
+            {
+                error = "The active chunks could not be unloaded: " + exception.Message;
+                Logger.Error($"[DimensionManager] Could not unload active chunks: {exception}");
+                return false;
+            }
+        }
+
+        private static int UnloadRemainingNonPlayerEntities(World world, Chunk unloadedChunk)
+        {
+            int entityUnloads = 0;
+            List<Entity> activeEntities = new List<Entity>(world.Entities.list);
+            foreach (Entity entity in activeEntities)
+            {
+                if (entity is EntityPlayer || !entity.addedToChunk ||
+                    entity.chunkPosAddedEntityTo.x != unloadedChunk.X ||
+                    entity.chunkPosAddedEntityTo.z != unloadedChunk.Z) continue;
+
+                if (world.RemoveEntity(entity.entityId, EnumRemoveEntityReason.Unloaded) != null)
+                {
+                    entityUnloads++;
+                }
+            }
+
+            return entityUnloads;
+        }
+
+        private static void ClearDisplayedChunkGameObjects(ChunkCluster chunkCache)
+        {
+            ChunkManager chunkManager = GameManager.Instance.World.m_ChunkManager;
+            lock (chunkCache.DisplayedChunkGameObjects)
+            {
+                long[] displayedChunkKeys = new long[chunkCache.DisplayedChunkGameObjects.Count];
+                chunkCache.DisplayedChunkGameObjects.Dict.CopyKeysTo(displayedChunkKeys);
+                foreach (long chunkKey in displayedChunkKeys)
+                {
+                    _ = chunkCache.DisplayedChunkGameObjects[chunkKey];
+                    chunkManager.FreeChunkGameObject(chunkCache, chunkKey);
+                }
+                chunkCache.DisplayedChunkGameObjects.Clear();
+            }
+        }
+
+        public static void CleanupInactiveRegionStorage()
+        {
+            RegionFileManager activeRegionFileManager = storageBindingProvider != null
+                ? storageBindingProvider.m_RegionFileManager
+                : null;
+
+            foreach (RegionStorageBinding storageBinding in regionStorageBindings.Values)
+            {
+                if (storageBinding.RegionFileManager == null ||
+                    ReferenceEquals(storageBinding.RegionFileManager, activeRegionFileManager)) continue;
+
+                try
+                {
+                    storageBinding.RegionFileManager.Cleanup();
+                }
+                catch (Exception exception)
+                {
+                    Logger.Error($"[DimensionManager] Could not close inactive region storage: {exception}");
+                }
+            }
+
+            regionStorageBindings.Clear();
+            storageBindingProvider = null;
+        }
+
+        private static void RequestChunk(IChunkProvider chunkProvider, int chunkX, int chunkZ)
+        {
+            chunkProvider.RequestChunk(chunkX, chunkZ);
+            Logger.Info($"[DimensionManager] Requested destination chunk ({chunkX}, {chunkZ}) through '{chunkProvider.GetType().Name}'.");
+        }
+
+        private static IChunkProvider GetActiveChunkProvider(ChunkCluster chunkCache)
+        {
+            object world = GameManager.Instance != null ? GameManager.Instance.World : null;
+            if (world == null) return null;
+
+            List<string> inspectedPaths = new List<string>();
+            IChunkProvider provider = FindChunkProvider(GameManager.Instance, "GameManager", ProviderSearchDepth, inspectedPaths);
+            if (provider == null)
+            {
+                provider = FindChunkProvider(world, "World", ProviderSearchDepth, inspectedPaths);
+            }
+
+            if (provider == null && chunkCache != null)
+            {
+                provider = FindChunkProvider(chunkCache, "ChunkCache", ProviderSearchDepth, inspectedPaths);
+            }
+
+            if (provider != null)
+            {
+                Logger.Info($"[DimensionManager] Located chunk provider '{provider.GetType().Name}'.");
+                return provider;
+            }
+
+            string inspectedPathSummary = inspectedPaths.Count == 0
+                ? "No chunk-related members could be read."
+                : string.Join(" | ", inspectedPaths.ToArray());
+            Logger.Error($"[DimensionManager] No IChunkProvider was found on world type '{world.GetType().FullName}'. Inspected: {inspectedPathSummary}");
+            return null;
+        }
+
+        private static IChunkProvider FindChunkProvider(object root, string rootPath, int maxDepth, List<string> inspectedPaths)
+        {
+            Queue<ProviderSearchCandidate> candidates = new Queue<ProviderSearchCandidate>();
+            HashSet<object> visited = new HashSet<object>();
+            candidates.Enqueue(new ProviderSearchCandidate(root, rootPath, 0));
+
+            while (candidates.Count > 0)
+            {
+                ProviderSearchCandidate candidate = candidates.Dequeue();
+                if (candidate.Value == null || !visited.Add(candidate.Value)) continue;
+
+                IChunkProvider provider = candidate.Value as IChunkProvider;
+                if (provider != null) return provider;
+                if (candidate.Depth >= maxDepth) continue;
+
+                Type candidateType = candidate.Value.GetType();
+                foreach (PropertyInfo property in candidateType.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
+                {
+                    if (!property.CanRead || !IsChunkRelatedMember(property.Name, property.PropertyType)) continue;
+                    TryQueueChunkRelatedValue(candidates, candidate.Path + "." + property.Name, candidate.Depth, inspectedPaths, () => property.GetValue(candidate.Value, null));
+                }
+
+                for (Type currentType = candidateType; currentType != null; currentType = currentType.BaseType)
+                {
+                    foreach (FieldInfo field in currentType.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly))
+                    {
+                        if (!IsChunkRelatedMember(field.Name, field.FieldType)) continue;
+                        TryQueueChunkRelatedValue(candidates, candidate.Path + "." + field.Name, candidate.Depth, inspectedPaths, () => field.GetValue(candidate.Value));
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        private static bool IsChunkRelatedMember(string memberName, Type memberType)
+        {
+            return typeof(IChunkProvider).IsAssignableFrom(memberType) ||
+                   memberName.IndexOf("chunk", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                   memberName.IndexOf("provider", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                   memberName.IndexOf("region", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                   memberType.Name.IndexOf("chunk", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                   memberType.Name.IndexOf("provider", StringComparison.OrdinalIgnoreCase) >= 0;
+        }
+
+        private static void TryQueueChunkRelatedValue(Queue<ProviderSearchCandidate> candidates, string path, int depth, List<string> inspectedPaths, Func<object> getValue)
+        {
+            try
+            {
+                object value = getValue();
+                if (value == null) return;
+
+                if (inspectedPaths.Count < ProviderSearchDiagnosticLimit)
+                {
+                    inspectedPaths.Add(path + " (" + value.GetType().Name + ")");
+                }
+
+                candidates.Enqueue(new ProviderSearchCandidate(value, path, depth + 1));
+            }
+            catch (Exception)
+            {
+            }
+        }
+
+        private sealed class ProviderSearchCandidate
+        {
+            public object Value { get; }
+            public string Path { get; }
+            public int Depth { get; }
+
+            public ProviderSearchCandidate(object value, string path, int depth)
+            {
+                Value = value;
+                Path = path;
+                Depth = depth;
+            }
+        }
+
+        private sealed class ChunkProviderRebuildContext
+        {
+            public ChunkCluster ChunkCache { get; }
+            public ChunkProviderGenerateWorld GeneratedWorldProvider { get; }
+            public IChunkProvider ChunkProvider { get; set; }
+            public string Error { get; set; }
+
+            public ChunkProviderRebuildContext(ChunkCluster chunkCache, ChunkProviderGenerateWorld generatedWorldProvider)
+            {
+                ChunkCache = chunkCache;
+                GeneratedWorldProvider = generatedWorldProvider;
+                Error = "";
+            }
+        }
+
+        private sealed class RegionStorageBinding
+        {
+            public RegionFileManager RegionFileManager { get; }
+            public EventPrefabs EventPrefabs { get; }
+
+            public RegionStorageBinding(RegionFileManager regionFileManager, EventPrefabs eventPrefabs)
+            {
+                RegionFileManager = regionFileManager;
+                EventPrefabs = eventPrefabs;
+            }
+        }
+    }
+
+    [HarmonyPatch(typeof(World), "Cleanup")]
+    public class World_Cleanup_DimensionStoragePatch
+    {
+        public static void Prefix()
+        {
+            DimensionManager.CleanupInactiveRegionStorage();
         }
     }
 }

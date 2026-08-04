@@ -21,7 +21,16 @@ namespace LizziesMod
 
         public void SetValue(string newValue)
         {
-            if (Value != newValue)
+            bool valueChanged = !string.Equals(Value, newValue, StringComparison.Ordinal);
+            if (Name.Equals("Enabled", StringComparison.OrdinalIgnoreCase) &&
+                bool.TryParse(Value, out bool currentEnabled) &&
+                bool.TryParse(newValue, out bool requestedEnabled))
+            {
+                valueChanged = currentEnabled != requestedEnabled;
+                newValue = requestedEnabled.ToString().ToLowerInvariant();
+            }
+
+            if (valueChanged)
             {
                 Value = newValue;
                 Logger.Info($"Setting '{Name}' for mod '{ModName}' changed to: {newValue} {(OnValueChanged != null ? "INVOKABLE" : "NON-INVOKABLE") }");
@@ -44,11 +53,19 @@ namespace LizziesMod
         public int TotalSettingsModified = 0;
     }
 
+    public class MissingProfileModInfo
+    {
+        public string Name;
+        public string Version;
+    }
+
     public static class ModSettingsManager
     {
 
         public static Dictionary<string, List<ModSetting>> AllModSettings = new Dictionary<string, List<ModSetting>>();
         public static bool PendingRestart = false;
+        public static List<MissingProfileModInfo> LastMissingProfileMods = new List<MissingProfileModInfo>();
+
         public static void LoadAllModSettings()
         {
             Logger.Info("Scanning for ModSettings.xml across all loaded mods...");
@@ -172,6 +189,23 @@ namespace LizziesMod
 
             return paths;
         }
+
+        private static string GetProfileModLabel(XmlNode modNode, string modName)
+        {
+            Mod installedMod = ModManager.GetMod(modName);
+            if (installedMod == null)
+            {
+                string savedVersion = modNode.Attributes["version"]?.Value;
+                return string.IsNullOrEmpty(savedVersion)
+                    ? modName + " [missing]"
+                    : modName + " [missing, profile " + savedVersion + "]";
+            }
+
+            return string.IsNullOrEmpty(installedMod.VersionString)
+                ? modName
+                : modName + " [" + installedMod.VersionString + "]";
+        }
+
         public static List<ModProfileInfo> GetAvailableProfiles()
         {
  
@@ -218,14 +252,14 @@ namespace LizziesMod
                                     {
                                         foundEnabledSetting = true;
                                         if (sValue != null && sValue.Equals("true", StringComparison.OrdinalIgnoreCase))
-                                            info.EnabledMods.Add(modName + $" [{ModManager.GetMod(modName).VersionString}]");
+                                            info.EnabledMods.Add(GetProfileModLabel(modNode, modName));
                                         else
-                                            info.DisabledMods.Add(modName + $" [{ModManager.GetMod(modName).VersionString}]");
+                                            info.DisabledMods.Add(GetProfileModLabel(modNode, modName));
                                     }
                                 }
                             }
 
-                            if (!foundEnabledSetting) info.EnabledMods.Add(modName + $" [{ModManager.GetMod(modName).VersionString}]");
+                            if (!foundEnabledSetting) info.EnabledMods.Add(GetProfileModLabel(modNode, modName));
                         }
 
                         // Add or overwrite the profile in our dictionary
@@ -319,9 +353,12 @@ namespace LizziesMod
             xmlDoc.Save(path);
             Logger.Info($"[ModProfiles] Saved profile '{profileName}'");
         }
+        
         public static bool LoadProfile(string profileName)
         {
             if (string.IsNullOrEmpty(profileName)) return false;
+
+            LastMissingProfileMods = new List<MissingProfileModInfo>();
 
             List<string> allPaths = GetAllProfilePaths();
             allPaths.Reverse();
@@ -335,13 +372,12 @@ namespace LizziesMod
                     XmlNode profileNode = xmlDoc.DocumentElement?.SelectSingleNode($"Profile[@name='{profileName}']");
                     if (profileNode == null) continue;
 
+                    List<MissingProfileModInfo> missingMods = new List<MissingProfileModInfo>();
+                    Dictionary<string, string> desiredEnabledStates = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+                    HashSet<string> modsToSave = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
                     foreach (var mod in AllModSettings.Keys)
                     {
-                        ModSetting enabledSetting = AllModSettings[mod].Find(s => s.Name.Equals("Enabled", StringComparison.OrdinalIgnoreCase));
-                        if (enabledSetting != null)
-                        {
-                            enabledSetting.SetValue("false");
-                        }
+                        desiredEnabledStates[mod] = "false";
                     }
 
                     foreach (XmlNode modNode in profileNode.ChildNodes)
@@ -350,13 +386,29 @@ namespace LizziesMod
                         string modName = modNode.Attributes["name"]?.Value;
                         if (string.IsNullOrEmpty(modName)) continue;
 
-                        if (!AllModSettings.ContainsKey(modName)) continue;
+                        if (!AllModSettings.ContainsKey(modName))
+                        {
+                            missingMods.Add(new MissingProfileModInfo
+                            {
+                                Name = modName,
+                                Version = modNode.Attributes["version"]?.Value
+                            });
+                            continue;
+                        }
 
+                        bool hasEnabledSetting = false;
                         foreach (XmlNode settingNode in modNode.ChildNodes)
                         {
                             if (settingNode.Name != "Setting") continue;
                             string sName = settingNode.Attributes["name"]?.Value;
                             string sValue = settingNode.Attributes["value"]?.Value;
+
+                            if (sName != null && sName.Equals("Enabled", StringComparison.OrdinalIgnoreCase))
+                            {
+                                desiredEnabledStates[modName] = sValue ?? "true";
+                                hasEnabledSetting = true;
+                                continue;
+                            }
 
                             ModSetting existing = AllModSettings[modName].Find(s => s.Name.Equals(sName, StringComparison.OrdinalIgnoreCase));
                             if (existing != null)
@@ -365,7 +417,6 @@ namespace LizziesMod
                             }
                             else
                             {
-
                                 string sType = settingNode.Attributes["type"]?.Value ?? "string";
                                 bool bServerOnly = false;
                                 if (settingNode.Attributes["serverOnly"] != null)
@@ -381,7 +432,7 @@ namespace LizziesMod
 
                                 bool bMenuOnly = false;
                                 if (settingNode.Attributes["menuOnly"] != null)
-                                    bool.TryParse(settingNode.Attributes["menuOnly"].Value, out bServerOnly);
+                                    bool.TryParse(settingNode.Attributes["menuOnly"].Value, out bMenuOnly);
 
                                 ModSetting newSetting = new ModSetting
                                 {
@@ -398,7 +449,51 @@ namespace LizziesMod
                                 newSetting.OnValueChanged?.Invoke(sValue);
                             }
                         }
+
+                        if (!hasEnabledSetting)
+                        {
+                            desiredEnabledStates[modName] = "true";
+                        }
+
+                        modsToSave.Add(modName);
+                    }
+
+                    foreach (var enabledState in desiredEnabledStates)
+                    {
+                        string modName = enabledState.Key;
+                        string desiredValue = enabledState.Value;
+                        ModSetting enabledSetting = AllModSettings[modName].Find(s => s.Name.Equals("Enabled", StringComparison.OrdinalIgnoreCase));
+
+                        if (enabledSetting != null)
+                        {
+                            if (!string.Equals(enabledSetting.Value, desiredValue, StringComparison.OrdinalIgnoreCase))
+                            {
+                                enabledSetting.SetValue(desiredValue);
+                                modsToSave.Add(modName);
+                            }
+                        }
+                        else
+                        {
+                            bool desiredEnabled;
+                            if (!bool.TryParse(desiredValue, out desiredEnabled))
+                            {
+                                desiredEnabled = true;
+                            }
+
+                            SetSetting(modName, "Enabled", desiredEnabled, true);
+                            modsToSave.Add(modName);
+                        }
+                    }
+
+                    foreach (string modName in modsToSave)
+                    {
                         SaveModSettings(modName);
+                    }
+
+                    LastMissingProfileMods = missingMods;
+                    if (missingMods.Count > 0)
+                    {
+                        Logger.Warning($"[ModProfiles] The profile '{profileName}' was loaded with missing mods: {string.Join(", ", missingMods.ConvertAll(mod => mod.Name))}");
                     }
 
                     Logger.Info($"[ModProfiles] Successfully applied profile '{profileName}'");

@@ -45,5 +45,19 @@
                 <triggered_effect trigger="onSelfBuffUpdate" action="Ragdoll" duration="5"/>
             </effect_group>
         </buff>
+
+        <buff name="buffSpawnMenuRagdoll" hidden="true">
+            <stack_type value="replace"/>
+            <duration value="0"/>
+            <update_rate value="0.5"/>
+
+            <effect_group>
+                <passive_effect name="WalkSpeed" operation="base_set" value="0"/>
+                <passive_effect name="RunSpeed" operation="base_set" value="0"/>
+                <passive_effect name="JumpStrength" operation="base_set" value="0"/>
+                <triggered_effect trigger="onSelfBuffStart" action="Ragdoll" duration="5"/>
+                <triggered_effect trigger="onSelfBuffUpdate" action="Ragdoll" duration="5"/>
+            </effect_group>
+        </buff>
     </append>
 </configs>

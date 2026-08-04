@@ -50,31 +50,107 @@
             </rect>
         </window>
 
-        <!-- Menu Readme Library -->
-        <window name="windowModLibrary" depth="200" width="1200" height="800" anchor="Center" cursor_area="true" lock_navigation="true" controller="LizziesMod.ModLibraryUIController, LizziesMod">
+        <!-- Missing Profile Mods -->
+        <window name="windowProfileMissingMods" width="820" height="560" panel="Center" cursor_area="true" controller="LizziesMod.MissingProfileModsUIController, LizziesMod">
             <fullscreencollider color="0,0,0,220"/>
-            <rect depth="0" pos="-600, 400" width="1200" height="800">
+
+            <sprite depth="0" name="background" sprite="menu_empty" type="sliced" color="30,30,30,255" pos="0,0" width="820" height="560" />
+            <sprite depth="1" name="border" sprite="menu_empty2px" type="sliced" color="255,180,0,255" pos="0,0" width="820" height="560" fillcenter="false" />
+
+            <panel name="header" pos="0,0" height="50" depth="2">
+                <sprite depth="1" sprite="ui_game_panel_header" type="sliced" width="820" height="50" />
+                <label depth="2" pos="0,-10" width="820" height="30" text="MISSING PROFILE MODS" font_size="28" justify="center" color="[white]"/>
+            </panel>
+
+            <rect name="leftPane" pos="15,-60" width="500" height="420" depth="2">
+                <sprite depth="1" sprite="menu_empty" type="sliced" color="15,15,15,255" />
+                <sprite depth="2" sprite="menu_empty2px" type="sliced" color="60,60,60,255" fillcenter="false" />
+                <label depth="3" pos="15,-10" width="470" height="30" text="NOT INSTALLED" font_size="22" color="255,110,110,255" />
+
+                <rect pos="10,-45" width="480" height="360" on_scroll="true">
+                    <defaultscrollbar />
+                    <scrollview width="460" clippingsoftness="0,10">
+                        <grid name="missingModsListGrid" pos="0,0" rows="50" cols="1" cell_width="450" cell_height="56" arrangement="vertical" repeat_content="true">
+                            <rect name="missingModEntry" controller="LizziesMod.MissingProfileModEntryController, LizziesMod" width="450" height="52">
+                                <sprite depth="1" sprite="menu_empty" type="sliced" color="55,25,25,255" width="450" height="52" />
+                                <label name="lblModName" depth="2" pos="12,-5" width="425" height="24" text="MOD NAME" font_size="20" color="255,210,210,255" />
+                                <label name="lblModVersion" depth="2" pos="12,-29" width="425" height="20" text="PROFILE VERSION" font_size="16" color="220,180,180,255" />
+                            </rect>
+                        </grid>
+                    </scrollview>
+                </rect>
+            </rect>
+
+            <rect name="rightPane" pos="530,-60" width="275" height="420" depth="2">
+                <sprite depth="1" sprite="menu_empty" type="sliced" color="20,20,20,255" />
+                <sprite depth="2" sprite="menu_empty2px" type="sliced" color="60,60,60,255" fillcenter="false" />
+                <label depth="3" pos="15,-15" width="245" height="370" text="Please download the missing mods.&#10;&#10;Once you are done downloading, click restart and try again to load this profile!" font_size="22" justify="left" pivot="topleft" color="[white]" />
+            </rect>
+
+            <rect pos="0,-500" width="820" height="50" depth="2">
+                <simplebutton name="btnCancel" depth="3" pos="195,0" width="190" height="40" font_size="24" caption="CANCEL" />
+                <simplebutton name="btnRestart" depth="3" pos="435,0" width="190" height="40" font_size="24" caption="RESTART" />
+            </rect>
+        </window>
+
+        <!-- Mod Load Errors -->
+        <window name="windowModLoadErrors" width="1120" height="760" panel="Center" cursor_area="true" controller="LizziesMod.ModErrorWindowUIController, LizziesMod">
+            <fullscreencollider color="0,0,0,220"/>
+
+            <sprite depth="0" name="background" sprite="menu_empty" type="sliced" color="30,30,30,255" pos="0,0" width="1120" height="760" />
+            <sprite depth="1" name="border" sprite="menu_empty2px" type="sliced" color="255,100,100,255" pos="0,0" width="1120" height="760" fillcenter="false" />
+
+            <panel name="header" pos="0,0" height="50" depth="2">
+                <sprite depth="1" sprite="ui_game_panel_header" type="sliced" width="1120" height="50" />
+                <label depth="2" pos="0,-10" width="1120" height="30" text="MOD LOAD ERRORS" font_size="28" justify="center" color="[white]"/>
+            </panel>
+
+            <rect name="errorPane" pos="20,-65" width="1080" height="605" depth="2">
+                <sprite depth="1" sprite="menu_empty" type="sliced" color="15,15,15,255" />
+                <sprite depth="2" sprite="menu_empty2px" type="sliced" color="90,50,50,255" fillcenter="false" />
+                <label depth="3" pos="15,-10" width="1050" height="28" text="REVIEW THE ERROR DETAILS" font_size="22" color="255,125,125,255" />
+
+                <rect pos="15,-48" width="1050" height="540" on_scroll="true">
+                    <defaultscrollbar />
+                    <scrollview width="1025" clippingsoftness="0,10">
+                        <label name="lblErrorText" depth="4" pos="0,0" width="1005" text="Loading error details..." font_size="20" color="[white]" justify="left" pivot="topleft" />
+                    </scrollview>
+                </rect>
+            </rect>
+
+            <rect pos="0,-710" width="1120" height="50" depth="2">
+                <simplebutton name="btnProceed" depth="3" pos="130,0" width="240" height="40" font_size="22" caption="CONTINUE" />
+                <simplebutton name="btnDisableMods" depth="3" pos="440,0" width="240" height="40" font_size="22" caption="DISABLE MODS" />
+                <simplebutton name="btnClose" depth="3" pos="750,0" width="240" height="40" font_size="22" caption="CLOSE" />
+            </rect>
+        </window>
+
+        <!-- Menu Readme Library -->
+        <window name="windowModLibrary" depth="200" width="1500" height="900" anchor="Center" cursor_area="true" lock_navigation="true" controller="LizziesMod.ModLibraryUIController, LizziesMod">
+            <fullscreencollider color="0,0,0,220"/>
+            <rect depth="0" pos="-750,450" width="1500" height="900">
                 
                 <sprite depth="1" name="background" sprite="menu_empty" type="sliced" color="30,30,30,250" />
                 <sprite depth="2" name="border" sprite="menu_empty2px" type="sliced" color="255,180,0,255" fillcenter="false" />
 
                 <rect depth="3" pos="0,0" height="50">
                     <sprite depth="1" sprite="menu_empty" type="sliced" color="0,0,0,255" />
-                    <label depth="2" text="MOD README" font_size="32" justify="center" pivot="center" pos="600,-25" color="255,180,0,255" upper_case="true" />
+                    <label depth="2" text="MOD README" font_size="32" justify="center" pivot="center" pos="750,-25" color="255,180,0,255" upper_case="true" />
                 </rect>
 
-                <rect name="leftPanel" depth="3" pos="20, -70" width="350" height="650">
+                <rect name="leftPanel" depth="3" pos="20, -70" width="350" height="750">
                     <sprite depth="1" sprite="menu_empty" type="sliced" color="15,15,15,255" />
                     <sprite depth="2" sprite="menu_empty2px" type="sliced" color="60,60,60,255" fillcenter="false" />
                     
-                    <rect depth="3" pos="5, -5" width="340" height="640" on_scroll="true">
+                    <rect depth="3" pos="5, -5" width="340" height="740" on_scroll="true">
                         <defaultscrollbar />
                         <scrollview width="320" clippingsoftness="0,10">
-                            <grid name="bookListGrid" pos="16,0" rows="50" cols="1" cell_width="320" cell_height="60" arrangement="vertical" repeat_content="true">
+                            <grid name="bookListGrid" pos="0,0" rows="50" cols="1" cell_width="320" cell_height="60" arrangement="vertical" repeat_content="true">
                                 <rect name="bookEntry" controller="LizziesMod.ModLibraryBookEntryController, LizziesMod">
                                     <button name="clickable" depth="3" pos="2,-2" width="316" height="56" sprite="menu_empty" type="sliced" defaultcolor="40,40,40,255" hovercolor="80,180,255,255" sound_play_on_hover="[default_hover]" sound="[default_click]" />
                                     <label name="lblBookName" depth="4" text="BOOK TITLE" font_size="22" justify="left" pivot="topleft" pos="15,-10" width="290" color="255,255,255,255" />
                                     <label name="lblAuthor" depth="4" text="By: Author" font_size="18" justify="left" pivot="topleft" pos="15,-34" width="290" color="180,180,180,255" />
+                                    <sprite name="sprSelected" depth="4" pos="2,-55" width="316" height="3" sprite="menu_empty" type="sliced" color="255,180,0,255" visible="false" />
                                 </rect>
                             </grid>
                         </scrollview>
@@ -82,34 +158,100 @@
                 </rect>
 
 
-                <rect name="rightPanel" depth="3" pos="390, -70" width="790" height="650">
+                <rect name="rightPanel" depth="3" pos="390, -70" width="1090" height="750">
                     
                     <sprite name="readingBackground" depth="1" sprite="menu_empty" type="sliced" color="20,20,20,255" />
                     <sprite depth="2" sprite="menu_empty2px" type="sliced" color="60,60,60,255" fillcenter="false" />
 
-                    <label name="lblBookTitle" depth="4" pos="10, -10" width="770" height="40" font_size="32" justify="center" text="BOOK TITLE" color="255,180,0,255" upper_case="true" />
-                    <sprite depth="3" sprite="menu_empty1px" type="sliced" color="100,100,100,255" pos="20,-50" width="750" height="2" />
+                    <label name="lblBookTitle" depth="4" pos="10, -10" width="1070" height="40" font_size="32" justify="center" text="BOOK TITLE" color="255,180,0,255" upper_case="true" />
+                    <sprite depth="3" sprite="menu_empty1px" type="sliced" color="100,100,100,255" pos="20,-50" width="1050" height="2" />
 
-                    <label name="lblPageTitle" depth="4" pos="20, -60" width="750" height="35" font_size="28" justify="center" text="PAGE TITLE" color="200,200,200,255" />
+                    <label name="lblPageTitle" depth="4" pos="20, -60" width="1050" height="35" font_size="28" justify="center" text="PAGE TITLE" color="200,200,200,255" />
                     
-                    <texture name="imgPageDiagram" depth="4" pos="20, -105" width="750" height="200" visible="false" />
-
-                    <rect name="textArea" depth="4" pos="20, -110" width="750" height="470" on_scroll="true">
-                        <defaultscrollbar />
-                        <scrollview width="730" clippingsoftness="0,10">
-                            <label name="lblPageText" depth="5" pos="0,0" width="720" text="Loading..." font_size="24" color="255,255,255,255" justify="left" pivot="topleft" />
+                    <rect name="readmeViewport" depth="4" pos="20,-105" width="1050" height="570" on_scroll="true">
+                        <scrollbar name="readmeScrollbar" pos="1034,0" width="16" depth="5">
+                            <sprite name="thumb" depth="1" pos="4,-4" width="8" height="562" sprite="menu_empty" type="sliced" color="179,11,11,255" fillcenter="true" on_press="true" on_scroll="true" gamepad_selectable="false" snap="false" />
+                            <sprite name="background" depth="0" sprite="menu_empty2px" type="sliced" color="[darkGrey]" fillcenter="false" on_press="true" on_scroll="true" gamepad_selectable="false" snap="false" />
+                        </scrollbar>
+                        <scrollview name="readmeScrollView" width="1030" clippingsoftness="0,10">
+                            <rect name="readmeCanvas" pos="0,0" width="1030" height="570">
+                                <label name="readmeText01" depth="5" pos="0,0" width="730" height="80" font_size="24" color="255,255,255,255" justify="left" pivot="topleft" visible="false" />
+                                <label name="readmeText02" depth="5" pos="0,0" width="730" height="80" font_size="24" color="255,255,255,255" justify="left" pivot="topleft" visible="false" />
+                                <label name="readmeText03" depth="5" pos="0,0" width="730" height="80" font_size="24" color="255,255,255,255" justify="left" pivot="topleft" visible="false" />
+                                <label name="readmeText04" depth="5" pos="0,0" width="730" height="80" font_size="24" color="255,255,255,255" justify="left" pivot="topleft" visible="false" />
+                                <label name="readmeText05" depth="5" pos="0,0" width="730" height="80" font_size="24" color="255,255,255,255" justify="left" pivot="topleft" visible="false" />
+                                <label name="readmeText06" depth="5" pos="0,0" width="730" height="80" font_size="24" color="255,255,255,255" justify="left" pivot="topleft" visible="false" />
+                                <label name="readmeText07" depth="5" pos="0,0" width="730" height="80" font_size="24" color="255,255,255,255" justify="left" pivot="topleft" visible="false" />
+                                <label name="readmeText08" depth="5" pos="0,0" width="730" height="80" font_size="24" color="255,255,255,255" justify="left" pivot="topleft" visible="false" />
+                                <label name="readmeText09" depth="5" pos="0,0" width="730" height="80" font_size="24" color="255,255,255,255" justify="left" pivot="topleft" visible="false" />
+                                <label name="readmeText10" depth="5" pos="0,0" width="730" height="80" font_size="24" color="255,255,255,255" justify="left" pivot="topleft" visible="false" />
+                                <label name="readmeText11" depth="5" pos="0,0" width="730" height="80" font_size="24" color="255,255,255,255" justify="left" pivot="topleft" visible="false" />
+                                <label name="readmeText12" depth="5" pos="0,0" width="730" height="80" font_size="24" color="255,255,255,255" justify="left" pivot="topleft" visible="false" />
+                                <label name="readmeText13" depth="5" pos="0,0" width="730" height="80" font_size="24" color="255,255,255,255" justify="left" pivot="topleft" visible="false" />
+                                <label name="readmeText14" depth="5" pos="0,0" width="730" height="80" font_size="24" color="255,255,255,255" justify="left" pivot="topleft" visible="false" />
+                                <label name="readmeText15" depth="5" pos="0,0" width="730" height="80" font_size="24" color="255,255,255,255" justify="left" pivot="topleft" visible="false" />
+                                <label name="readmeText16" depth="5" pos="0,0" width="730" height="80" font_size="24" color="255,255,255,255" justify="left" pivot="topleft" visible="false" />
+                                <label name="readmeText17" depth="5" pos="0,0" width="1030" height="80" font_size="24" color="255,255,255,255" justify="left" pivot="topleft" visible="false" />
+                                <label name="readmeText18" depth="5" pos="0,0" width="1030" height="80" font_size="24" color="255,255,255,255" justify="left" pivot="topleft" visible="false" />
+                                <label name="readmeText19" depth="5" pos="0,0" width="1030" height="80" font_size="24" color="255,255,255,255" justify="left" pivot="topleft" visible="false" />
+                                <label name="readmeText20" depth="5" pos="0,0" width="1030" height="80" font_size="24" color="255,255,255,255" justify="left" pivot="topleft" visible="false" />
+                                <label name="readmeText21" depth="5" pos="0,0" width="1030" height="80" font_size="24" color="255,255,255,255" justify="left" pivot="topleft" visible="false" />
+                                <label name="readmeText22" depth="5" pos="0,0" width="1030" height="80" font_size="24" color="255,255,255,255" justify="left" pivot="topleft" visible="false" />
+                                <label name="readmeText23" depth="5" pos="0,0" width="1030" height="80" font_size="24" color="255,255,255,255" justify="left" pivot="topleft" visible="false" />
+                                <label name="readmeText24" depth="5" pos="0,0" width="1030" height="80" font_size="24" color="255,255,255,255" justify="left" pivot="topleft" visible="false" />
+                                <label name="readmeText25" depth="5" pos="0,0" width="1030" height="80" font_size="24" color="255,255,255,255" justify="left" pivot="topleft" visible="false" />
+                                <label name="readmeText26" depth="5" pos="0,0" width="1030" height="80" font_size="24" color="255,255,255,255" justify="left" pivot="topleft" visible="false" />
+                                <label name="readmeText27" depth="5" pos="0,0" width="1030" height="80" font_size="24" color="255,255,255,255" justify="left" pivot="topleft" visible="false" />
+                                <label name="readmeText28" depth="5" pos="0,0" width="1030" height="80" font_size="24" color="255,255,255,255" justify="left" pivot="topleft" visible="false" />
+                                <label name="readmeText29" depth="5" pos="0,0" width="1030" height="80" font_size="24" color="255,255,255,255" justify="left" pivot="topleft" visible="false" />
+                                <label name="readmeText30" depth="5" pos="0,0" width="1030" height="80" font_size="24" color="255,255,255,255" justify="left" pivot="topleft" visible="false" />
+                                <label name="readmeText31" depth="5" pos="0,0" width="1030" height="80" font_size="24" color="255,255,255,255" justify="left" pivot="topleft" visible="false" />
+                                <label name="readmeText32" depth="5" pos="0,0" width="1030" height="80" font_size="24" color="255,255,255,255" justify="left" pivot="topleft" visible="false" />
+                                <texture name="readmeImage01" depth="4" pos="0,0" width="730" height="200" visible="false" />
+                                <texture name="readmeImage02" depth="4" pos="0,0" width="730" height="200" visible="false" />
+                                <texture name="readmeImage03" depth="4" pos="0,0" width="730" height="200" visible="false" />
+                                <texture name="readmeImage04" depth="4" pos="0,0" width="730" height="200" visible="false" />
+                                <texture name="readmeImage05" depth="4" pos="0,0" width="730" height="200" visible="false" />
+                                <texture name="readmeImage06" depth="4" pos="0,0" width="730" height="200" visible="false" />
+                                <texture name="readmeImage07" depth="4" pos="0,0" width="730" height="200" visible="false" />
+                                <texture name="readmeImage08" depth="4" pos="0,0" width="730" height="200" visible="false" />
+                                <texture name="readmeImage09" depth="4" pos="0,0" width="730" height="200" visible="false" />
+                                <texture name="readmeImage10" depth="4" pos="0,0" width="730" height="200" visible="false" />
+                                <texture name="readmeImage11" depth="4" pos="0,0" width="730" height="200" visible="false" />
+                                <texture name="readmeImage12" depth="4" pos="0,0" width="730" height="200" visible="false" />
+                                <texture name="readmeImage13" depth="4" pos="0,0" width="1030" height="200" visible="false" />
+                                <texture name="readmeImage14" depth="4" pos="0,0" width="1030" height="200" visible="false" />
+                                <texture name="readmeImage15" depth="4" pos="0,0" width="1030" height="200" visible="false" />
+                                <texture name="readmeImage16" depth="4" pos="0,0" width="1030" height="200" visible="false" />
+                                <texture name="readmeImage17" depth="4" pos="0,0" width="1030" height="200" visible="false" />
+                                <texture name="readmeImage18" depth="4" pos="0,0" width="1030" height="200" visible="false" />
+                                <texture name="readmeImage19" depth="4" pos="0,0" width="1030" height="200" visible="false" />
+                                <texture name="readmeImage20" depth="4" pos="0,0" width="1030" height="200" visible="false" />
+                                <texture name="readmeImage21" depth="4" pos="0,0" width="1030" height="200" visible="false" />
+                                <texture name="readmeImage22" depth="4" pos="0,0" width="1030" height="200" visible="false" />
+                                <texture name="readmeImage23" depth="4" pos="0,0" width="1030" height="200" visible="false" />
+                                <texture name="readmeImage24" depth="4" pos="0,0" width="1030" height="200" visible="false" />
+                                <texture name="readmeImage25" depth="4" pos="0,0" width="1030" height="200" visible="false" />
+                                <texture name="readmeImage26" depth="4" pos="0,0" width="1030" height="200" visible="false" />
+                                <texture name="readmeImage27" depth="4" pos="0,0" width="1030" height="200" visible="false" />
+                                <texture name="readmeImage28" depth="4" pos="0,0" width="1030" height="200" visible="false" />
+                                <texture name="readmeImage29" depth="4" pos="0,0" width="1030" height="200" visible="false" />
+                                <texture name="readmeImage30" depth="4" pos="0,0" width="1030" height="200" visible="false" />
+                                <texture name="readmeImage31" depth="4" pos="0,0" width="1030" height="200" visible="false" />
+                                <texture name="readmeImage32" depth="4" pos="0,0" width="1030" height="200" visible="false" />
+                            </rect>
                         </scrollview>
                     </rect>
 
-                    <rect name="paginationArea" depth="4" pos="20, -590" width="750" height="50">
+                    <rect name="paginationArea" depth="4" pos="20, -685" width="1050" height="50">
                         <simplebutton name="btnPrevPage" depth="5" pos="0,0" width="150" height="40" font_size="22" caption="&lt; PREV" />
-                        <label name="lblPageNumber" depth="5" pos="150, -5" width="450" height="30" font_size="22" justify="center" text="Page 1 of X" color="200,200,200,255" />
-                        <simplebutton name="btnNextPage" depth="5" pos="600,0" width="150" height="40" font_size="22" caption="NEXT &gt;" />
+                        <label name="lblPageNumber" depth="5" pos="150, -5" width="750" height="30" font_size="22" justify="center" text="Page 1 of X" color="200,200,200,255" />
+                        <simplebutton name="btnNextPage" depth="5" pos="900,0" width="150" height="40" font_size="22" caption="NEXT &gt;" />
                     </rect>
 
                 </rect>
 
-                <simplebutton name="btnClose" depth="4" pos="20,-740" width="1160" height="40" font_size="26" caption="RETURN TO MAIN MENU" />
+                <simplebutton name="btnClose" depth="4" pos="20,-840" width="1460" height="40" font_size="26" caption="RETURN TO MAIN MENU" />
             </rect>
         </window>
         
@@ -159,6 +301,7 @@
                 <rect depth="3" pos="0,0" height="50">
                     <sprite depth="1" sprite="menu_empty" type="sliced" color="0,0,0,255" />
                     <label depth="2" text="MOD SETTINGS" font_size="32" justify="center" pivot="center" pos="600,-25" color="255,180,0,255" upper_case="true" />
+                    <simplebutton name="btnEditInputs" depth="3" pos="1090,-7" width="230" height="36" font_size="18" caption="EDIT INPUTS" visible="false" />
                 </rect>
 
                 
@@ -190,7 +333,7 @@
                     <sprite depth="1" sprite="menu_empty" type="sliced" color="15,15,15,255" />
                     <sprite depth="2" sprite="menu_empty2px" type="sliced" color="60,60,60,255" fillcenter="false" />
 
-                    <label name="lblSelectedModTitle" depth="4" pos="10, -10" width="970" height="40" font_size="32" justify="center" text="MOD TITLE" color="255,180,0,255" upper_case="true" />
+                    <label name="lblSelectedModTitle" depth="4" pos="10, -10" width="848" height="40" font_size="32" justify="center" text="MOD TITLE" color="255,180,0,255" upper_case="true" />
 
                     <rect name="modInfoArea" depth="3" pos="10, -50" width="870" height="30">
                         <label name="lblModAuthor" depth="4" pos="0,0" width="250" height="30" font_size="22" justify="left" text="Author: " color="200,200,200,255" />
@@ -203,12 +346,12 @@
                         <texture name="imgBanner" depth="2" pos="0,0" width="848" height="150" visible="false" />
                     </rect>
 
-                    <rect name="settingsArea" depth="3" pos="10, -240" width="970" height="800" on_scroll="true">
+                    <rect name="settingsArea" depth="3" pos="10, -240" width="848" height="385" on_scroll="true">
                         <defaultscrollbar />
-                        <scrollview width="970" clippingsoftness="0,10">
-                            <grid name="settingsGrid" pos="0,0" rows="50" cols="1" cell_width="970" cell_height="50" arrangement="vertical" repeat_content="true">
+                        <scrollview width="828" clippingsoftness="0,10">
+                            <grid name="settingsGrid" pos="0,0" rows="50" cols="1" cell_width="808" cell_height="50" arrangement="vertical" repeat_content="true">
                                 <rect name="settingEntry" controller="LizziesMod.SettingEntryController, LizziesMod">
-                                    <sprite depth="3" pos="2,-2" width="825" height="46" sprite="menu_empty" type="sliced" color="40,40,40,255" />
+                                    <sprite depth="3" pos="2,-2" width="808" height="46" sprite="menu_empty" type="sliced" color="40,40,40,255" />
                                     <label name="lblSettingName" depth="4" text="SETTING NAME" font_size="22" justify="left" pos="15,-12" color="200,200,200,255" />
                                     
                                     <textfield name="txtSettingValue" depth="4" pos="450,-5" width="292" height="40" font_size="20" justify="center" backgroundcolor="20,20,20,255" textcolor="255,255,255,255" active_text_color="255,255,255,255" caret_color="255,255,255,255" max_length="50" vk_propagates_events="false" />
@@ -237,11 +380,74 @@
                 </rect>
             </rect>
         </window>
+
+        <window name="windowCustomInputs" depth="200" width="1180" height="720" anchor="Center" cursor_area="true" lock_navigation="true" controller="LizziesMod.CustomInputBindingsUIController, LizziesMod">
+            <fullscreencollider color="0,0,0,220" />
+            <rect depth="0" pos="-590,360" width="1180" height="720">
+                <sprite depth="1" name="background" sprite="menu_empty" type="sliced" color="30,30,30,250" />
+                <sprite depth="2" name="border" sprite="menu_empty2px" type="sliced" color="255,180,0,255" fillcenter="false" />
+                <rect depth="3" pos="0,0" height="50">
+                    <sprite depth="1" sprite="menu_empty" type="sliced" color="0,0,0,255" />
+                    <label depth="2" pos="0,-10" width="1180" height="30" text="MOD INPUT BINDINGS" font_size="32" justify="center" color="255,180,0,255" />
+                </rect>
+                <rect name="leftPanel" depth="3" pos="20,-70" width="290" height="570">
+                    <sprite depth="1" sprite="menu_empty" type="sliced" color="15,15,15,255" />
+                    <sprite depth="2" sprite="menu_empty2px" type="sliced" color="60,60,60,255" fillcenter="false" />
+                    <rect depth="3" pos="5,-5" width="280" height="560" on_scroll="true">
+                        <defaultscrollbar />
+                        <scrollview width="260" clippingsoftness="0,10">
+                            <grid name="modListGrid" pos="0,0" rows="50" cols="1" cell_width="250" cell_height="54" arrangement="vertical" repeat_content="true">
+                                <rect name="modInputEntry" controller="LizziesMod.CustomInputModEntryController, LizziesMod" width="250" height="50">
+                                    <button name="clickable" depth="2" width="250" height="50" sprite="menu_empty" type="sliced" defaultcolor="40,40,40,255" hovercolor="80,180,255,255" />
+                                    <label name="lblModName" depth="3" pos="12,-7" width="220" height="22" text="MOD NAME" font_size="18" color="255,255,255,255" />
+                                    <label name="lblInputCount" depth="3" pos="12,-29" width="220" height="16" text="0 INPUTS" font_size="14" color="180,180,180,255" />
+                                    <sprite name="sprSelected" depth="4" pos="0,-47" width="250" height="3" sprite="menu_empty" type="sliced" color="255,180,0,255" visible="false" />
+                                </rect>
+                            </grid>
+                        </scrollview>
+                    </rect>
+                </rect>
+                <rect name="rightPanel" depth="3" pos="330,-70" width="830" height="570">
+                    <sprite depth="1" sprite="menu_empty" type="sliced" color="15,15,15,255" />
+                    <sprite depth="2" sprite="menu_empty2px" type="sliced" color="60,60,60,255" fillcenter="false" />
+                    <label name="lblModTitle" depth="3" pos="10,-10" width="810" height="30" text="MOD INPUTS" font_size="26" justify="center" color="255,180,0,255" />
+                    <label depth="3" pos="14,-43" width="80" height="20" text="SEARCH" font_size="16" justify="left" color="180,180,180,255" />
+                    <textfield name="txtInputSearch" depth="3" pos="98,-42" width="345" height="28" font_size="16" backgroundcolor="20,20,20,255" textcolor="255,255,255,255" active_text_color="255,255,255,255" caret_color="255,255,255,255" max_length="50" vk_propagates_events="false" />
+                    <label name="lblCaptureStatus" depth="3" pos="10,-76" width="810" height="20" text="" font_size="16" justify="center" color="80,180,255,255" visible="false" />
+                    <rect depth="3" pos="10,-104" width="810" height="439" on_scroll="true">
+                        <defaultscrollbar />
+                        <scrollview width="790" clippingsoftness="0,10">
+                            <grid name="inputListGrid" pos="0,0" rows="50" cols="1" cell_width="790" cell_height="66" arrangement="vertical" repeat_content="true">
+                                <rect name="customInputEntry" controller="LizziesMod.CustomInputEntryController, LizziesMod" width="790" height="62">
+                                    <sprite depth="1" width="790" height="62" sprite="menu_empty" type="sliced" color="40,40,40,255" />
+                                    <label name="lblDescription" depth="2" pos="14,-7" width="330" height="24" text="INPUT DESCRIPTION" font_size="19" color="255,255,255,255" />
+                                    <label name="lblCategory" depth="2" pos="14,-32" width="330" height="18" text="CATEGORY" font_size="14" color="180,180,180,255" />
+                                    <label name="lblBinding" depth="2" pos="350,-7" width="180" height="24" text="CTRL+P" font_size="19" justify="center" color="80,180,255,255" />
+                                    <label name="lblDefault" depth="2" pos="350,-32" width="180" height="18" text="DEFAULT: CTRL+P" font_size="14" justify="center" color="180,180,180,255" />
+                                    <simplebutton name="btnRebind" depth="2" pos="545,-11" width="125" height="38" font_size="17" caption="REBIND" />
+                                    <simplebutton name="btnReset" depth="2" pos="680,-11" width="95" height="38" font_size="17" caption="RESET" />
+                                </rect>
+                            </grid>
+                        </scrollview>
+                    </rect>
+                </rect>
+                <rect depth="4" pos="20,-670" width="1140" height="40">
+                    <simplebutton name="btnCancelCapture" depth="5" pos="0,0" width="260" height="40" font_size="20" caption="CANCEL REBIND" visible="false" />
+                    <simplebutton name="btnClose" depth="5" pos="280,0" width="860" height="40" font_size="24" caption="RETURN" />
+                </rect>
+            </rect>
+        </window>
+    </append>
+
+    <!-- Use the final built-in Keyboard tab slot to open custom mod input bindings. -->
+    <append xpath="/windows/window[@name='optionsControls']/rect[@name='tabs']/rect[@name='content']/rect[@name='tabsContents']">
+        <rect name="modsTab" controller="TabSelectorTab" tab_key="xuiOptionsControlsMods" />
     </append>
     
     <!-- Injects some buttons into the main menu grid -->
     <append xpath="/windows/window[@name='mainMenu']/grid">
         <mainmenubutton name="btnModSettings" depth="3" pos="0, -310" width="250" height="40" font_size="24" caption_key="xuiModSettings" />
         <mainmenubutton name="btnModLibrary" depth="3" pos="0, -350" width="250" height="40" font_size="24" caption_key="xuiModLibrary" />
+        <mainmenubutton name="btnCustomInputs" depth="3" pos="0, -390" width="250" height="40" font_size="24" caption_key="xuiModInputBindings" />
     </append>
 </configs>

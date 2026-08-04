@@ -1,0 +1,13 @@
+<configs>
+    <append xpath="/lootcontainers/lootgroup[@name='groupJunk01']">
+        <item name="cassette_ExplanationOfAnEntity" count="1" loot_prob_template="low" />
+    </append>
+
+    <append xpath="/lootcontainers/lootgroup[@name='groupJunk02']">
+        <item name="itemWalkman" count="1" loot_prob_template="veryLow" />
+    </append>
+
+    <append xpath="/lootcontainers/lootgroup[@name='groupCrackabookCrate03']">
+        <item name="musicDisc_TestTrack" count="1" loot_prob_template="veryLow" />
+    </append>
+</configs>

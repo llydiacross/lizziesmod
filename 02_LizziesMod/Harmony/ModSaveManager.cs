@@ -5,15 +5,34 @@ using System.Xml;
 
 namespace LizziesMod
 {
-    public static class ModProfileManager
+    public static class ModSaveManager
     {
-        public static void SaveLevelProfile()
+        private const string LegacyBackupDirectoryName = "LizziesMod_Backups";
+
+        private sealed class BackupFileRecord
+        {
+            public string RelativePath;
+            public long Length;
+            public DateTime LastWriteTimeUtc;
+        }
+        
+        public static void SaveLevelModProfile()
         {
             if (SingletonMonoBehaviour<ConnectionManager>.Instance == null || !SingletonMonoBehaviour<ConnectionManager>.Instance.IsServer)
                 return;
 
             string saveDir = GameIO.GetSaveGameDir();
             if (string.IsNullOrEmpty(saveDir)) return;
+
+            try
+            {
+                Directory.CreateDirectory(saveDir);
+            }
+            catch (Exception e)
+            {
+                Logger.Error($"[ModProfileManager] Failed to create world save directory '{saveDir}': {e.Message}");
+                return;
+            }
 
             string path = Path.Combine(saveDir, "LevelModProfile.xml");
 
@@ -36,42 +55,149 @@ namespace LizziesMod
                 root.AppendChild(modNode);
             }
 
-            xmlDoc.Save(path);
-            Logger.Info($"[ModProfileManager] Saved active profile '{currentProfileName}' to world save directory.");
-        }
-
-        public static void BackupSaveDirectory(string saveDir)
-        {
             try
             {
-                string backupRoot = Path.Combine(saveDir, "LizziesMod_Backups");
-                string timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
-                string targetBackupDir = Path.Combine(backupRoot, "Backup_" + timestamp);
-
-                if (!Directory.Exists(targetBackupDir))
-                {
-                    Directory.CreateDirectory(targetBackupDir);
-                }
-
-                // Copy the critical state files before any modification happens
-                string[] filesToBackup = new string[] { "main.ttw", "players.xml", "LevelModProfile.xml" };
-                foreach (string fileName in filesToBackup)
-                {
-                    string sourceFile = Path.Combine(saveDir, fileName);
-                    if (File.Exists(sourceFile))
-                    {
-                        File.Copy(sourceFile, Path.Combine(targetBackupDir, fileName), true);
-                    }
-                }
-                Logger.Info($"[ModProfileManager] Created safety backup at: {targetBackupDir}");
+                xmlDoc.Save(path);
+                Logger.Info($"[ModProfileManager] Saved active profile '{currentProfileName}' to world save directory.");
             }
-            catch (Exception ex)
+            catch (Exception e)
             {
-                Logger.Error($"[ModProfileManager] Failed to create safety backup: {ex.Message}");
+                Logger.Error($"[ModProfileManager] Failed to save level profile to '{path}': {e.Message}");
             }
         }
 
-        public static bool VerifyLevelProfile(string path, out string warningText)
+        public static bool BackupSaveDirectory(string saveDir, string reason)
+        {
+            string stagingDirectory = "";
+            try
+            {
+                if (string.IsNullOrEmpty(saveDir) || !Directory.Exists(saveDir))
+                {
+                    Logger.Error("[ModProfileManager] Cannot create a safety backup because the world save directory does not exist.");
+                    return false;
+                }
+
+                string sourceDirectory = Path.GetFullPath(saveDir)
+                    .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+                DirectoryInfo sourceInfo = new DirectoryInfo(sourceDirectory);
+                if (sourceInfo.Parent == null)
+                {
+                    Logger.Error($"[ModProfileManager] Cannot create a safety backup for root directory '{sourceDirectory}'.");
+                    return false;
+                }
+
+                string backupRoot = Path.Combine(sourceInfo.Parent.FullName, sourceInfo.Name + "_LizziesMod_Backups");
+                string timestamp = DateTime.UtcNow.ToString("yyyyMMdd_HHmmss_fff");
+                string targetBackupDir = Path.Combine(backupRoot, "Backup_" + timestamp);
+                stagingDirectory = Path.Combine(backupRoot, ".staging_" + timestamp);
+                Directory.CreateDirectory(stagingDirectory);
+
+                var files = new System.Collections.Generic.List<BackupFileRecord>();
+                CopySaveDirectory(sourceDirectory, sourceDirectory, stagingDirectory, files);
+                WriteBackupManifest(stagingDirectory, sourceDirectory, reason, files);
+
+                if (Directory.Exists(targetBackupDir))
+                {
+                    throw new IOException($"Backup target '{targetBackupDir}' already exists.");
+                }
+
+                Directory.Move(stagingDirectory, targetBackupDir);
+                stagingDirectory = "";
+                Logger.Info($"[ModProfileManager] Created full safety backup at '{targetBackupDir}' with {files.Count} file(s).");
+                return true;
+            }
+            catch (Exception exception)
+            {
+                Logger.Error($"[ModProfileManager] Failed to create safety backup: {exception.Message}");
+                if (!string.IsNullOrEmpty(stagingDirectory) && Directory.Exists(stagingDirectory))
+                {
+                    try
+                    {
+                        Directory.Delete(stagingDirectory, true);
+                    }
+                    catch (Exception cleanupException)
+                    {
+                        Logger.Warning($"[ModProfileManager] Failed to remove incomplete safety backup '{stagingDirectory}': {cleanupException.Message}");
+                    }
+                }
+                return false;
+            }
+        }
+
+        private static void CopySaveDirectory(
+            string sourceRoot,
+            string currentSourceDirectory,
+            string targetRoot,
+            System.Collections.Generic.List<BackupFileRecord> files)
+        {
+            foreach (string sourceFile in Directory.GetFiles(currentSourceDirectory))
+            {
+                FileInfo sourceInfo = new FileInfo(sourceFile);
+                string relativePath = GetRelativeBackupPath(sourceRoot, sourceFile);
+                string targetFile = Path.Combine(targetRoot, relativePath);
+                string targetDirectory = Path.GetDirectoryName(targetFile);
+                if (!string.IsNullOrEmpty(targetDirectory)) Directory.CreateDirectory(targetDirectory);
+
+                File.Copy(sourceFile, targetFile, true);
+                File.SetLastWriteTimeUtc(targetFile, sourceInfo.LastWriteTimeUtc);
+                files.Add(new BackupFileRecord
+                {
+                    RelativePath = relativePath,
+                    Length = sourceInfo.Length,
+                    LastWriteTimeUtc = sourceInfo.LastWriteTimeUtc
+                });
+            }
+
+            foreach (string childDirectory in Directory.GetDirectories(currentSourceDirectory))
+            {
+                DirectoryInfo childInfo = new DirectoryInfo(childDirectory);
+                if (childInfo.Name.Equals(LegacyBackupDirectoryName, StringComparison.OrdinalIgnoreCase)) continue;
+                if ((childInfo.Attributes & FileAttributes.ReparsePoint) != 0) continue;
+
+                CopySaveDirectory(sourceRoot, childDirectory, targetRoot, files);
+            }
+        }
+
+        private static string GetRelativeBackupPath(string sourceRoot, string fullPath)
+        {
+            string relativePath = fullPath.Substring(sourceRoot.Length)
+                .TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+            if (string.IsNullOrEmpty(relativePath)) throw new IOException("Backup source path resolved to the save root.");
+            return relativePath;
+        }
+
+        private static void WriteBackupManifest(
+            string stagingDirectory,
+            string sourceDirectory,
+            string reason,
+            System.Collections.Generic.List<BackupFileRecord> files)
+        {
+            string manifestPath = Path.Combine(stagingDirectory, "LizziesModBackupManifest.xml");
+            using (XmlWriter writer = XmlWriter.Create(manifestPath, new XmlWriterSettings { Indent = true }))
+            {
+                writer.WriteStartDocument();
+                writer.WriteStartElement("LizziesModSaveBackup");
+                writer.WriteAttributeString("createdUtc", DateTime.UtcNow.ToString("o"));
+                writer.WriteAttributeString("sourceDirectory", sourceDirectory);
+                writer.WriteAttributeString("reason", reason ?? "");
+                writer.WriteAttributeString("fileCount", files.Count.ToString());
+
+                writer.WriteStartElement("Files");
+                foreach (BackupFileRecord file in files)
+                {
+                    writer.WriteStartElement("File");
+                    writer.WriteAttributeString("path", file.RelativePath);
+                    writer.WriteAttributeString("length", file.Length.ToString());
+                    writer.WriteAttributeString("lastWriteUtc", file.LastWriteTimeUtc.ToString("o"));
+                    writer.WriteEndElement();
+                }
+                writer.WriteEndElement();
+                writer.WriteEndElement();
+                writer.WriteEndDocument();
+            }
+        }
+
+        public static bool VerifyLevelModProfile(string path, out string warningText)
         {
             warningText = "";
             if (!File.Exists(path)) return false;
@@ -174,7 +300,7 @@ namespace LizziesMod
 
             if (File.Exists(profilePath))
             {
-                if (ModProfileManager.VerifyLevelProfile(profilePath, out string mismatchWarning))
+                if (ModSaveManager.VerifyLevelModProfile(profilePath, out string mismatchWarning))
                 {
                     XUiC_MessageBoxWindowGroup.ShowOkCancel(
                         LocalPlayerUI.primaryUI.mXUi,
@@ -184,7 +310,7 @@ namespace LizziesMod
                         () =>
                         {
                             Logger.Info("[ModProfileManager] Mismatch bypassed. Creating folder backup.");
-                            ModProfileManager.BackupSaveDirectory(saveDir);
+                            ModSaveManager.BackupSaveDirectory(saveDir, "Accepted mod profile mismatch");
                             bypassWarning = true;
 
                    
@@ -223,7 +349,7 @@ namespace LizziesMod
                 () =>
                 {
                     Logger.Info("[ModProfileManager] Injecting configuration into legacy save. Creating backup.");
-                    ModProfileManager.BackupSaveDirectory(saveDir);
+                    ModSaveManager.BackupSaveDirectory(saveDir, "Accepted legacy save profile injection");
                     bypassWarning = true;
 
                     // Re-calculate the offline status directly from the ConnectionManager
@@ -244,7 +370,7 @@ namespace LizziesMod
         {
             if (__state)
             {
-                ModProfileManager.SaveLevelProfile();
+                ModSaveManager.SaveLevelModProfile();
             }
         }
     }
@@ -316,7 +442,7 @@ namespace LizziesMod
 
             try
             {
-                ModProfileManager.SaveLevelProfile();
+                ModSaveManager.SaveLevelModProfile();
             }  
             catch
             {

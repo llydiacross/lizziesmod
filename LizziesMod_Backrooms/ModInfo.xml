@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<xml>
+  <Name value="LizziesMod_Backrooms" />
+  <DisplayName value="LizziesMod: Backrooms" />
+  <Description value="Adds a generated Backrooms dimension for LizziesMod's dimension framework." />
+  <Author value="llydia" />
+  <Version value="0.0.1" />
+  <SkipWithAntiCheat value="true" />
+</xml>
