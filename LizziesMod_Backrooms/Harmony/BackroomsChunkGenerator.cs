@@ -43,13 +43,17 @@ namespace LizziesMod.Backrooms
         // from world position. That prevents seams at either chunk or macro-room boundaries.
         private const int MacroSize = 32;
         private const int DoorHalfWidth = 1;
-        private const int TemplateCount = 10;
+        private const int TemplateCount = 17;
         private const int MinimumDoorHeight = 3;
         private const int PitStairDoorHeight = 2;
         private const int DoorHeightVariants = 3;
         private const int PitLayoutCount = 4;
         private const int BasementFeatureStyleCount = 4;
         private const int PitDoorVariantSalt = 28019;
+        private const int CrossroadsSupportPillarChanceSalt = 26103;
+        private const int CrossroadsSupportPillarLocationSalt = 26111;
+        private const int PitPillarChanceSalt = 26079;
+        private const int PitPillarLocationSalt = 26087;
 
         // Door masks let each room template describe its allowed exits compactly.
         private const int DoorWest = 1;
@@ -136,6 +140,20 @@ namespace LizziesMod.Backrooms
             "cntTrashPile01"
         };
 
+        // Basement stations sit at fixed corridor alcoves, so this palette can use larger native
+        // workstation models without competing with the ordinary-room ambient props.
+        private static readonly string[] BasementStationBlockNames =
+        {
+            "controlPanelBase01",
+            "cntUtilityCartEmptyGrey",
+            "cntFootlockerClosedGrey",
+            "cntLootCrateMoPowerElectronics",
+            "cntCollapsedWorkbenchEmpty",
+            "cntCollapsedChemistryStation",
+            "workbench",
+            "chemistryStation"
+        };
+
         // Resolve every block by name at runtime. A missing dependency causes this generator to
         // decline the chunk instead of silently emitting invalid BlockValues.
         private static readonly string[] RequiredBlockNames = BuildRequiredBlockNames();
@@ -147,13 +165,10 @@ namespace LizziesMod.Backrooms
                 "concreteMaster",
                 "woodMaster",
                 "lightPanelLEDWhite",
-                "cntLootCrateMoPowerElectronics",
-                "controlPanelBase01",
-                "cntUtilityCartEmptyGrey",
-                "cntFootlockerClosedGrey",
                 "concreteShapes:ramp"
             };
             names.AddRange(AmbientPropBlockNames);
+            names.AddRange(BasementStationBlockNames);
             names.AddRange(PitDoorBlockNames);
             return names.ToArray();
         }
@@ -174,6 +189,7 @@ namespace LizziesMod.Backrooms
         private static BlockValue footlockerBlock;
         private static BlockValue pitRampBlock;
         private static BlockValue[] ambientPropBlocks;
+        private static BlockValue[] basementStationBlocks;
         private static BlockValue[] pitDoorBlocks;
         private bool paletteResolved;
         private static bool firstGeneratedChunkLogged;
@@ -322,8 +338,8 @@ namespace LizziesMod.Backrooms
                 for (int localZ = 0; localZ < 16; localZ++)
                 {
                     int worldZ = (chunk.Z << 4) + localZ;
-                    // Templates 5 and 7 have a different vertical stack, so they entirely own their
-                    // columns. Normal rooms continue below through the shared floor/wall algorithm.
+                    // Templates 5, 7, 10, 14, and 15 have different vertical stacks, so they
+                    // entirely own their columns. Normal rooms continue below through the shared floor/wall algorithm.
                     if (IsPitStoreyTemplate(worldX, worldZ))
                     {
                         InitializeTerrainColumn(chunk, localX, localZ, PitFloorY);
@@ -335,6 +351,13 @@ namespace LizziesMod.Backrooms
                     {
                         InitializeTerrainColumn(chunk, localX, localZ, FloorY);
                         GenerateTwoStoreyColumn(chunk, localX, localZ, worldX, worldZ);
+                        continue;
+                    }
+
+                    if (IsTallEmptyTemplate(worldX, worldZ))
+                    {
+                        InitializeTerrainColumn(chunk, localX, localZ, FloorY);
+                        GenerateTallEmptyColumn(chunk, localX, localZ, worldX, worldZ);
                         continue;
                     }
 
@@ -448,7 +471,7 @@ namespace LizziesMod.Backrooms
                         continue;
                     }
 
-                    if (IsTwoStoreyTemplate(worldX, worldZ))
+                    if (IsTwoStoreyTemplate(worldX, worldZ) || IsTallEmptyTemplate(worldX, worldZ))
                     {
                         if (IsLowerChamberCell(worldX, worldZ))
                         {
@@ -459,7 +482,7 @@ namespace LizziesMod.Backrooms
                             RestoreBasementLowerSpaceColumn(chunk, localX, localZ);
                             PlaceBasementCorridorDetails(chunk, localX, localZ, worldX, worldZ);
                         }
-                        SetTwoStoreyStability(chunk, localX, localZ);
+                        SetTallRoomStability(chunk, localX, localZ);
                         continue;
                     }
 
@@ -661,6 +684,12 @@ namespace LizziesMod.Backrooms
                             continue;
                         }
 
+                        if (IsTallEmptyTemplate(worldX, worldZ))
+                        {
+                            PaintTallEmptyColumn(gameManager, worldX, worldZ);
+                            continue;
+                        }
+
                         // This mirrors the normal-column raw generation order. Keeping raw and
                         // paint passes structurally parallel makes it easier to add new templates.
                         int floorY = GetFloorY(worldX, worldZ);
@@ -846,6 +875,11 @@ namespace LizziesMod.Backrooms
             {
                 ambientPropBlocks[index] = GetRequiredBlock(AmbientPropBlockNames[index]);
             }
+            basementStationBlocks = new BlockValue[BasementStationBlockNames.Length];
+            for (int index = 0; index < BasementStationBlockNames.Length; index++)
+            {
+                basementStationBlocks[index] = GetRequiredBlock(BasementStationBlockNames[index]);
+            }
             pitDoorBlocks = new BlockValue[PitDoorBlockNames.Length];
             for (int index = 0; index < PitDoorBlockNames.Length; index++)
             {
@@ -877,7 +911,9 @@ namespace LizziesMod.Backrooms
             if (localZ == 0 && !IsDoorwayOnNorthEdge(macroX, macroZ, localX)) return true;
             if (localZ == MacroSize - 1 && !IsDoorwayOnSouthEdge(macroX, macroZ, localX)) return true;
 
-            return IsInteriorWall(GetTemplate(macroX, macroZ), localX, localZ);
+            int template = GetTemplate(macroX, macroZ);
+            if (template == 6 && IsCrossroadsSupportPillar(macroX, macroZ, localX, localZ)) return true;
+            return IsInteriorWall(template, localX, localZ);
         }
 
         private static int GetCeilingStartY(int worldX, int worldZ)
@@ -898,9 +934,10 @@ namespace LizziesMod.Backrooms
         private static bool IsInteriorWall(int template, int localX, int localZ)
         {
             // Template IDs are a compact grammar for ordinary macro-rooms:
-            // 0 is a central room; 1 and 2 are paired/segmented rooms; 3 is a cross;
-            // 4 is the default multi-room layout. IDs 5, 6, and 7 are special vertical templates,
-            // while 8 and 9 are intentionally large empty rooms, so none use interior walls here.
+            // 0 is a central room; 1 and 2 are paired/segmented rooms; 3 is a cross; 4 is a
+            // multi-room layout; 6 is a pillar hall; 11 is an inner-box loop; 12 is a staggered
+            // gallery; and 13 is a four-room cluster. IDs 5, 7, 10, 14, and 15 are special
+            // vertical templates, while 8, 9, and 16 use no interior walls.
             switch (template)
             {
                 case 0:
@@ -917,16 +954,60 @@ namespace LizziesMod.Backrooms
                 case 5:
                     return false;
                 case 6:
-                    return false;
+                    return IsCrossroadsCorePillar(localX, localZ);
                 case 7:
                     return false;
                 case 8:
                 case 9:
+                case 10:
+                case 14:
+                case 15:
+                case 16:
                     return false;
+                case 11:
+                    return IsRoomOutline(
+                        localX,
+                        localZ,
+                        5,
+                        5,
+                        26,
+                        26,
+                        DoorWest | DoorEast | DoorNorth | DoorSouth);
+                case 12:
+                    return IsStaggeredGalleryWall(localX, localZ);
+                case 13:
+                    return IsRoomOutline(localX, localZ, 4, 4, 12, 12, DoorEast | DoorSouth)
+                        || IsRoomOutline(localX, localZ, 19, 4, 27, 12, DoorWest | DoorSouth)
+                        || IsRoomOutline(localX, localZ, 4, 19, 12, 27, DoorEast | DoorNorth)
+                        || IsRoomOutline(localX, localZ, 19, 19, 27, 27, DoorWest | DoorNorth);
                 default:
                     return IsRoomOutline(localX, localZ, 6, 6, 12, 25, DoorNorth | DoorSouth)
                         || IsRoomOutline(localX, localZ, 19, 6, 25, 25, DoorNorth | DoorSouth)
                         || IsRoomOutline(localX, localZ, 12, 13, 19, 18, DoorWest | DoorEast);
+            }
+        }
+
+        private static bool IsCrossroadsCorePillar(int localX, int localZ)
+        {
+            return IsInRectangle(localX, localZ, 12, 12, 19, 19);
+        }
+
+        private static bool IsCrossroadsSupportPillar(int macroX, int macroZ, int localX, int localZ)
+        {
+            // One third of pillar halls receive an additional off-center support. It keeps a
+            // familiar macro from reading identically without affecting exterior door routes.
+            if (PositiveModulo(Hash(macroX, macroZ, CrossroadsSupportPillarChanceSalt), 3) != 0) return false;
+
+            switch (PositiveModulo(Hash(macroX, macroZ, CrossroadsSupportPillarLocationSalt), 4))
+            {
+                case 0:
+                    return IsInRectangle(localX, localZ, 4, 4, 7, 7);
+                case 1:
+                    return IsInRectangle(localX, localZ, 24, 4, 27, 7);
+                case 2:
+                    return IsInRectangle(localX, localZ, 4, 24, 7, 27);
+                default:
+                    return IsInRectangle(localX, localZ, 24, 24, 27, 27);
             }
         }
 
@@ -976,6 +1057,26 @@ namespace LizziesMod.Backrooms
             return !verticalDoorway && !horizontalDoorway;
         }
 
+        private static bool IsStaggeredGalleryWall(int localX, int localZ)
+        {
+            // Two offset partitions turn this room into a long gallery. Their alternating openings
+            // create a readable route through the room instead of a dead-end office maze.
+            bool westPartition = localX == 10 && localZ >= 4 && localZ <= 27;
+            if (westPartition)
+            {
+                return !IsAtDoorCenter(localZ, 10) && !IsAtDoorCenter(localZ, 22);
+            }
+
+            bool eastPartition = localX == 21 && localZ >= 4 && localZ <= 27;
+            return eastPartition && !IsAtDoorCenter(localZ, 16);
+        }
+
+        private static bool IsStaggeredGalleryDoorFrame(int localX, int localZ)
+        {
+            return (localX == 10 && (IsDoorFrameSide(localZ, 10) || IsDoorFrameSide(localZ, 22)))
+                || (localX == 21 && IsDoorFrameSide(localZ, 16));
+        }
+
         private static bool IsInRectangle(int x, int z, int minX, int minZ, int maxX, int maxZ)
         {
             return x >= minX && x <= maxX && z >= minZ && z <= maxZ;
@@ -990,10 +1091,10 @@ namespace LizziesMod.Backrooms
             if (IsEntrySpace(macroX, macroZ, localX, localZ)) return FloorY;
             // Template 5 contains nine sunken pits. Returning a lower floor here causes the normal
             // generator to create retaining faces between pit and non-pit cells.
-            if (GetTemplate(macroX, macroZ) == 5 && IsPit(worldX, worldZ)) return PitFloorY;
-            if (GetTemplate(macroX, macroZ) != 6) return FloorY;
+            if (IsPitStoreyTemplate(worldX, worldZ) && IsPit(worldX, worldZ)) return PitFloorY;
+            if (!IsSplitLevelTemplate(worldX, worldZ)) return FloorY;
 
-            // Template 6 is a split-level room. Two narrow bands act as ramps into a lower center.
+            // Template 16 is a split-level room. Two narrow bands act as ramps into a lower center.
             // Math.Min prevents those ramps from descending further than the configured depth.
             if (localX >= 12 && localX <= 19)
             {
@@ -1016,7 +1117,7 @@ namespace LizziesMod.Backrooms
             int macroZ = FloorDivide(worldZ, MacroSize);
             int localX = PositiveModulo(worldX, MacroSize);
             int localZ = PositiveModulo(worldZ, MacroSize);
-            if (GetTemplate(macroX, macroZ) == 6 && localX >= 12 && localX <= 19)
+            if (IsSplitLevelTemplate(worldX, worldZ) && localX >= 12 && localX <= 19)
             {
                 if (localZ >= 5 && localZ <= 8)
                 {
@@ -1047,12 +1148,38 @@ namespace LizziesMod.Backrooms
             return GetTemplate(macroX, macroZ) == 7;
         }
 
-        private static bool IsPitStoreyTemplate(int worldX, int worldZ)
+        private static bool IsTallEmptyTemplate(int worldX, int worldZ)
         {
-            // Template 5 is likewise isolated because the room has a basement layer and pit stairs.
+            // Template 10 is a continuous two-storey-high room: no intermediate slab, ramps, or
+            // interior walls, just the large empty box requested for long-range Backrooms sightlines.
             int macroX = FloorDivide(worldX, MacroSize);
             int macroZ = FloorDivide(worldZ, MacroSize);
-            return GetTemplate(macroX, macroZ) == 5;
+            return GetTemplate(macroX, macroZ) == 10;
+        }
+
+        private static bool IsSplitLevelTemplate(int worldX, int worldZ)
+        {
+            int macroX = FloorDivide(worldX, MacroSize);
+            int macroZ = FloorDivide(worldZ, MacroSize);
+            return GetTemplate(macroX, macroZ) == 16;
+        }
+
+        private static bool IsPitStoreyTemplate(int worldX, int worldZ)
+        {
+            // Template 5 uses varied pits, while 14 and 15 are deliberate main-floor descents.
+            // All three need a separate basement stack and native ramp writer.
+            int macroX = FloorDivide(worldX, MacroSize);
+            int macroZ = FloorDivide(worldZ, MacroSize);
+            int template = GetTemplate(macroX, macroZ);
+            return template == 5 || template == 14 || template == 15;
+        }
+
+        private static bool IsBasementAccessTemplate(int worldX, int worldZ)
+        {
+            int macroX = FloorDivide(worldX, MacroSize);
+            int macroZ = FloorDivide(worldZ, MacroSize);
+            int template = GetTemplate(macroX, macroZ);
+            return template == 14 || template == 15;
         }
 
         private static void GenerateTwoStoreyColumn(Chunk chunk, int chunkLocalX, int chunkLocalZ, int worldX, int worldZ)
@@ -1179,6 +1306,62 @@ namespace LizziesMod.Backrooms
             }
         }
 
+        private static void GenerateTallEmptyColumn(Chunk chunk, int chunkLocalX, int chunkLocalZ, int worldX, int worldZ)
+        {
+            // Keep the lower service route, but leave the room above it as one uninterrupted
+            // two-storey volume from the main floor to the roof.
+            for (int y = 0; y <= FloorY; y++)
+            {
+                chunk.SetBlockRaw(chunkLocalX, y, chunkLocalZ, floorBlock);
+            }
+
+            if (IsLowerChamberCell(worldX, worldZ))
+            {
+                BuildLowerChamberColumn(chunk, chunkLocalX, chunkLocalZ, worldX, worldZ);
+            }
+            else if (IsBasementCorridor(worldX, worldZ))
+            {
+                BuildBasementCorridorColumn(chunk, chunkLocalX, chunkLocalZ, worldX, worldZ);
+            }
+            else if (TouchesBasementLowerSpace(worldX, worldZ))
+            {
+                PrepareBasementCorridorTerrain(chunk, chunkLocalX, chunkLocalZ);
+            }
+
+            for (int y = FloorY + 1; y <= StoryRoofTopY; y++)
+            {
+                chunk.SetBlockRaw(chunkLocalX, y, chunkLocalZ, BlockValue.Air);
+            }
+
+            bool doorway = IsLowerDoorway(worldX, worldZ);
+            int doorTopY = doorway ? GetDoorTopY(worldX, worldZ, FloorY, StoryCeilingY, 25013) : FloorY;
+            int frameTopY = FloorY;
+            bool frame = !doorway && TryGetTallDoorFrameTopY(worldX, worldZ, out frameTopY);
+            bool wall = IsWall(worldX, worldZ);
+            if (doorway || wall)
+            {
+                for (int y = FloorY + 1; y < StoryCeilingY; y++)
+                {
+                    bool header = doorway && y > doorTopY;
+                    bool framePost = wall && frame && y <= frameTopY;
+                    if (header || wall)
+                    {
+                        chunk.SetBlockRaw(chunkLocalX, y, chunkLocalZ, framePost || header ? counterBlock : wallBlock);
+                    }
+                }
+            }
+
+            for (int y = StoryCeilingY; y <= StoryRoofTopY; y++)
+            {
+                chunk.SetBlockRaw(chunkLocalX, y, chunkLocalZ, wallBlock);
+            }
+
+            if (!wall && !doorway && ShouldPlaceCeilingLight(worldX, worldZ))
+            {
+                chunk.SetBlockRaw(chunkLocalX, StoryCeilingY - 1, chunkLocalZ, ceilingLightBlock);
+            }
+        }
+
         private static bool TryGetStoryStairSlope(
             int localX,
             int localZ,
@@ -1291,6 +1474,11 @@ namespace LizziesMod.Backrooms
             return TryGetAdjacentDoorTopY(worldX, worldZ, FloorY, StoryFloorY, 23011, IsLowerDoorway, out frameTopY);
         }
 
+        private static bool TryGetTallDoorFrameTopY(int worldX, int worldZ, out int frameTopY)
+        {
+            return TryGetAdjacentDoorTopY(worldX, worldZ, FloorY, StoryCeilingY, 25013, IsLowerDoorway, out frameTopY);
+        }
+
         private static bool TryGetUpperDoorFrameTopY(int worldX, int worldZ, out int frameTopY)
         {
             return TryGetAdjacentDoorTopY(worldX, worldZ, StoryFloorY, StoryCeilingY, 24019, IsTwoStoreyUpperDoorway, out frameTopY);
@@ -1391,9 +1579,9 @@ namespace LizziesMod.Backrooms
             return GetTemplate(macroX, macroZ) == 7;
         }
 
-        private static void SetTwoStoreyStability(Chunk chunk, int localX, int localZ)
+        private static void SetTallRoomStability(Chunk chunk, int localX, int localZ)
         {
-            // The upper slab and roof span air, so mark the complete constructed stack as supported.
+            // A tall room's roof spans air, so mark the complete constructed stack as supported.
             if (IsBasementLowerSpace((chunk.X << 4) + localX, (chunk.Z << 4) + localZ))
             {
                 SetBasementCorridorStability(chunk, localX, localZ);
@@ -1497,6 +1685,54 @@ namespace LizziesMod.Backrooms
             }
         }
 
+        private static void PaintTallEmptyColumn(GameManager gameManager, int worldX, int worldZ)
+        {
+            PaintBlockFace(gameManager, worldX, FloorY, worldZ, BlockFace.Top, FloorPaintId);
+            if (IsLowerChamberCell(worldX, worldZ))
+            {
+                PaintLowerChamberColumn(gameManager, worldX, worldZ);
+            }
+            else if (IsBasementCorridor(worldX, worldZ))
+            {
+                PaintBasementCorridorColumn(gameManager, worldX, worldZ);
+            }
+            else
+            {
+                PaintBasementCorridorBoundary(gameManager, worldX, worldZ);
+            }
+
+            bool doorway = IsLowerDoorway(worldX, worldZ);
+            int doorTopY = doorway ? GetDoorTopY(worldX, worldZ, FloorY, StoryCeilingY, 25013) : FloorY;
+            int frameTopY = FloorY;
+            bool frame = !doorway && TryGetTallDoorFrameTopY(worldX, worldZ, out frameTopY);
+            bool wall = IsWall(worldX, worldZ);
+            if (doorway || wall)
+            {
+                for (int y = FloorY + 1; y < StoryCeilingY; y++)
+                {
+                    bool header = doorway && y > doorTopY;
+                    bool framePost = wall && frame && y <= frameTopY;
+                    if (header || framePost)
+                    {
+                        PaintDoorFrameFaces(gameManager, worldX, y, worldZ);
+                    }
+                    else if (wall)
+                    {
+                        PaintBlockAllFaces(gameManager, worldX, y, worldZ, WallPaintId);
+                    }
+                }
+            }
+
+            for (int y = StoryCeilingY; y <= StoryRoofTopY; y++)
+            {
+                PaintBlockAllFaces(gameManager, worldX, y, worldZ, WallPaintId);
+                if (y == StoryCeilingY)
+                {
+                    PaintBlockFace(gameManager, worldX, y, worldZ, BlockFace.Bottom, CeilingPaintId);
+                }
+            }
+        }
+
         private static void GeneratePitStoreyColumn(Chunk chunk, int chunkLocalX, int chunkLocalZ, int worldX, int worldZ)
         {
             // Template 5 combines three vertical spaces in one macro-room: a lower pit floor, the
@@ -1535,9 +1771,10 @@ namespace LizziesMod.Backrooms
             }
 
             // A compact stair exits the central pit. Outside pit cells receive a main-floor slab;
-            // retaining walls are placed first when those slabs neighbor a lower pit cell.
+            // access pits extend that slab into an upper landing that reaches the outer rim.
             int stairTopY;
             bool pitStair = TryGetPitStairTopY(localX, localZ, out stairTopY);
+            bool basementAccessLanding = IsBasementAccessLanding(worldX, worldZ);
             bool pitCorridorDoorway = IsPitCorridorDoorway(worldX, worldZ);
             if (pitStair)
             {
@@ -1551,7 +1788,7 @@ namespace LizziesMod.Backrooms
                     chunk.SetBlockRaw(chunkLocalX, stairTopY + 1, chunkLocalZ, GetSlopeBlock(BlockFace.South));
                 }
             }
-            else if (!pit)
+            else if (!pit || basementAccessLanding)
             {
                 if (IsPitRetainingWall(worldX, worldZ))
                 {
@@ -1571,10 +1808,11 @@ namespace LizziesMod.Backrooms
                 chunk.SetBlockRaw(chunkLocalX, FloorY, chunkLocalZ, floorBlock);
             }
 
-            // Each pit macro-room receives one deterministic basement feature room and a small desk
-            // vignette. These conditions explicitly avoid the pit stairs so features never overlap.
-            bool basementFeatureDoorway = !pitStair && IsBasementFeatureDoorway(worldX, worldZ);
-            bool basementFeatureWall = !pitStair && IsBasementFeatureWall(worldX, worldZ);
+            // Access-pit macros reserve the entire lower level for traversal. The varied pit macro
+            // still receives one deterministic basement feature room and small desk vignette.
+            bool hasBasementFeature = !IsBasementAccessTemplate(worldX, worldZ);
+            bool basementFeatureDoorway = hasBasementFeature && !pitStair && IsBasementFeatureDoorway(worldX, worldZ);
+            bool basementFeatureWall = hasBasementFeature && !pitStair && IsBasementFeatureWall(worldX, worldZ);
             if (basementFeatureDoorway)
             {
                 for (int y = BasementDoorTopY + 1; y < FloorY; y++)
@@ -1589,12 +1827,20 @@ namespace LizziesMod.Backrooms
                     chunk.SetBlockRaw(chunkLocalX, y, chunkLocalZ, wallBlock);
                 }
             }
-            else if (!pitStair)
+            else if (hasBasementFeature && !pitStair)
             {
                 BlockValue basementFeature = GetBasementFeatureBlock(worldX, worldZ);
                 if (basementFeature.Block != null)
                 {
                     chunk.SetBlockRaw(chunkLocalX, PitFloorY + 1, chunkLocalZ, basementFeature);
+                }
+            }
+
+            if (IsPitSupportPillar(worldX, worldZ))
+            {
+                for (int y = PitInteriorWallBottomY; y < CeilingY; y++)
+                {
+                    chunk.SetBlockRaw(chunkLocalX, y, chunkLocalZ, wallBlock);
                 }
             }
 
@@ -1788,17 +2034,9 @@ namespace LizziesMod.Backrooms
                     break;
             }
 
-            switch (PositiveModulo(Hash(macroX, macroZ, BasementStationStyleSalt), 4))
-            {
-                case 0:
-                    return controlPanelBlock;
-                case 1:
-                    return utilityCartBlock;
-                case 2:
-                    return footlockerBlock;
-                default:
-                    return lootCrateBlock;
-            }
+            return basementStationBlocks[PositiveModulo(
+                Hash(macroX, macroZ, BasementStationStyleSalt),
+                basementStationBlocks.Length)];
         }
 
         private static bool IsBasementLowerSpace(int worldX, int worldZ)
@@ -1838,7 +2076,7 @@ namespace LizziesMod.Backrooms
             int macroX = FloorDivide(worldX, MacroSize);
             int macroZ = FloorDivide(worldZ, MacroSize);
             int template = GetTemplate(macroX, macroZ);
-            if (template == 5 || template == 6)
+            if (template == 5 || template == 14 || template == 15 || template == 16)
             {
                 minX = 0;
                 minZ = 0;
@@ -2359,10 +2597,9 @@ namespace LizziesMod.Backrooms
             int localX = PositiveModulo(worldX, MacroSize);
             int localZ = PositiveModulo(worldZ, MacroSize);
             int tangentPosition = facing == BlockFace.North || facing == BlockFace.South ? localX : localZ;
-            // A compact four-cell threshold gives every pit shape several routes into the shared
-            // lower cross. The old one-cell hash roll could land against a stair and seal the
-            // entire lower level behind retaining walls.
-            return tangentPosition >= 14 && tangentPosition <= 17;
+            // A native entity door occupies one block cell. Use one stable center cell for each
+            // corridor threshold; every neighboring retaining-wall cell remains solid.
+            return tangentPosition == 15;
         }
 
         private static bool TryGetPitDoorFacing(int worldX, int worldZ, out BlockFace facing)
@@ -2583,7 +2820,7 @@ namespace LizziesMod.Backrooms
                     PaintBlockFace(gameManager, worldX, stairTopY, worldZ, BlockFace.Top, FloorPaintId);
                 }
             }
-            else if (!IsPit(worldX, worldZ))
+            else if (!IsPit(worldX, worldZ) || IsBasementAccessLanding(worldX, worldZ))
             {
                 PaintBlockAllFaces(gameManager, worldX, FloorY, worldZ, WallPaintId);
                 PaintBlockFace(gameManager, worldX, FloorY, worldZ, BlockFace.Top, FloorPaintId);
@@ -2594,8 +2831,9 @@ namespace LizziesMod.Backrooms
                 }
             }
 
-            bool basementFeatureDoorway = !pitStair && IsBasementFeatureDoorway(worldX, worldZ);
-            bool basementFeatureWall = !pitStair && IsBasementFeatureWall(worldX, worldZ);
+            bool hasBasementFeature = !IsBasementAccessTemplate(worldX, worldZ);
+            bool basementFeatureDoorway = hasBasementFeature && !pitStair && IsBasementFeatureDoorway(worldX, worldZ);
+            bool basementFeatureWall = hasBasementFeature && !pitStair && IsBasementFeatureWall(worldX, worldZ);
             if (basementFeatureDoorway)
             {
                 for (int y = BasementDoorTopY + 1; y < FloorY; y++)
@@ -2608,6 +2846,14 @@ namespace LizziesMod.Backrooms
                 for (int y = PitInteriorWallBottomY; y < FloorY; y++)
                 {
                     PaintBasementWallBlock(gameManager, worldX, y, worldZ);
+                }
+            }
+
+            if (IsPitSupportPillar(worldX, worldZ))
+            {
+                for (int y = PitInteriorWallBottomY; y < CeilingY; y++)
+                {
+                    PaintBlockAllFaces(gameManager, worldX, y, worldZ, WallPaintId);
                 }
             }
 
@@ -2688,7 +2934,21 @@ namespace LizziesMod.Backrooms
             int macroZ = FloorDivide(worldZ, MacroSize);
             int localX = PositiveModulo(worldX, MacroSize);
             int localZ = PositiveModulo(worldZ, MacroSize);
-            if (GetTemplate(macroX, macroZ) != 5 || IsEntrySpace(macroX, macroZ, localX, localZ)) return false;
+            int template = GetTemplate(macroX, macroZ);
+            if ((template != 5 && template != 14 && template != 15) ||
+                IsEntrySpace(macroX, macroZ, localX, localZ)) return false;
+
+            // These deliberate access macros share the pit ramp, retaining walls, and lower-door
+            // machinery with template 5, but carve one large reachable floor cut instead of wells.
+            if (template == 14)
+            {
+                return IsInRectangle(localX, localZ, 9, 9, 22, 22);
+            }
+
+            if (template == 15)
+            {
+                return IsInRectangle(localX, localZ, 11, 4, 20, 27);
+            }
 
             switch (PositiveModulo(Hash(macroX, macroZ, 26003), PitLayoutCount))
             {
@@ -2718,6 +2978,89 @@ namespace LizziesMod.Backrooms
                         || IsInRectangle(localX, localZ, 3, 20, 11, 28)
                         || IsInRectangle(localX, localZ, 20, 20, 28, 28);
             }
+        }
+
+        private static bool IsBasementAccessLanding(int worldX, int worldZ)
+        {
+            int macroX = FloorDivide(worldX, MacroSize);
+            int macroZ = FloorDivide(worldZ, MacroSize);
+            int template = GetTemplate(macroX, macroZ);
+            if (template != 14 && template != 15) return false;
+
+            int localX = PositiveModulo(worldX, MacroSize);
+            int localZ = PositiveModulo(worldZ, MacroSize);
+            if (localX < 13 || localX > 18 || localZ < 19) return false;
+
+            // The landing begins at the ramp's full-height final step and reaches the south rim.
+            return template == 14 ? localZ <= 22 : localZ <= 27;
+        }
+
+        private static bool IsPitSupportPillar(int worldX, int worldZ)
+        {
+            int macroX = FloorDivide(worldX, MacroSize);
+            int macroZ = FloorDivide(worldZ, MacroSize);
+            if (GetTemplate(macroX, macroZ) != 5 ||
+                PositiveModulo(Hash(macroX, macroZ, PitPillarChanceSalt), 3) != 0) return false;
+
+            int localX = PositiveModulo(worldX, MacroSize);
+            int localZ = PositiveModulo(worldZ, MacroSize);
+            int stairTopY;
+            if (!IsPit(worldX, worldZ) || TryGetPitStairTopY(localX, localZ, out stairTopY)) return false;
+
+            int layout = PositiveModulo(Hash(macroX, macroZ, 26003), PitLayoutCount);
+            int location = PositiveModulo(Hash(macroX, macroZ, PitPillarLocationSalt), 8);
+            int centerX;
+            int centerZ;
+            switch (layout)
+            {
+                case 0:
+                    switch (location)
+                    {
+                        case 0:
+                            centerX = 5;
+                            centerZ = 5;
+                            break;
+                        case 1:
+                            centerX = 15;
+                            centerZ = 5;
+                            break;
+                        case 2:
+                            centerX = 25;
+                            centerZ = 5;
+                            break;
+                        case 3:
+                            centerX = 5;
+                            centerZ = 15;
+                            break;
+                        case 4:
+                            centerX = 25;
+                            centerZ = 15;
+                            break;
+                        case 5:
+                            centerX = 5;
+                            centerZ = 25;
+                            break;
+                        case 6:
+                            centerX = 15;
+                            centerZ = 25;
+                            break;
+                        default:
+                            centerX = 25;
+                            centerZ = 25;
+                            break;
+                    }
+                    break;
+                case 1:
+                    centerX = location % 2 == 0 ? 5 : 25;
+                    centerZ = location % 4 < 2 ? 10 : 22;
+                    break;
+                default:
+                    centerX = location % 2 == 0 ? 6 : 24;
+                    centerZ = location % 4 < 2 ? 6 : 24;
+                    break;
+            }
+
+            return IsInRectangle(localX, localZ, centerX - 1, centerZ - 1, centerX + 1, centerZ + 1);
         }
 
         private static bool IsPitRetainingWall(int worldX, int worldZ)
@@ -2778,6 +3121,22 @@ namespace LizziesMod.Backrooms
                     return IsRoomDoorFrame(localX, localZ, 6, 6, 12, 25, DoorNorth | DoorSouth)
                         || IsRoomDoorFrame(localX, localZ, 19, 6, 25, 25, DoorNorth | DoorSouth)
                         || IsRoomDoorFrame(localX, localZ, 12, 13, 19, 18, DoorWest | DoorEast);
+                case 11:
+                    return IsRoomDoorFrame(
+                        localX,
+                        localZ,
+                        5,
+                        5,
+                        26,
+                        26,
+                        DoorWest | DoorEast | DoorNorth | DoorSouth);
+                case 12:
+                    return IsStaggeredGalleryDoorFrame(localX, localZ);
+                case 13:
+                    return IsRoomDoorFrame(localX, localZ, 4, 4, 12, 12, DoorEast | DoorSouth)
+                        || IsRoomDoorFrame(localX, localZ, 19, 4, 27, 12, DoorWest | DoorSouth)
+                        || IsRoomDoorFrame(localX, localZ, 4, 19, 12, 27, DoorEast | DoorNorth)
+                        || IsRoomDoorFrame(localX, localZ, 19, 19, 27, 27, DoorWest | DoorNorth);
                 default:
                     return false;
             }
@@ -2843,6 +3202,7 @@ namespace LizziesMod.Backrooms
                     architecture = false;
                     break;
                 case 6:
+                case 16:
                     architecture = false;
                     break;
                 case 7:
@@ -2850,6 +3210,14 @@ namespace LizziesMod.Backrooms
                     break;
                 case 8:
                 case 9:
+                case 10:
+                case 14:
+                case 15:
+                    architecture = false;
+                    break;
+                case 11:
+                case 12:
+                case 13:
                     architecture = false;
                     break;
                 default:
@@ -2918,7 +3286,7 @@ namespace LizziesMod.Backrooms
         private static int GetTemplate(int macroX, int macroZ)
         {
             // Pin the spawn macro-room to template 7 so the entry coordinates always land in the
-            // known two-storey structure. All other macro-rooms choose one of ten stable templates.
+            // known two-storey structure. All other macro-rooms choose one of seventeen stable templates.
             if (macroX == 0 && macroZ == 0) return 7;
             return PositiveModulo(Hash(macroX, macroZ, 3079), TemplateCount);
         }
@@ -2946,7 +3314,7 @@ namespace LizziesMod.Backrooms
             int localZ = PositiveModulo(worldZ, MacroSize);
             if (IsEntrySpace(macroX, macroZ, localX, localZ)) return default(BlockValue);
             int template = GetTemplate(macroX, macroZ);
-            if (template == 8 || template == 9) return default(BlockValue);
+            if (template == 8 || template == 9 || template == 10) return default(BlockValue);
             if (localX < 3 || localX > MacroSize - 4 || localZ < 3 || localZ > MacroSize - 4)
             {
                 return default(BlockValue);
