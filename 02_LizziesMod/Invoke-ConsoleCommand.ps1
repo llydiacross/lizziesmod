@@ -1,23 +1,34 @@
-<#
+<#!
 .SYNOPSIS
-Sends one command to the locally running 7 Days To Die client console.
+Queues one command for the local 7 Days To Die client console.
 
 .DESCRIPTION
-Activates the native client window, opens its F1 console unless it is already
-open, types the supplied command through SendInput, and submits it. The script
-refuses to send input unless the foreground window belongs to 7DaysToDie.
+Writes a command atomically into LizziesMod's developer-only command inbox.
+The client executes it on the main thread through its native console dispatcher,
+removes the request file, and writes a matching result file. Use
+-KeyboardFallback only when testing an older core DLL that lacks the inbox.
 #>
-[CmdletBinding(SupportsShouldProcess = $true)]
+[CmdletBinding(SupportsShouldProcess = $true, DefaultParameterSetName = 'Command')]
 param(
-    [Parameter(Mandatory = $true, Position = 0)]
+    [Parameter(Mandatory = $true, Position = 0, ParameterSetName = 'Command')]
     [ValidateNotNullOrEmpty()]
     [string]$Command,
+    [Parameter(Mandatory = $true, ParameterSetName = 'SpawnWorld')]
+    [switch]$SpawnWorld,
+    [switch]$WaitForResult,
+    [ValidateRange(1, 60)]
+    [int]$TimeoutSeconds = 15,
+    [switch]$KeyboardFallback,
     [switch]$ConsoleAlreadyOpen,
     [ValidateRange(0, 1000)]
     [int]$ConsoleOpenDelayMilliseconds = 150
 )
 
 $ErrorActionPreference = 'Stop'
+if ($SpawnWorld) {
+    $Command = '@spawn-world'
+}
+
 $Command = $Command.Trim()
 
 if ([string]::IsNullOrWhiteSpace($Command)) {
@@ -26,6 +37,59 @@ if ([string]::IsNullOrWhiteSpace($Command)) {
 
 if ($Command.IndexOf([char]0) -ge 0) {
     throw 'Command cannot contain a null character.'
+}
+
+if ($Command.IndexOf("`r") -ge 0 -or $Command.IndexOf("`n") -ge 0) {
+    throw 'Command must be a single line.'
+}
+
+if (-not $KeyboardFallback) {
+    $inboxRoot = Join-Path $PSScriptRoot 'ConsoleCommandInbox'
+    $pendingDirectory = Join-Path $inboxRoot 'Pending'
+    $resultsDirectory = Join-Path $inboxRoot 'Results'
+    $requestId = [Guid]::NewGuid().ToString('N')
+    $pendingPath = Join-Path $pendingDirectory ($requestId + '.txt')
+    $temporaryPath = $pendingPath + '.tmp'
+    $resultPath = Join-Path $resultsDirectory ($requestId + '.txt')
+
+    if (-not $PSCmdlet.ShouldProcess($pendingPath, "Queue console command '$Command'")) {
+        return
+    }
+
+    New-Item -ItemType Directory -Path $pendingDirectory -Force | Out-Null
+    New-Item -ItemType Directory -Path $resultsDirectory -Force | Out-Null
+    [System.IO.File]::WriteAllText($temporaryPath, $Command, [System.Text.UTF8Encoding]::new($false))
+    Move-Item -LiteralPath $temporaryPath -Destination $pendingPath
+    Write-Host "Queued console command request $requestId."
+    Write-Host "Result file: $resultPath"
+
+    if (-not $WaitForResult) {
+        return
+    }
+
+    $watcher = [System.IO.FileSystemWatcher]::new($resultsDirectory, ($requestId + '.txt'))
+    $watcher.NotifyFilter = [System.IO.NotifyFilters]::FileName
+    $watcher.EnableRaisingEvents = $true
+    try {
+        if (-not (Test-Path -LiteralPath $resultPath)) {
+            $changeTypes = [System.IO.WatcherChangeTypes]::Created -bor [System.IO.WatcherChangeTypes]::Renamed
+            $change = $watcher.WaitForChanged($changeTypes, $TimeoutSeconds * 1000)
+            if ($change.TimedOut -and -not (Test-Path -LiteralPath $resultPath)) {
+                throw "Timed out after $TimeoutSeconds second(s) waiting for the game to process request $requestId."
+            }
+
+            if (-not (Test-Path -LiteralPath $resultPath)) {
+                throw "The game signaled a result change for request $requestId, but its result file was unavailable."
+            }
+        }
+
+        Get-Content -LiteralPath $resultPath -Raw
+    }
+    finally {
+        $watcher.Dispose()
+    }
+
+    return
 }
 
 if ($null -eq ('LizziesModConsoleInputV3' -as [type])) {

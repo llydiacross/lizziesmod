@@ -19,9 +19,9 @@ Use a disposable save while testing experimental dimensions, and make a backup b
     ]]></Page>
 
     <Page title="Floor Configuration"><![CDATA[
-FloorY controls the concrete floor height. It defaults to 65 and is clamped between 16 and 240. The setting requires a client restart.
+FloorY controls the concrete floor height. It defaults to 32 and is clamped between 16 and 240. The setting requires a client restart.
 
-The generator fills terrain support through the block below the configured floor, clears the space above it, and places the concrete floor at FloorY. Existing chunks retain their old geometry after a setting change.
+The generator fills concrete terrain support through the block below the configured floor, clears the space above it, and places a concrete floor at FloorY. Existing chunks retain their old geometry after a setting change.
 
 The setting is available under LizziesMod_PocketDimension in Mod Settings.
     ]]></Page>
@@ -29,7 +29,7 @@ The setting is available under LizziesMod_PocketDimension in Mod Settings.
     <Page title="Regenerating Terrain"><![CDATA[
 After changing generator code or FloorY, restart the client and regenerate the realm before testing. Pocket Dimension data is stored below <save>_LizziesMod/Dimensions/PocketDimension.
 
-For a disposable test, archive or delete that realm's Region directory so the generator creates fresh chunks. Do not delete the Overworld Region directory.
+While in the Overworld, run lizziesregendimension PocketDimension. It creates an Overworld backup, archives the old Pocket Dimension Region directory, and creates an empty Region directory for fresh chunks. Do not run it while inside the Pocket Dimension.
 
 Return to the Overworld before closing the game to keep ordinary save maintenance straightforward.
     ]]></Page>

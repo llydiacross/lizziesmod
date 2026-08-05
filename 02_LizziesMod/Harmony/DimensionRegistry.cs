@@ -66,6 +66,13 @@ namespace LizziesMod
                 definition.GeneratorId.Equals(generatorId, StringComparison.OrdinalIgnoreCase);
         }
 
+        public static List<DimensionDefinition> GetDefinitions()
+        {
+            List<DimensionDefinition> result = new List<DimensionDefinition>(definitions.Values);
+            result.Sort((left, right) => string.Compare(left.Id, right.Id, StringComparison.OrdinalIgnoreCase));
+            return result;
+        }
+
         public static void Load(Mod modInstance)
         {
             LoadDefinitions(modInstance);

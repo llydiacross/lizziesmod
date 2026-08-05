@@ -8,13 +8,12 @@ namespace LizziesMod.PocketDimension
         public const string GeneratorId = "pocket-dimension";
 
         private const string SettingsModName = "LizziesMod_PocketDimension";
-        private const int DefaultFloorY = 65;
+        private const int DefaultFloorY = 32;
         private const int MinimumFloorY = 16;
         private const int MaximumFloorY = 240;
         private const int WorldHeight = 256;
         private static readonly string[] RequiredBlockNames =
         {
-            "terrainFiller",
             "concreteMaster",
             "pocketDimensionPortal"
         };
@@ -46,8 +45,7 @@ namespace LizziesMod.PocketDimension
         {
             if (!TryResolveRequiredBlocks(RequiredBlockNames)) return false;
 
-            BlockValue foundationBlock = GetRequiredBlock("terrainFiller");
-            BlockValue floorBlock = GetRequiredBlock("concreteMaster");
+            BlockValue concreteBlock = GetRequiredBlock("concreteMaster");
             BlockValue portalBlock = GetRequiredBlock("pocketDimensionPortal");
             int floorY = FloorY;
             int foundationTopY = floorY - 1;
@@ -64,9 +62,13 @@ namespace LizziesMod.PocketDimension
                 for (int localZ = 0; localZ < 16; localZ++)
                 {
                     int worldZ = (chunk.Z << 4) + localZ;
+
+                    // Both the terrain support and the visible surface are concrete. A terrain
+                    // filler foundation can render as grass through the surface mesh, even when a
+                    // concrete block is placed above it.
                     SetTerrainHeights(chunk, localX, localZ, foundationTopY);
-                    FillTerrainColumn(chunk, localX, localZ, foundationTopY, foundationBlock);
-                    chunk.SetBlockRaw(localX, floorY, localZ, floorBlock);
+                    FillTerrainColumn(chunk, localX, localZ, foundationTopY, concreteBlock);
+                    chunk.SetBlockRaw(localX, floorY, localZ, concreteBlock);
                     chunk.SetDensity(localX, floorY, localZ, MarchingCubes.DensityAir);
                     ClearAirColumn(chunk, localX, localZ, floorY + 1, WorldHeight);
 

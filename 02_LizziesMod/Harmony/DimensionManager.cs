@@ -89,8 +89,14 @@ namespace LizziesMod
                 return false;
             }
 
-            activeDimensionId = IsOverworld(dimensionId) ? OverworldDimensionId : dimensionId;
+            string nextDimensionId = IsOverworld(dimensionId) ? OverworldDimensionId : dimensionId;
+            if (string.Equals(activeDimensionId, nextDimensionId, StringComparison.OrdinalIgnoreCase)) return true;
+
+            string previousDimensionId = activeDimensionId;
+            DimensionGeneratorRegistry.NotifyDimensionDeactivated(previousDimensionId);
+            activeDimensionId = nextDimensionId;
             Logger.Info($"[DimensionManager] Active dimension set to '{activeDimensionId}'.");
+            DimensionGeneratorRegistry.NotifyDimensionActivated(activeDimensionId);
             return true;
         }
 

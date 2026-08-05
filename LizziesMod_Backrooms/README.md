@@ -16,8 +16,12 @@ The **LizziesMod_Backrooms** entry in Mod Settings exposes these restart-require
 
 - `MainFloorY` sets the normal room floor height. It accepts `16` through `200`.
 - `StoreyHeight` sets both room clearance and the upper-storey elevation. It accepts `4` through `7`.
-- `PitDepth` sets the distance below `MainFloorY` for pit floors. It accepts `4` through `12`, limited by the chosen main-floor height.
+- `PitDepth` sets the distance below `MainFloorY` for internal pit-wall footings. Pit floors sit one additional block lower, creating crawl space beneath those walls. It accepts `4` through `12`, limited by the chosen main-floor height.
 - `BasementCorridorHeight` sets the clear height at pit entrances. It accepts `3` through one less than `PitDepth`.
 - `SplitLevelDepth` sets the deepest point of split-level rooms. It accepts `1` through `4`.
 
-The pit-floor height is derived as `MainFloorY - PitDepth`, so those two settings stay consistent. Settings affect newly generated chunks only. After changing them, restart the client and recreate the generated Backrooms dimension (or delete its saved `Region` directory) before testing the new layout.
+The pit-floor height is derived as `MainFloorY - PitDepth - 1`, so those settings remain consistent with the crawl space. Settings affect newly generated chunks only. After changing them, restart the client and recreate the generated Backrooms dimension (or delete its saved `Region` directory) before testing the new layout.
+
+## Exploration
+
+Pit macro-rooms use deterministic layouts including grid wells, service trenches, ring walkways, and larger corner hazards. Their lower service nooks vary between abandoned workstations, supply caches, and electronics crates that use the game's native loot system. Ambient chairs, computers, and lamps appear more often in ordinary, pit, and two-storey rooms while preserving clear entry and outer-door space.

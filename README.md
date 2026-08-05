@@ -81,13 +81,47 @@ The launch and stop scripts are designed for repeatable development loops. Autom
 
 ### Send client console commands
 
-`02_LizziesMod/Invoke-ConsoleCommand.ps1` sends one command through the F1 console of a visible local 7 Days To Die client. It activates the game window, verifies that it owns the foreground, opens the console, types the command, and presses Enter. This makes targeted XUi checks possible without manually navigating menus:
+`02_LizziesMod/Invoke-ConsoleCommand.ps1` queues a command through a file-backed developer inbox. The running client atomically claims the request, executes it through its native console dispatcher on the main thread, removes the request file, and writes a result receipt. It does not require the game window, F1 console, or focus to be available:
 
 ```powershell
-& '.\02_LizziesMod\Invoke-ConsoleCommand.ps1' 'xui open windowModLibrary'
+& '.\02_LizziesMod\Invoke-ConsoleCommand.ps1' 'lizziesdebug diagnostics' -WaitForResult
 ```
 
-Use `-ConsoleAlreadyOpen` when the F1 console is already visible. Otherwise the helper waits 150ms after opening it before entering the command; use `-ConsoleOpenDelayMilliseconds` to adjust that handoff when needed. `-WhatIf` never sends input. The helper refuses to send anything if it cannot find or foreground the local `7DaysToDie` window, which prevents commands intended for the game from being typed into another application.
+The inbox is available only when the client starts with `-DevMode`. Requests live under `02_LizziesMod/ConsoleCommandInbox/Pending`; completed result receipts are written to `Results`. `-WaitForResult` prints the exact console output and fails after `-TimeoutSeconds` if the client has not processed the request. A client restart recovers any request that was claimed during a shutdown.
+
+When the loading screen shows **Ready to Spawn in the World**, use the native, focus-free spawn shortcut instead of clicking the button:
+
+```powershell
+& '.\02_LizziesMod\Invoke-ConsoleCommand.ps1' -SpawnWorld -WaitForResult
+```
+
+It queues a developer-only inbox spawn request; the receipt reports `queued` until the game reaches its native spawn-ready state, when it invokes the same `GameManager.DoSpawn()` action as the loading-screen button. `lizziesgame spawnstatus` reports whether a spawn request is queued and ready after the world has started.
+
+`-KeyboardFallback` retains the former F1-keyboard path for testing an older core DLL. It requires a visible, foregroundable `7DaysToDie` window; `-ConsoleAlreadyOpen` and `-ConsoleOpenDelayMilliseconds` apply only to that fallback. `-WhatIf` never writes a request or sends keyboard input.
+
+### LizziesMod debug commands
+
+Run `lizziesdebug help` in the native console for the current command list. `lizziesdev` is an alias.
+
+- `lizziesdebug dimensions` lists registered dimensions and generators, including supported and active state.
+- `lizziesdebug status [dimension-id]` reports a dimension's generator, transition state, save location, and Region/archive counts.
+- `lizziesdebug region [dimension-id]` reports only the generated terrain storage state.
+- `lizziesdebug position` and `lizziesdebug chunk [chunk-x chunk-z]` report player coordinates and loaded chunk collision/regeneration flags.
+- `lizziesdebug settings [mod-name]` lists loaded setting groups or effective values, including developer overrides and restart requirements.
+- `lizziesdebug diagnostics` prints captured XML error and warning details.
+- `lizziesdebug enter <dimension-id>` and `lizziesdebug return` request the normal guarded dimension transition. They use the same single-player and Experimental Features checks as the portal.
+- `lizziesregendimension <dimension-id>` remains the intentional terrain-reset command. It can only run in the Overworld and takes an Overworld backup before archiving the old Region directory.
+
+### Gameplay QA commands
+
+Run `lizziesgame help` for the gameplay test command family. `lizziesqa` is an alias.
+
+- `lizziesgame player`, `world`, `time`, `block [x y z]`, and `entities [radius]` inspect the current local state without changing it.
+- `lizziesgame give|take|count <item-or-block> [count]` manages test inventory items. `give` and `take` validate names and report the actual result.
+- `lizziesgame teleport <x> <y> <z>` moves the local player, while `lizziesgame buff add|remove|has <buff-id>` exercises buff state.
+- `lizziesgame spawn list [props|entities|ragdolls] [filter]` searches the Prop Spawner catalogue. `spawn <entry-id>`, `spawn grant <prop-id>`, `spawn undo`, and `spawn clear` retain the existing admin, ownership, and enabled-setting checks.
+- `lizziesgame inputs [filter]`, `textures [filter]`, `xml [items|blocks|recipes] [filter]`, and `portal` inspect the corresponding LizziesMod systems.
+- `lizziesgame ui <window-name>` opens a named XUi window for local UI testing, such as `windowModSettings`, `windowModLibrary`, or `windowSpawnMenu`.
 
 ## Developer Settings
 

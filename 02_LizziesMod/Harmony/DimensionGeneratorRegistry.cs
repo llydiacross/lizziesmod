@@ -18,19 +18,25 @@ namespace LizziesMod
         public Func<DimensionDefinition, Vector3, Vector3> GetEntryPosition { get; }
         public Func<Chunk, bool> GenerateChunk { get; }
         public Action ProcessMainThread { get; }
+        public Action OnDimensionActivated { get; }
+        public Action OnDimensionDeactivated { get; }
 
         public DimensionGeneratorDefinition(
             string id,
             DimensionSaveMode saveMode,
             Func<DimensionDefinition, Vector3, Vector3> getEntryPosition = null,
             Func<Chunk, bool> generateChunk = null,
-            Action processMainThread = null)
+            Action processMainThread = null,
+            Action onDimensionActivated = null,
+            Action onDimensionDeactivated = null)
         {
             Id = id;
             SaveMode = saveMode;
             GetEntryPosition = getEntryPosition;
             GenerateChunk = generateChunk;
             ProcessMainThread = processMainThread;
+            OnDimensionActivated = onDimensionActivated;
+            OnDimensionDeactivated = onDimensionDeactivated;
         }
     }
 
@@ -54,12 +60,15 @@ namespace LizziesMod
                 return false;
             }
 
+            IDimensionGeneratorLifecycle lifecycle = generator as IDimensionGeneratorLifecycle;
             return Register(new DimensionGeneratorDefinition(
                 generator.Id,
                 generator.SaveMode,
                 generator.GetEntryPosition,
                 generator.Generate,
-                generator.HasMainThreadWork ? new Action(generator.ProcessMainThread) : null));
+                generator.HasMainThreadWork ? new Action(generator.ProcessMainThread) : null,
+                lifecycle != null ? new Action(lifecycle.OnDimensionActivated) : null,
+                lifecycle != null ? new Action(lifecycle.OnDimensionDeactivated) : null));
         }
 
             public static bool RegisterAndLoadDefinitions(Mod modInstance, IDimensionGenerator generator)
@@ -119,6 +128,16 @@ namespace LizziesMod
             return TryGet(generatorId, out generator);
         }
 
+        public static List<DimensionGeneratorDefinition> GetRegisteredGenerators()
+        {
+            lock (generators)
+            {
+                List<DimensionGeneratorDefinition> result = new List<DimensionGeneratorDefinition>(generators.Values);
+                result.Sort((left, right) => string.Compare(left.Id, right.Id, StringComparison.OrdinalIgnoreCase));
+                return result;
+            }
+        }
+
         public static void ProcessActiveGeneratorMainThread()
         {
             DimensionDefinition dimension;
@@ -134,6 +153,38 @@ namespace LizziesMod
             catch (Exception exception)
             {
                 Logger.Error($"[DimensionGenerators] '{generator.Id}' main-thread processing failed: {exception}");
+            }
+        }
+
+        public static void NotifyDimensionActivated(string dimensionId)
+        {
+            NotifyDimensionLifecycle(dimensionId, true);
+        }
+
+        public static void NotifyDimensionDeactivated(string dimensionId)
+        {
+            NotifyDimensionLifecycle(dimensionId, false);
+        }
+
+        private static void NotifyDimensionLifecycle(string dimensionId, bool activated)
+        {
+            DimensionDefinition dimension;
+            if (!DimensionRegistry.TryGet(dimensionId, out dimension)) return;
+
+            DimensionGeneratorDefinition generator;
+            if (!TryGet(dimension.GeneratorId, out generator)) return;
+
+            Action callback = activated ? generator.OnDimensionActivated : generator.OnDimensionDeactivated;
+            if (callback == null) return;
+
+            try
+            {
+                callback();
+            }
+            catch (Exception exception)
+            {
+                string eventName = activated ? "activation" : "deactivation";
+                Logger.Error($"[DimensionGenerators] '{generator.Id}' {eventName} callback failed: {exception}");
             }
         }
     }

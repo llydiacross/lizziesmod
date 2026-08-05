@@ -35,6 +35,10 @@
   <ItemGroup>
     <Compile Include="Harmony\BlockDimensionPortal.cs" />
     <Compile Include="Harmony\ConsoleCmdGetPosition.cs" />
+    <Compile Include="Harmony\ConsoleCmdLizziesDebug.cs" />
+    <Compile Include="Harmony\ConsoleCmdLizziesGame.cs" />
+    <Compile Include="Harmony\ConsoleCmdRegenerateDimension.cs" />
+    <Compile Include="Harmony\ConsoleCommandInbox.cs" />
     <Compile Include="Harmony\DimensionGeneratorRegistry.cs" />
     <Compile Include="Harmony\GeneratedDimensionGeneratorBase.cs" />
     <Compile Include="Harmony\DimensionManager.cs" />

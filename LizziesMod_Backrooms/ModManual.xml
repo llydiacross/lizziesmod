@@ -19,17 +19,17 @@ Back up a save before testing dimension transitions. Settings marked as requirin
     ]]></Page>
 
     <Page title="Layout Settings"><![CDATA[
-MainFloorY sets the normal room floor from 16 through 200. StoreyHeight controls room clearance and upper-storey elevation from 4 through 7.
+MainFloorY sets the normal room floor from 16 through 200. StoreyHeight controls room clearance and upper-storey elevation from 4 through 8.
 
-PitDepth determines the distance below MainFloorY for pit floors, from 4 through 12. BasementCorridorHeight sets clearance at pit entrances and is limited by PitDepth. SplitLevelDepth controls the deepest point of split-level rooms from 1 through 4.
+PitDepth determines the depth of the internal pit-wall footings below MainFloorY, from 4 through 12. The pit floor sits one additional block lower, leaving a crawl space under those walls. BasementCorridorHeight sets clearance at pit entrances and is limited by PitDepth. SplitLevelDepth controls the deepest point of split-level rooms from 1 through 4.
 
-The pit floor is calculated as MainFloorY minus PitDepth, so those values remain consistent.
+The pit floor is calculated as MainFloorY minus PitDepth minus one, so those values remain consistent with the crawl space.
     ]]></Page>
 
     <Page title="Regenerating Terrain"><![CDATA[
 Layout changes affect newly generated chunks only. Restart after changing settings, then recreate the Backrooms realm before testing a new layout.
 
-For a disposable test save, delete the Backrooms Region directory below <save>_LizziesMod/Dimensions/Backrooms, or remove and recreate the entire Backrooms realm. Do not remove the Overworld Region directory.
+While in the Overworld, run lizziesregendimension Backrooms. It creates an Overworld backup, archives the old Backrooms Region directory, and creates an empty Region directory for fresh chunks. Do not run it while inside Backrooms.
 
 Keep the generated-realm data isolated from ordinary save maintenance and return to the Overworld before ending a session.
     ]]></Page>

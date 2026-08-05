@@ -14,6 +14,14 @@ namespace LizziesMod
         void ProcessMainThread();
     }
 
+    // Optional callbacks for generators that own transient work tied to one active dimension.
+    // Existing generators do not need to implement this interface.
+    public interface IDimensionGeneratorLifecycle
+    {
+        void OnDimensionActivated();
+        void OnDimensionDeactivated();
+    }
+
     public abstract class GeneratedDimensionGeneratorBase : IDimensionGenerator
     {
         private readonly object initializationLock = new object();
