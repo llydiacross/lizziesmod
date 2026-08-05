@@ -106,6 +106,8 @@ namespace LizziesMod
     {
         private const string DeveloperModeEnvironmentVariable = "LIZZIESMOD_DEV_MODE";
         private const string DeveloperSettingsFileName = "DevSettings.xml";
+           private const string ModSettingsFileName = "ModSettings.xml";
+           private const string ModSettingsConfigDirectoryName = "Config";
         public static Dictionary<string, List<ModSetting>> AllModSettings = new Dictionary<string, List<ModSetting>>();
         public static bool PendingRestart = false;
         public static List<MissingProfileModInfo> LastMissingProfileMods = new List<MissingProfileModInfo>();
@@ -117,7 +119,7 @@ namespace LizziesMod
 
         public static void LoadAllModSettings()
         {
-            Logger.Info("Scanning for ModSettings.xml across all loaded mods...");
+              Logger.Info("Scanning for Config/ModSettings.xml across all loaded mods...");
 
             foreach (Mod mod in global::ModManager.GetLoadedMods())
             {
@@ -127,11 +129,11 @@ namespace LizziesMod
                     AllModSettings[mod.Name] = new List<ModSetting>();
                 }
 
-                string settingsPath = Path.Combine(mod.Path, "ModSettings.xml");
+                string settingsPath = GetModSettingsPath(mod);
 
                 if (File.Exists(settingsPath))
                 {
-                    Logger.Info($"Found ModSettings.xml for: {mod.Name}");
+                    Logger.Info($"Found Config/ModSettings.xml for: {mod.Name}");
 
                     List<ModSetting> currentSettings = AllModSettings[mod.Name];
                     List<ModSetting> updatedSettings = new List<ModSetting>();
@@ -203,12 +205,17 @@ namespace LizziesMod
                     }
                     catch (System.Exception e)
                     {
-                        Logger.Error($"Failed to parse ModSettings.xml for {mod.Name}: {e.Message}");
+                        Logger.Error($"Failed to parse Config/ModSettings.xml for {mod.Name}: {e.Message}");
                     }
                 }
             }
 
             ApplyDeveloperSettingsOverrides();
+        }
+
+        private static string GetModSettingsPath(Mod mod)
+        {
+            return Path.Combine(mod.Path, ModSettingsConfigDirectoryName, ModSettingsFileName);
         }
 
         private static void ApplyDeveloperSettingsOverrides()
@@ -830,7 +837,12 @@ namespace LizziesMod
 
             if (targetMod == null || !AllModSettings.ContainsKey(modName)) return;
 
-            string settingsPath = Path.Combine(targetMod.Path, "ModSettings.xml");
+                string settingsPath = GetModSettingsPath(targetMod);
+                string settingsDirectory = Path.GetDirectoryName(settingsPath);
+                if (!string.IsNullOrEmpty(settingsDirectory))
+                {
+                    Directory.CreateDirectory(settingsDirectory);
+                }
 
             XmlDocument xmlDoc = new XmlDocument();
             XmlElement root = xmlDoc.CreateElement("ModSettings");
@@ -852,7 +864,7 @@ namespace LizziesMod
             }
 
             xmlDoc.Save(settingsPath);
-            Logger.Info($"Saved changes to ModSettings.xml for {modName}");
+            Logger.Info($"Saved changes to Config/ModSettings.xml for {modName}");
         }
     }
 }
