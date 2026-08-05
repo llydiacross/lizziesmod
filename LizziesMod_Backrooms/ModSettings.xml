@@ -4,5 +4,9 @@
   <Setting name="PitDepth" value="5" type="int" requiresRestart="true" />
   <Setting name="BasementCorridorHeight" value="4" type="int" requiresRestart="true" />
   <Setting name="SplitLevelDepth" value="4" type="int" requiresRestart="true" />
+  <Setting name="LayoutSeed" value="0" type="int" requiresRestart="true" />
+  <Setting name="AmbientPropDensity" value="2" type="int" requiresRestart="true" />
+  <Setting name="CeilingLightSpacing" value="5" type="int" requiresRestart="true" />
+  <Setting name="BasementLightSpacing" value="6" type="int" requiresRestart="true" />
   <Setting name="Enabled" value="true" type="bool" requiresRestart="true" hidden="true" />
 </ModSettings>

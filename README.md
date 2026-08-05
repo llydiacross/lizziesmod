@@ -107,6 +107,7 @@ Run `lizziesdebug help` in the native console for the current command list. `liz
 - `lizziesdebug status [dimension-id]` reports a dimension's generator, transition state, save location, and Region/archive counts.
 - `lizziesdebug region [dimension-id]` reports only the generated terrain storage state.
 - `lizziesdebug position` and `lizziesdebug chunk [chunk-x chunk-z]` report player coordinates and loaded chunk collision/regeneration flags.
+- `getpos` is the compact standalone coordinate command. Use it to copy the local player's world and block position; use `lizziesdebug position` when dimension and chunk details are also needed.
 - `lizziesdebug settings [mod-name]` lists loaded setting groups or effective values, including developer overrides and restart requirements.
 - `lizziesdebug diagnostics` prints captured XML error and warning details.
 - `lizziesdebug enter <dimension-id>` and `lizziesdebug return` request the normal guarded dimension transition. They use the same single-player and Experimental Features checks as the portal.
@@ -119,6 +120,7 @@ Run `lizziesgame help` for the gameplay test command family. `lizziesqa` is an a
 - `lizziesgame player`, `world`, `time`, `block [x y z]`, and `entities [radius]` inspect the current local state without changing it.
 - `lizziesgame give|take|count <item-or-block> [count]` manages test inventory items. `give` and `take` validate names and report the actual result.
 - `lizziesgame teleport <x> <y> <z>` moves the local player, while `lizziesgame buff add|remove|has <buff-id>` exercises buff state.
+- `lizziesgame spawnworld` requests the native world-spawn action without using the loading-screen button. `lizziesgame spawnstatus` reports whether that request is waiting or ready to run.
 - `lizziesgame spawn list [props|entities|ragdolls] [filter]` searches the Prop Spawner catalogue. `spawn <entry-id>`, `spawn grant <prop-id>`, `spawn undo`, and `spawn clear` retain the existing admin, ownership, and enabled-setting checks.
 - `lizziesgame inputs [filter]`, `textures [filter]`, `xml [items|blocks|recipes] [filter]`, and `portal` inspect the corresponding LizziesMod systems.
 - `lizziesgame ui <window-name>` opens a named XUi window for local UI testing, such as `windowModSettings`, `windowModLibrary`, or `windowSpawnMenu`.

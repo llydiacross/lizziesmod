@@ -24,6 +24,10 @@ MainFloorY sets the normal room floor from 16 through 200. StoreyHeight controls
 PitDepth determines the depth of the internal pit-wall footings below MainFloorY, from 4 through 12. The pit floor sits one additional block lower, leaving a crawl space under those walls. BasementCorridorHeight sets clearance at pit entrances and is limited by PitDepth. SplitLevelDepth controls the deepest point of split-level rooms from 1 through 4.
 
 The pit floor is calculated as MainFloorY minus PitDepth minus one, so those values remain consistent with the crawl space.
+
+LayoutSeed controls the full deterministic Backrooms layout. Its default value of 0 preserves the standard layout; any other signed whole number creates a different, internally consistent arrangement of rooms, pits, doors, lights, props, and lower corridors.
+
+AmbientPropDensity is the percentage of eligible ordinary-room floor cells that can receive a random prop, from 0 through 20. CeilingLightSpacing and BasementLightSpacing set the fixture grid interval from 3 through 12 blocks; lower values make their respective areas brighter.
     ]]></Page>
 
     <Page title="Regenerating Terrain"><![CDATA[

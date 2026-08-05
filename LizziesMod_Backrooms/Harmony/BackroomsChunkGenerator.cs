@@ -33,6 +33,10 @@ namespace LizziesMod.Backrooms
         private const int DefaultPitDepth = 5;
         private const int DefaultBasementCorridorHeight = 4;
         private const int DefaultSplitLevelDepth = 4;
+        private const int DefaultLayoutSeed = 0;
+        private const int DefaultAmbientPropDensity = 2;
+        private const int DefaultCeilingLightSpacing = 5;
+        private const int DefaultBasementLightSpacing = 6;
 
         // A macro-room is larger than the engine's 16 x 16 terrain chunk. This is the key to the
         // layout: a room normally spans four chunks, while the helpers derive its local coordinate
@@ -43,7 +47,6 @@ namespace LizziesMod.Backrooms
         private const int MinimumDoorHeight = 3;
         private const int PitStairDoorHeight = 2;
         private const int DoorHeightVariants = 3;
-        private const int AmbientPropChance = 47;
         private const int PitLayoutCount = 4;
         private const int BasementFeatureStyleCount = 4;
         private const int PitDoorVariantSalt = 28019;
@@ -65,8 +68,6 @@ namespace LizziesMod.Backrooms
         private const int WallPaintId = 176;
         private const int FloorPaintId = 26;
         private const int CeilingPaintId = 106;
-        private const int CeilingLightSpacing = 5;
-        private const int BasementLightSpacing = 6;
         private const int BasementJunctionVariantSalt = 30983;
         private const int BasementLightSalt = 31001;
         private const int BasementStationLocationSalt = 31019;
@@ -186,6 +187,10 @@ namespace LizziesMod.Backrooms
         private static int configuredPitDepth;
         private static int configuredBasementCorridorHeight;
         private static int configuredSplitLevelDepth;
+        private static int configuredLayoutSeed;
+        private static int configuredAmbientPropDensity;
+        private static int configuredCeilingLightSpacing;
+        private static int configuredBasementLightSpacing;
         // Terrain threads enqueue requests; the main thread consumes them. The companion hash set
         // de-duplicates requests because a chunk can be visited more than once during generation.
         private static readonly Queue<ChunkPaintRequest> paintQueue = new Queue<ChunkPaintRequest>();
@@ -260,12 +265,30 @@ namespace LizziesMod.Backrooms
                 ModSettingsManager.GetSetting<int>(SettingsModName, "SplitLevelDepth", DefaultSplitLevelDepth),
                 1,
                 4);
+            configuredLayoutSeed = ModSettingsManager.GetSetting<int>(
+                SettingsModName,
+                "LayoutSeed",
+                DefaultLayoutSeed);
+            configuredAmbientPropDensity = Clamp(
+                ModSettingsManager.GetSetting<int>(SettingsModName, "AmbientPropDensity", DefaultAmbientPropDensity),
+                0,
+                20);
+            configuredCeilingLightSpacing = Clamp(
+                ModSettingsManager.GetSetting<int>(SettingsModName, "CeilingLightSpacing", DefaultCeilingLightSpacing),
+                3,
+                12);
+            configuredBasementLightSpacing = Clamp(
+                ModSettingsManager.GetSetting<int>(SettingsModName, "BasementLightSpacing", DefaultBasementLightSpacing),
+                3,
+                12);
             layoutInitialized = true;
 
             Logger.Info(
                 $"[Backrooms] Layout: floor Y={configuredFloorY}, storey height={configuredStoreyHeight}, " +
                 $"pit depth={configuredPitDepth}, basement clearance={configuredBasementCorridorHeight}, " +
-                $"split level depth={configuredSplitLevelDepth}.");
+                $"split level depth={configuredSplitLevelDepth}, seed={configuredLayoutSeed}, " +
+                $"ambient props={configuredAmbientPropDensity}%, ceiling light spacing={configuredCeilingLightSpacing}, " +
+                $"basement light spacing={configuredBasementLightSpacing}.");
         }
 
         protected override void Initialize()
@@ -1735,9 +1758,9 @@ namespace LizziesMod.Backrooms
             int macroZ = FloorDivide(worldZ, MacroSize);
             int localX = PositiveModulo(worldX, MacroSize);
             int localZ = PositiveModulo(worldZ, MacroSize);
-            int offset = PositiveModulo(Hash(macroX, macroZ, BasementLightSalt), BasementLightSpacing);
-            bool verticalFixture = localX == 15 && PositiveModulo(localZ - offset, BasementLightSpacing) == 0;
-            bool horizontalFixture = localZ == 15 && PositiveModulo(localX - offset, BasementLightSpacing) == 0;
+            int offset = PositiveModulo(Hash(macroX, macroZ, BasementLightSalt), configuredBasementLightSpacing);
+            bool verticalFixture = localX == 15 && PositiveModulo(localZ - offset, configuredBasementLightSpacing) == 0;
+            bool horizontalFixture = localZ == 15 && PositiveModulo(localX - offset, configuredBasementLightSpacing) == 0;
             return verticalFixture || horizontalFixture;
         }
 
@@ -2906,13 +2929,13 @@ namespace LizziesMod.Backrooms
             int macroZ = FloorDivide(worldZ, MacroSize);
             int localX = PositiveModulo(worldX, MacroSize);
             int localZ = PositiveModulo(worldZ, MacroSize);
-            // Shift a dense fluorescent grid per macro-room. Five-block spacing keeps the level
-            // visibly lit between fixtures while the hashed origin avoids an obvious global seam.
-            int offsetX = PositiveModulo(Hash(macroX, macroZ, 4001), CeilingLightSpacing);
-            int offsetZ = PositiveModulo(Hash(macroX, macroZ, 5003), CeilingLightSpacing);
+            // Shift a fluorescent grid per macro-room while the hashed origin avoids an obvious
+            // global seam. The spacing setting controls the grid density without altering walls.
+            int offsetX = PositiveModulo(Hash(macroX, macroZ, 4001), configuredCeilingLightSpacing);
+            int offsetZ = PositiveModulo(Hash(macroX, macroZ, 5003), configuredCeilingLightSpacing);
 
-            return PositiveModulo(localX - offsetX, CeilingLightSpacing) == 0
-                && PositiveModulo(localZ - offsetZ, CeilingLightSpacing) == 0;
+            return PositiveModulo(localX - offsetX, configuredCeilingLightSpacing) == 0
+                && PositiveModulo(localZ - offsetZ, configuredCeilingLightSpacing) == 0;
         }
 
         private static BlockValue GetPropBlock(int worldX, int worldZ, int salt)
@@ -2932,7 +2955,7 @@ namespace LizziesMod.Backrooms
             // Prop placement stays stable across loads while the palette makes ordinary rooms feel
             // like varied abandoned office and service spaces instead of repeating a few models.
             int propSeed = Hash(worldX, worldZ, salt);
-            if (PositiveModulo(propSeed, AmbientPropChance) != 0) return default(BlockValue);
+            if (PositiveModulo(propSeed, 100) >= configuredAmbientPropDensity) return default(BlockValue);
             return ambientPropBlocks[PositiveModulo(
                 Hash(worldX, worldZ, salt + 1009),
                 ambientPropBlocks.Length)];
@@ -2950,10 +2973,10 @@ namespace LizziesMod.Backrooms
         {
             // Small deterministic integer mixer. It has no shared state and works for negative input,
             // which is essential for terrain that must reproduce identically after unload/reload.
-            // Different salts create independent-looking decisions from the same coordinates.
+            // The layout seed roots every stream, while different salts keep feature decisions separate.
             unchecked
             {
-                int hash = salt;
+                int hash = salt ^ configuredLayoutSeed;
                 hash = (hash * 486187739) ^ first;
                 hash = (hash * 16777619) ^ second;
                 hash ^= hash >> 16;
