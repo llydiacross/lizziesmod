@@ -125,9 +125,15 @@ Run `lizziesgame help` for the gameplay test command family. `lizziesqa` is an a
 - `lizziesgame inputs [filter]`, `textures [filter]`, `xml [items|blocks|recipes] [filter]`, and `portal` inspect the corresponding LizziesMod systems.
 - `lizziesgame ui <window-name>` opens a named XUi window for local UI testing, such as `windowModSettings`, `windowModLibrary`, or `windowSpawnMenu`.
 
+## Gears Compatibility
+
+LizziesMod settings use `Config/ModSettings.xml` inside each LizziesMod package. This leaves the root-level `ModSettings.xml` available for [Gears - A Mod Settings Manager](https://www.nexusmods.com/7daystodie/mods/4017?tab=description), which uses that root file for its own settings definitions.
+
+LizziesMod does not load, save, or modify root-level `ModSettings.xml` files. Mods that define their settings for Gears therefore still require Gears; LizziesMod only manages settings declared in `Config/ModSettings.xml`.
+
 ## Developer Settings
 
-Committed `ModSettings.xml` files use player-safe defaults. Local development overrides live in the ignored `02_LizziesMod/DevSettings.xml` file and apply only when the client starts in developer mode:
+Committed `Config/ModSettings.xml` files use player-safe defaults. Local development overrides live in the ignored `02_LizziesMod/DevSettings.xml` file and apply only when the client starts in developer mode:
 
 ```xml
 <DevSettings>
