@@ -81,7 +81,7 @@ The launch and stop scripts are designed for repeatable development loops. Autom
 
 ### Send client console commands
 
-`02_LizziesMod/Invoke-ConsoleCommand.ps1` queues a command through a file-backed developer inbox. The running client atomically claims the request, executes it through its native console dispatcher on the main thread, removes the request file, and writes a result receipt. It does not require the game window, F1 console, or focus to be available:
+`02_LizziesMod/Invoke-ConsoleCommand.ps1` queues a command through a file-backed developer console queue system. The running client atomically claims the request, executes it through its native console dispatcher on the main thread, removes the request file, and writes a result receipt. It does not require the game window, F1 console, or focus to be available:
 
 ```powershell
 & '.\02_LizziesMod\Invoke-ConsoleCommand.ps1' 'lizziesdebug diagnostics' -WaitForResult

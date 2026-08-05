@@ -2,7 +2,7 @@
 
 This is a generated-dimension add-on for `02_LizziesMod`. It registers the `backrooms` generator and declares the `Backrooms` dimension in `Config/Dimensions.xml`.
 
-The mod requires the core LizziesMod DLL. Its generator uses a concrete foundation below the configured main floor, then builds persistent Backrooms rooms and corridors above it.
+The mod requires the core LizziesMod DLL.
 
 `defaultPriority="100"` makes Backrooms the portal destination while this add-on is installed. Lower-priority definitions remain available but are not selected by the current portal UI.
 
