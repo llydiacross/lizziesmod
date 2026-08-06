@@ -10,17 +10,19 @@ namespace LizziesMod
         public string Id { get; }
         public string DisplayName { get; }
         public string GeneratorId { get; }
+            public bool DisableWorldBoundary { get; }
 
         public bool IsSupported
         {
             get { return DimensionGeneratorRegistry.IsRegistered(GeneratorId); }
         }
 
-        public DimensionDefinition(string id, string displayName, string generatorId)
+        public DimensionDefinition(string id, string displayName, string generatorId, bool disableWorldBoundary = false)
         {
             Id = id;
             DisplayName = string.IsNullOrEmpty(displayName) ? id : displayName;
             GeneratorId = string.IsNullOrEmpty(generatorId) ? DimensionRegistry.SaveSnapshotGeneratorId : generatorId;
+            DisableWorldBoundary = disableWorldBoundary;
         }
     }
 
@@ -112,6 +114,8 @@ namespace LizziesMod
                     string id = node.Attributes["id"]?.Value;
                     string displayName = node.Attributes["displayName"]?.Value;
                     string generatorId = node.Attributes["generator"]?.Value;
+                        bool disableWorldBoundary;
+                        bool.TryParse(node.Attributes["disableWorldBoundary"]?.Value, out disableWorldBoundary);
                     if (!DimensionStorage.IsValidDimensionId(id) || DimensionManager.IsOverworld(id))
                     {
                         Logger.Warning($"[DimensionRegistry] Ignored dimension with invalid ID '{id ?? ""}'.");
@@ -124,7 +128,7 @@ namespace LizziesMod
                         continue;
                     }
 
-                    definitions[id] = new DimensionDefinition(id, displayName, generatorId);
+                    definitions[id] = new DimensionDefinition(id, displayName, generatorId, disableWorldBoundary);
                     loadedDefinitionCount++;
                 }
 

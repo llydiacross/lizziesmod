@@ -23,6 +23,7 @@ namespace LizziesMod
         private static readonly object chunkGenerationGate = new object();
         private static readonly Dictionary<string, RegionStorageBinding> regionStorageBindings =
             new Dictionary<string, RegionStorageBinding>(StringComparer.OrdinalIgnoreCase);
+            private static string loggedWorldBoundaryOverrideDimensionId = "";
 
         public static string ActiveDimensionId
         {
@@ -57,6 +58,40 @@ namespace LizziesMod
         {
             return !IsOverworld(activeDimensionId) && DimensionRegistry.UsesGenerator(activeDimensionId, generatorId);
         }
+
+            public static bool IsWorldBoundaryDisabledForActiveDimension()
+            {
+                if (IsOverworld(activeDimensionId)) return false;
+
+                DimensionDefinition definition;
+                if (!DimensionRegistry.TryGet(activeDimensionId, out definition) || !definition.DisableWorldBoundary)
+                {
+                    return false;
+                }
+
+                if (!loggedWorldBoundaryOverrideDimensionId.Equals(activeDimensionId, StringComparison.OrdinalIgnoreCase))
+                {
+                    loggedWorldBoundaryOverrideDimensionId = activeDimensionId;
+                    Logger.Info($"[DimensionManager] World boundary and biome radiation are disabled for '{activeDimensionId}'.");
+                }
+
+                return true;
+            }
+
+            public static float FilterWorldBoundsPercent(float worldBoundsPercent)
+            {
+                return IsWorldBoundaryDisabledForActiveDimension() ? 1f : worldBoundsPercent;
+            }
+
+            public static bool FilterWorldBoundsAdjustment(bool needsBoundsAdjustment)
+            {
+                return IsWorldBoundaryDisabledForActiveDimension() ? false : needsBoundsAdjustment;
+            }
+
+            public static float FilterBiomeRadiation(float radiation)
+            {
+                return IsWorldBoundaryDisabledForActiveDimension() ? 0f : radiation;
+            }
 
         public static bool IsProviderBoundToActiveGeneratedDimension(ChunkProviderGenerateWorld provider)
         {
@@ -95,6 +130,7 @@ namespace LizziesMod
             string previousDimensionId = activeDimensionId;
             DimensionGeneratorRegistry.NotifyDimensionDeactivated(previousDimensionId);
             activeDimensionId = nextDimensionId;
+                loggedWorldBoundaryOverrideDimensionId = "";
             Logger.Info($"[DimensionManager] Active dimension set to '{activeDimensionId}'.");
             DimensionGeneratorRegistry.NotifyDimensionActivated(activeDimensionId);
             return true;

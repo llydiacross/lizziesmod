@@ -45,6 +45,9 @@
         <window_group name="windowModSettings">
             <window name="windowModSettings"/>
         </window_group>
+        <window_group name="windowModSettingColorPicker" actionset="true" close_comp_on_escape="true">
+            <window name="windowModSettingColorPicker" />
+        </window_group>
 
         <!-- Flux Teleport Timer -->
         <window_group name="windowFluxTeleportTimer" actionset="false">

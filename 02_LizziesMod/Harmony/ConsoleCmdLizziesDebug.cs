@@ -127,7 +127,8 @@ namespace LizziesMod
                 string mode = generatorRegistered ? generator.SaveMode.ToString() : "missing";
                 report.AppendLine("- " + definition.Id + " | " + definition.DisplayName +
                     " | generator=" + definition.GeneratorId + " (" + mode + ")" +
-                    " | supported=" + definition.IsSupported);
+                    " | supported=" + definition.IsSupported +
+                    " | world boundary disabled=" + definition.DisableWorldBoundary);
             }
 
             report.AppendLine("Registered generators:");
@@ -176,6 +177,7 @@ namespace LizziesMod
                 " | registered=" + generatorRegistered +
                 " | mode=" + (generatorRegistered ? generator.SaveMode.ToString() : "missing"));
             report.AppendLine("Supported: " + definition.IsSupported);
+                report.AppendLine("World boundary disabled: " + definition.DisableWorldBoundary);
             AppendRegionStatus(report, definition.Id);
             Output(report.ToString().TrimEnd(), senderInfo);
         }
@@ -360,6 +362,7 @@ namespace LizziesMod
                 values.AppendLine("- " + setting.Name + "=" + setting.Value +
                     " | persisted=" + setting.ValueForPersistence +
                     " | type=" + setting.Type +
+                    " | control=" + setting.EffectiveControl.ToString().ToLowerInvariant() +
                     " | flags=" + GetSettingFlags(setting));
             }
 

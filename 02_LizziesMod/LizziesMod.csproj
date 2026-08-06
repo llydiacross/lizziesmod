@@ -44,6 +44,7 @@
     <Compile Include="Harmony\DimensionManager.cs" />
     <Compile Include="Harmony\DimensionRegistry.cs" />
     <Compile Include="Harmony\DimensionStorage.cs" />
+    <Compile Include="Harmony\DimensionWorldBoundaryPatches.cs" />
     <Compile Include="Harmony\EntityPhysicsProp.cs" />
     <Compile Include="Harmony\ItemActionOpenModManual.cs" />
     <Compile Include="Harmony\ModSaveManager.cs" />
@@ -75,6 +76,7 @@
     <Compile Include="Harmony\ModManualManager.cs" />
     <Compile Include="Harmony\ModManualUIController.cs" />
     <Compile Include="Harmony\ModSettingsManager.cs" />
+    <Compile Include="Harmony\ModSettingPresentation.cs" />
     <Compile Include="Harmony\ModSettingsUIController.cs" />
     <Compile Include="Harmony\NetPackageJukeboxCommand.cs" />
     <Compile Include="Harmony\NetPackageJukeboxFeedback.cs" />

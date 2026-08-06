@@ -8,6 +8,8 @@ LizziesMod_Backrooms is a generated-dimension companion for LizziesMod. It regis
 When this companion is installed, its default priority selects Backrooms as the ordinary Dimensional Portal destination. The dimension system is experimental, single-player only, and requires ExperimentalFeatures to be enabled before a portal can activate.
 
 The generator creates persistent rooms and corridors above a concrete foundation. Generated chunks are stored separately from the Overworld save.
+
+Backrooms enables disableWorldBoundary in Config/Dimensions.xml. While Backrooms is active, vanilla world-edge pushback, its end-of-world message, vehicle bounds correction, and biome radiation are disabled so exploration can continue beyond the normal map boundary. The Overworld remains unchanged, and practical chunk-streaming, memory, and disk limits still apply.
     ]]></Page>
 
     <Page title="Access Terminal"><![CDATA[

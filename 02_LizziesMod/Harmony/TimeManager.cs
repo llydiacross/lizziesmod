@@ -47,6 +47,9 @@ namespace LizziesMod
         private const float YearFadeDuration = 1.5f;
 
         private static bool displayFadeRequested;
+        private static readonly Color DefaultYearColor = new Color(1f, 180f / 255f, 0f, 1f);
+        private static Color yearColor = DefaultYearColor;
+        private static bool yearColorCallbackRegistered;
 
         private XUiV_Label lblYear;
         private XUiV_Label lblYearShadow;
@@ -60,6 +63,7 @@ namespace LizziesMod
         public override void Init()
         {
             base.Init();
+                EnsureYearColorCallback();
             lblYear = GetChildById("lblHUDYear")?.viewComponent as XUiV_Label;
             lblYearShadow = GetChildById("lblHUDYearShadow")?.viewComponent as XUiV_Label;
             SetYearAlpha(0f);
@@ -107,7 +111,7 @@ namespace LizziesMod
         {
             if (lblYear != null)
             {
-                lblYear.Color = new Color(1f, 180f / 255f, 0f, alpha);
+                 lblYear.Color = new Color(yearColor.r, yearColor.g, yearColor.b, alpha);
             }
 
             if (lblYearShadow != null)
@@ -115,6 +119,16 @@ namespace LizziesMod
                 lblYearShadow.Color = new Color(0f, 0f, 0f, 220f / 255f * alpha);
             }
         }
+
+            private static void EnsureYearColorCallback()
+            {
+                if (yearColorCallbackRegistered) return;
+
+                yearColorCallbackRegistered = ModSettingsManager.RegisterCallback(
+                    "LizziesMod",
+                    "YearDisplayColor",
+                    value => yearColor = ModSettingsManager.GetSettingColor("LizziesMod", "YearDisplayColor", DefaultYearColor));
+            }
     }
 
     [HarmonyPatch(typeof(EntityPlayerLocal), "OnAddedToWorld")]

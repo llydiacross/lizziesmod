@@ -131,6 +131,47 @@ LizziesMod settings use `Config/ModSettings.xml` inside each LizziesMod package.
 
 LizziesMod does not load, save, or modify root-level `ModSettings.xml` files. Mods that define their settings for Gears therefore still require Gears; LizziesMod only manages settings declared in `Config/ModSettings.xml`.
 
+## Settings
+
+LizziesMod reads and writes settings from `Config/ModSettings.xml` in each mod package. A declaration always has a `name`, `value`, and `type`; `defaultValue` is used only when the configured value is invalid. Existing declarations remain compatible: booleans render as switches, while strings and numbers without a `control` render as text fields.
+
+```xml
+<ModSettings>
+	<Setting name="DisplayName" value="Service Wing" type="string" displayName="Display Name" />
+	<Setting name="Enabled" value="true" type="bool" control="switch"
+					 leftValue="false" rightValue="true" leftLabel="Disabled" rightLabel="Enabled" />
+	<Setting name="LightSpacing" value="5" defaultValue="5" type="int" control="slider"
+					 min="3" max="12" step="1" displayName="Light Spacing" />
+	<Setting name="Difficulty" value="normal" type="string" control="selector" wrap="true">
+		<Option value="easy" label="Easy" />
+		<Option value="normal" label="Normal" />
+		<Option value="hard" label="Hard" />
+	</Setting>
+	<Setting name="AccentColor" value="255,180,0" type="color" control="color"
+					 displayName="Accent Color" />
+</ModSettings>
+```
+
+`control` accepts `text`, `switch`, `selector`, `slider`, `color`, or `auto`. A selector can use child `Option` elements, or an `options="one|two|three"` attribute. Integer and float selectors can instead use `min`, `max`, and `step`; `wrap="true"` cycles their ends. Sliders require an `int` or `float` type and use bounded previous/next controls at the declared step. Their `format` attribute uses a .NET numeric format string, such as `0'%'`.
+
+Color values use three comma-separated RGB channels from `0` through `255`, for example `255,180,0`. The Mod Settings color control opens the native 7 Days to Die color picker and persists its canonical `R,G,B` value. LizziesMod intentionally has no settings tabs or binding-setting type; declare custom key bindings in `Config/CustomInput.xml` and edit them through **Input Bindings**.
+
+Every changed value is normalized and validated against its setting type, selector options, and numeric range before it is applied, saved, used by profiles, or accepted from `DevSettings.xml`. Use the existing typed accessors in code:
+
+```csharp
+int spacing = ModSettingsManager.GetSetting<int>("ExampleMod", "LightSpacing", 5);
+string difficulty = ModSettingsManager.GetSetting<string>("ExampleMod", "Difficulty", "normal");
+Color accent = ModSettingsManager.GetSettingColor(
+		"ExampleMod",
+		"AccentColor",
+		new Color(1f, 180f / 255f, 0f, 1f));
+
+ModSettingsManager.RegisterCallback("ExampleMod", "AccentColor", value =>
+{
+		// Refresh live client state from the new persisted value.
+});
+```
+
 ## Developer Settings
 
 Committed `Config/ModSettings.xml` files use player-safe defaults. Local development overrides live in the ignored `02_LizziesMod/DevSettings.xml` file and apply only when the client starts in developer mode:
@@ -256,9 +297,11 @@ if (!DimensionGeneratorRegistry.RegisterAndLoadDefinitions(modInstance, generato
 
 ```xml
 <Dimensions default="ExampleDimension" defaultPriority="100">
-	<Dimension id="ExampleDimension" displayName="Example Dimension" generator="example-generated" />
+	<Dimension id="ExampleDimension" displayName="Example Dimension" generator="example-generated" disableWorldBoundary="true" />
 </Dimensions>
 ```
+
+`disableWorldBoundary` defaults to `false`. When enabled for the active generated dimension, it prevents the vanilla player pushback/end-of-world message, vehicle bounds correction, and biome-radiation value from applying in that dimension. It never changes the Overworld. The game can still have practical chunk-streaming, memory, and disk limits, so treat this as an extended exploration setting rather than a guarantee of unlimited world capacity.
 
 When several mods declare defaults, the highest `defaultPriority` wins. The included `LizziesMod_Backrooms` add-on provides the stable `backrooms` generator and `Backrooms` dimension. Its layout settings apply only to new generated chunks, so restart and recreate its realm after changing them.
 

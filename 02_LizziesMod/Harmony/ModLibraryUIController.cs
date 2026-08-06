@@ -183,7 +183,7 @@ namespace LizziesMod
             if (lblBookTitle != null) lblBookTitle.Text = "NO READMES FOUND";
             if (lblPageTitle != null) lblPageTitle.Text = "";
             ClearReadmeCanvas();
-            RenderTextArea(0, "Install mods containing a ModManual.xml to view their documentation here.", new Vector2i(0, 0), new Vector2i(ReadmeViewportWidth, 100), Color.white);
+                RenderTextArea(0, "Install mods containing Config/ModManual.xml to view their documentation here.", new Vector2i(0, 0), new Vector2i(ReadmeViewportWidth, 100), Color.white);
             SetCanvasSize(ReadmeViewportWidth, ReadmeViewportHeight);
             if (btnPrevPage != null) btnPrevPage.viewComponent.IsVisible = false;
             if (btnNextPage != null) btnNextPage.viewComponent.IsVisible = false;

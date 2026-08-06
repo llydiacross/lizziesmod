@@ -1,4 +1,4 @@
 <ModSettings>
-  <Setting name="FloorY" value="32" type="int" requiresRestart="true" />
-  <Setting name="Enabled" value="true" type="bool" requiresRestart="true" hidden="true" />
+  <Setting name="FloorY" value="32" type="int" requiresRestart="true" defaultValue="32" />
+  <Setting name="Enabled" value="true" type="bool" requiresRestart="true" defaultValue="true" hidden="true" />
 </ModSettings>

@@ -1,6 +1,6 @@
 <ModSettings>
-  <Setting name="VolumeLevel" value="10" type="int" requiresRestart="false" />
-  <Setting name="MinJukeboxDistance" value="10" type="int" requiresRestart="false" />
-  <Setting name="MaxJukeboxDistance" value="30" type="int" requiresRestart="false" />
-  <Setting name="Enabled" value="true" type="bool" requiresRestart="true" hidden="true" />
+  <Setting name="VolumeLevel" value="10" type="int" requiresRestart="false" defaultValue="10" control="selector" displayName="Volume Level" min="0" max="10" step="1" wrap="true" />
+  <Setting name="MinJukeboxDistance" value="14" type="int" requiresRestart="false" defaultValue="10" control="slider" displayName="Minimum Jukebox Distance" min="1" max="30" step="1" />
+  <Setting name="MaxJukeboxDistance" value="30" type="int" requiresRestart="false" defaultValue="30" control="slider" displayName="Maximum Jukebox Distance" min="2" max="100" step="1" />
+  <Setting name="Enabled" value="true" type="bool" requiresRestart="true" defaultValue="true" hidden="true" />
 </ModSettings>

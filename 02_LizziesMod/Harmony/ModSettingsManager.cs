@@ -4,6 +4,7 @@ using System.Globalization;
 using System.IO;
 using System.Xml;
 using System;
+using UnityEngine;
 
 namespace LizziesMod
 {
@@ -14,7 +15,9 @@ namespace LizziesMod
         public string Name;
         public string Value;
         public string PersistedValue;
+            public string DefaultValue;
         public string Type;
+            public ModSettingPresentation Presentation = new ModSettingPresentation();
         public Action<string> OnValueChanged;
         public bool requiresRestart;
         public bool Hidden;
@@ -34,43 +37,285 @@ namespace LizziesMod
             get { return developerDefined; }
         }
 
+            public ModSettingControl EffectiveControl
+            {
+                get { return Presentation.GetEffectiveControl(Type); }
+            }
+
+            public string DisplayName
+            {
+                get { return string.IsNullOrEmpty(Presentation.DisplayName) ? Name : Presentation.DisplayName; }
+            }
+
         public string ValueForPersistence
         {
             get { return PersistedValue ?? Value; }
         }
 
-        public void SetValue(string newValue)
-        {
-            if (IsDeveloperOverridden) return;
+            public bool TryNormalizeValue(string value, out string normalizedValue)
+            {
+                normalizedValue = "";
+                string candidate = value ?? "";
 
-            bool valueChanged = !string.Equals(Value, newValue, StringComparison.Ordinal);
+                if (EffectiveControl == ModSettingControl.Selector && Presentation.Options.Count > 0)
+                {
+                    ModSettingOption matchingOption = Presentation.Options.Find(option =>
+                        option.Value.Equals(candidate, StringComparison.OrdinalIgnoreCase));
+                    if (matchingOption == null) return false;
+                    candidate = matchingOption.Value;
+                }
+
+                if (EffectiveControl == ModSettingControl.Switch &&
+                    (!string.IsNullOrEmpty(Presentation.LeftValue) || !string.IsNullOrEmpty(Presentation.RightValue)))
+                {
+                    if (candidate.Equals(Presentation.LeftValue, StringComparison.OrdinalIgnoreCase))
+                    {
+                        normalizedValue = Presentation.LeftValue;
+                        return true;
+                    }
+
+                    if (candidate.Equals(Presentation.RightValue, StringComparison.OrdinalIgnoreCase))
+                    {
+                        normalizedValue = Presentation.RightValue;
+                        return true;
+                    }
+
+                    return false;
+                }
+
+                if (EffectiveControl == ModSettingControl.Color ||
+                    string.Equals(Type, "color", StringComparison.OrdinalIgnoreCase))
+                {
+                    return TryNormalizeColor(candidate, out normalizedValue);
+                }
+
+                if (string.Equals(Type, "bool", StringComparison.OrdinalIgnoreCase))
+                {
+                    bool boolValue;
+                    if (!bool.TryParse(candidate, out boolValue)) return false;
+                    normalizedValue = boolValue.ToString().ToLowerInvariant();
+                    return true;
+                }
+
+                if (string.Equals(Type, "int", StringComparison.OrdinalIgnoreCase))
+                {
+                    int intValue;
+                    if (!int.TryParse(candidate, NumberStyles.Integer, CultureInfo.InvariantCulture, out intValue) ||
+                        !IsInIntegerRange(intValue)) return false;
+                    normalizedValue = intValue.ToString(CultureInfo.InvariantCulture);
+                    return true;
+                }
+
+                if (string.Equals(Type, "float", StringComparison.OrdinalIgnoreCase))
+                {
+                    float floatValue;
+                    if (!float.TryParse(candidate, NumberStyles.Float, CultureInfo.InvariantCulture, out floatValue) ||
+                        float.IsNaN(floatValue) || float.IsInfinity(floatValue) || !IsInFloatRange(floatValue)) return false;
+                    normalizedValue = floatValue.ToString(CultureInfo.InvariantCulture);
+                    return true;
+                }
+
+                normalizedValue = candidate;
+                return true;
+            }
+
+                public bool TryGetAdjacentValue(string currentValue, int direction, out string nextValue)
+                {
+                    nextValue = currentValue;
+                    if (direction == 0) return false;
+
+                    if (EffectiveControl == ModSettingControl.Selector && Presentation.Options.Count > 0)
+                    {
+                        int currentIndex = Presentation.Options.FindIndex(option =>
+                            option.Value.Equals(currentValue, StringComparison.OrdinalIgnoreCase));
+                        if (currentIndex < 0) currentIndex = 0;
+
+                        int nextIndex = currentIndex + (direction < 0 ? -1 : 1);
+                        if (nextIndex < 0 || nextIndex >= Presentation.Options.Count)
+                        {
+                            if (!Presentation.Wrap) return false;
+                            nextIndex = nextIndex < 0 ? Presentation.Options.Count - 1 : 0;
+                        }
+
+                        nextValue = Presentation.Options[nextIndex].Value;
+                        return true;
+                    }
+
+                    if (EffectiveControl != ModSettingControl.Slider && EffectiveControl != ModSettingControl.Selector)
+                    {
+                        return false;
+                    }
+
+                    if (string.Equals(Type, "int", StringComparison.OrdinalIgnoreCase))
+                    {
+                        int current;
+                        if (!int.TryParse(currentValue, NumberStyles.Integer, CultureInfo.InvariantCulture, out current)) return false;
+
+                        int step;
+                        if (!int.TryParse(Presentation.Step, NumberStyles.Integer, CultureInfo.InvariantCulture, out step) || step <= 0)
+                        {
+                            step = 1;
+                        }
+
+                        long candidate = (long)current + (direction < 0 ? -step : step);
+                        int minimum;
+                        if (int.TryParse(Presentation.Minimum, NumberStyles.Integer, CultureInfo.InvariantCulture, out minimum) && candidate < minimum)
+                        {
+                            candidate = minimum;
+                        }
+
+                        int maximum;
+                        if (int.TryParse(Presentation.Maximum, NumberStyles.Integer, CultureInfo.InvariantCulture, out maximum) && candidate > maximum)
+                        {
+                            candidate = maximum;
+                        }
+
+                        if (candidate < int.MinValue || candidate > int.MaxValue) return false;
+                        return TryNormalizeValue(((int)candidate).ToString(CultureInfo.InvariantCulture), out nextValue) &&
+                            !string.Equals(currentValue, nextValue, StringComparison.Ordinal);
+                    }
+
+                    if (string.Equals(Type, "float", StringComparison.OrdinalIgnoreCase))
+                    {
+                        float current;
+                        if (!float.TryParse(currentValue, NumberStyles.Float, CultureInfo.InvariantCulture, out current)) return false;
+
+                        float step;
+                        if (!float.TryParse(Presentation.Step, NumberStyles.Float, CultureInfo.InvariantCulture, out step) || step <= 0f)
+                        {
+                            step = 0.1f;
+                        }
+
+                        float candidate = current + (direction < 0 ? -step : step);
+                        float minimum;
+                        if (float.TryParse(Presentation.Minimum, NumberStyles.Float, CultureInfo.InvariantCulture, out minimum) && candidate < minimum)
+                        {
+                            candidate = minimum;
+                        }
+
+                        float maximum;
+                        if (float.TryParse(Presentation.Maximum, NumberStyles.Float, CultureInfo.InvariantCulture, out maximum) && candidate > maximum)
+                        {
+                            candidate = maximum;
+                        }
+
+                        return TryNormalizeValue(candidate.ToString(CultureInfo.InvariantCulture), out nextValue) &&
+                            !string.Equals(currentValue, nextValue, StringComparison.Ordinal);
+                    }
+
+                    return false;
+                }
+
+                public bool TryGetToggledValue(string currentValue, out string nextValue)
+                {
+                    nextValue = currentValue;
+                    if (EffectiveControl != ModSettingControl.Switch) return false;
+
+                    if (!string.IsNullOrEmpty(Presentation.LeftValue) || !string.IsNullOrEmpty(Presentation.RightValue))
+                    {
+                        string candidate = currentValue.Equals(Presentation.LeftValue, StringComparison.OrdinalIgnoreCase)
+                            ? Presentation.RightValue
+                            : Presentation.LeftValue;
+                        return TryNormalizeValue(candidate, out nextValue);
+                    }
+
+                    bool value;
+                    if (!bool.TryParse(currentValue, out value)) return false;
+                    nextValue = (!value).ToString().ToLowerInvariant();
+                    return true;
+                }
+
+                public string GetDisplayValue(string value)
+                {
+                    string currentValue = value ?? "";
+                    if (EffectiveControl == ModSettingControl.Selector)
+                    {
+                        ModSettingOption option = Presentation.Options.Find(candidate =>
+                            candidate.Value.Equals(currentValue, StringComparison.OrdinalIgnoreCase));
+                        if (option != null && !string.IsNullOrEmpty(option.Label)) return option.Label;
+                    }
+
+                    if (EffectiveControl == ModSettingControl.Switch)
+                    {
+                        if (currentValue.Equals(Presentation.LeftValue, StringComparison.OrdinalIgnoreCase))
+                        {
+                            return string.IsNullOrEmpty(Presentation.LeftLabel) ? Presentation.LeftValue : Presentation.LeftLabel;
+                        }
+
+                        if (currentValue.Equals(Presentation.RightValue, StringComparison.OrdinalIgnoreCase))
+                        {
+                            return string.IsNullOrEmpty(Presentation.RightLabel) ? Presentation.RightValue : Presentation.RightLabel;
+                        }
+
+                        bool boolValue;
+                        if (bool.TryParse(currentValue, out boolValue)) return boolValue ? "ON" : "OFF";
+                    }
+
+                    if (!string.IsNullOrEmpty(Presentation.Format))
+                    {
+                        int intValue;
+                        if (int.TryParse(currentValue, NumberStyles.Integer, CultureInfo.InvariantCulture, out intValue))
+                        {
+                            try { return intValue.ToString(Presentation.Format, CultureInfo.InvariantCulture); }
+                            catch (FormatException) { }
+                        }
+
+                        float floatValue;
+                        if (float.TryParse(currentValue, NumberStyles.Float, CultureInfo.InvariantCulture, out floatValue))
+                        {
+                            try { return floatValue.ToString(Presentation.Format, CultureInfo.InvariantCulture); }
+                            catch (FormatException) { }
+                        }
+                    }
+
+                    return currentValue;
+                }
+
+            public bool SetValue(string newValue)
+        {
+                if (IsDeveloperOverridden) return false;
+
+                string normalizedValue;
+                if (!TryNormalizeValue(newValue, out normalizedValue))
+                {
+                    Logger.Warning($"[ModSettings] Rejected invalid value '{newValue ?? ""}' for '{ModName}.{Name}'.");
+                    return false;
+                }
+
+                bool valueChanged = !string.Equals(Value, normalizedValue, StringComparison.Ordinal);
             if (Name.Equals("Enabled", StringComparison.OrdinalIgnoreCase) &&
                 bool.TryParse(Value, out bool currentEnabled) &&
-                bool.TryParse(newValue, out bool requestedEnabled))
+                    bool.TryParse(normalizedValue, out bool requestedEnabled))
             {
                 valueChanged = currentEnabled != requestedEnabled;
-                newValue = requestedEnabled.ToString().ToLowerInvariant();
+                    normalizedValue = requestedEnabled.ToString().ToLowerInvariant();
             }
 
             if (valueChanged)
             {
-                Value = newValue;
-                PersistedValue = newValue;
-                Logger.Info($"Setting '{Name}' for mod '{ModName}' changed to: {newValue} {(OnValueChanged != null ? "INVOKABLE" : "NON-INVOKABLE") }");
+                    Value = normalizedValue;
+                    PersistedValue = normalizedValue;
+                    Logger.Info($"Setting '{Name}' for mod '{ModName}' changed to: {normalizedValue} {(OnValueChanged != null ? "INVOKABLE" : "NON-INVOKABLE") }");
  
                 if (requiresRestart || Name.Equals("Enabled", StringComparison.OrdinalIgnoreCase))
                 {
                     ModSettingsManager.PendingRestart = true;
                 }
 
-                OnValueChanged?.Invoke(newValue);
+                    OnValueChanged?.Invoke(normalizedValue);
             }
+
+                return true;
         }
 
-        public void SetPersistedValue(string value)
+            public bool SetPersistedValue(string value)
         {
-            PersistedValue = value;
-            if (!IsDeveloperOverridden) Value = value;
+                string normalizedValue;
+                if (!TryNormalizeValue(value, out normalizedValue)) return false;
+
+                PersistedValue = normalizedValue;
+                if (!IsDeveloperOverridden) Value = normalizedValue;
+                return true;
         }
 
         public void ApplyDeveloperOverride(string value)
@@ -83,9 +328,71 @@ namespace LizziesMod
         {
             developerDefined = true;
             Type = type;
+                DefaultValue = value;
             PersistedValue = value;
             ApplyDeveloperOverride(value);
         }
+
+            private bool IsInIntegerRange(int value)
+            {
+                int minimum;
+                if (!string.IsNullOrEmpty(Presentation.Minimum) &&
+                    (!int.TryParse(Presentation.Minimum, NumberStyles.Integer, CultureInfo.InvariantCulture, out minimum) || value < minimum))
+                {
+                    return false;
+                }
+
+                int maximum;
+                if (!string.IsNullOrEmpty(Presentation.Maximum) &&
+                    (!int.TryParse(Presentation.Maximum, NumberStyles.Integer, CultureInfo.InvariantCulture, out maximum) || value > maximum))
+                {
+                    return false;
+                }
+
+                return true;
+            }
+
+            private bool IsInFloatRange(float value)
+            {
+                float minimum;
+                if (!string.IsNullOrEmpty(Presentation.Minimum) &&
+                    (!float.TryParse(Presentation.Minimum, NumberStyles.Float, CultureInfo.InvariantCulture, out minimum) || value < minimum))
+                {
+                    return false;
+                }
+
+                float maximum;
+                if (!string.IsNullOrEmpty(Presentation.Maximum) &&
+                    (!float.TryParse(Presentation.Maximum, NumberStyles.Float, CultureInfo.InvariantCulture, out maximum) || value > maximum))
+                {
+                    return false;
+                }
+
+                return true;
+            }
+
+            private static bool TryNormalizeColor(string value, out string normalizedValue)
+            {
+                normalizedValue = "";
+                string[] components = value.Split(',');
+                if (components.Length != 3) return false;
+
+                int red;
+                int green;
+                int blue;
+                if (!int.TryParse(components[0].Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out red) ||
+                    !int.TryParse(components[1].Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out green) ||
+                    !int.TryParse(components[2].Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out blue) ||
+                    red < 0 || red > 255 || green < 0 || green > 255 || blue < 0 || blue > 255)
+                {
+                    return false;
+                }
+
+                normalizedValue = red.ToString(CultureInfo.InvariantCulture) + "," +
+                    green.ToString(CultureInfo.InvariantCulture) + "," +
+                    blue.ToString(CultureInfo.InvariantCulture);
+                return true;
+            }
     }
 
     public class ModProfileInfo
@@ -145,60 +452,38 @@ namespace LizziesMod
 
                         foreach (XmlNode node in xmlDoc.DocumentElement.ChildNodes)
                         {
-                            if (node.Name == "Setting")
-                            {
-                                string sName = node.Attributes["name"]?.Value ?? "Unknown";
-                                string sValue = node.Attributes["value"]?.Value ?? "";
-                                string sType = node.Attributes["type"]?.Value ?? "string";
+                                if (node.Name != "Setting") continue;
 
-                                bool bRequiresRestart = false;
-                                if (node.Attributes["requiresRestart"] != null)
-                                    bool.TryParse(node.Attributes["requiresRestart"].Value, out bRequiresRestart);
-
-                                bool bHidden = false;
-                                if (node.Attributes["hidden"] != null)
-                                    bool.TryParse(node.Attributes["hidden"].Value, out bHidden);
-                                bool bServerOnly = false;
-                                if (node.Attributes["serverOnly"] != null)
-                                    bool.TryParse(node.Attributes["serverOnly"].Value, out bServerOnly);
-
-                                bool bMenuOnly = false;
-                                if (node.Attributes["menuOnly"] != null)
-                                    bool.TryParse(node.Attributes["menuOnly"].Value, out bMenuOnly); 
-
-                                bool bWarning = false;
-                                if (node.Attributes["warning"] != null)
-                                    bool.TryParse(node.Attributes["warning"].Value, out bWarning);
-
-                                ModSetting existingSetting = currentSettings.Find(s => s.Name.Equals(sName, StringComparison.OrdinalIgnoreCase));
-                                if (existingSetting != null)
+                                string settingName = node.Attributes["name"]?.Value ?? "Unknown";
+                                string configuredValue = node.Attributes["value"]?.Value ?? "";
+                                ModSetting setting = currentSettings.Find(candidate =>
+                                    candidate.Name.Equals(settingName, StringComparison.OrdinalIgnoreCase));
+                                if (setting == null)
                                 {
-                                    existingSetting.SetPersistedValue(sValue);
-                                    existingSetting.Type = sType;
-                                    existingSetting.requiresRestart = bRequiresRestart;
-                                    existingSetting.Hidden = bHidden;
-                                    existingSetting.ServerOnly = bServerOnly;
-                                    existingSetting.inMenuOnly = bMenuOnly;
-                                    existingSetting.Warning = bWarning;
-                                    updatedSettings.Add(existingSetting);
-                                }
-                                else
-                                {
-                                    updatedSettings.Add(new ModSetting
+                                    setting = new ModSetting
                                     {
                                         ModName = mod.Name,
-                                        Name = sName,
-                                        Value = sValue,
-                                        PersistedValue = sValue,
-                                        Type = sType,
-                                        requiresRestart = bRequiresRestart,
-                                        Hidden = bHidden,
-                                        inMenuOnly = bMenuOnly,
-                                        ServerOnly = bServerOnly,
-                                        Warning = bWarning
-                                    });
+                                        Name = settingName
+                                    };
                                 }
-                            }
+
+                                ConfigureSettingFromXml(setting, node);
+                                setting.DefaultValue = node.Attributes["defaultValue"]?.Value ?? configuredValue;
+
+                                string normalizedValue;
+                                if (!setting.TryNormalizeValue(configuredValue, out normalizedValue))
+                                {
+                                    if (!setting.TryNormalizeValue(setting.DefaultValue, out normalizedValue))
+                                    {
+                                        Logger.Warning($"[ModSettings] Ignored invalid definition for '{mod.Name}.{settingName}'.");
+                                        continue;
+                                    }
+
+                                    Logger.Warning($"[ModSettings] Restored invalid value for '{mod.Name}.{settingName}' to its default.");
+                                }
+
+                                setting.SetPersistedValue(normalizedValue);
+                                updatedSettings.Add(setting);
                         }
 
                         AllModSettings[mod.Name] = updatedSettings;
@@ -217,6 +502,88 @@ namespace LizziesMod
         {
             return Path.Combine(mod.Path, ModSettingsConfigDirectoryName, ModSettingsFileName);
         }
+
+            private static void ConfigureSettingFromXml(ModSetting setting, XmlNode node)
+            {
+                setting.Type = node.Attributes["type"]?.Value ?? "string";
+                setting.requiresRestart = GetBooleanAttribute(node, "requiresRestart");
+                setting.Hidden = GetBooleanAttribute(node, "hidden");
+                setting.ServerOnly = GetBooleanAttribute(node, "serverOnly");
+                setting.inMenuOnly = GetBooleanAttribute(node, "menuOnly");
+                setting.Warning = GetBooleanAttribute(node, "warning");
+
+                ModSettingPresentation presentation = new ModSettingPresentation();
+                presentation.Control = ParseSettingControl(node.Attributes["control"]?.Value, setting);
+                presentation.DisplayName = node.Attributes["displayName"]?.Value ?? "";
+                presentation.Tooltip = node.Attributes["tooltip"]?.Value ?? "";
+                presentation.Minimum = node.Attributes["min"]?.Value ?? "";
+                presentation.Maximum = node.Attributes["max"]?.Value ?? "";
+                presentation.Step = node.Attributes["step"]?.Value ?? "";
+                presentation.Format = node.Attributes["format"]?.Value ?? "";
+                presentation.LeftValue = node.Attributes["leftValue"]?.Value ?? "";
+                presentation.RightValue = node.Attributes["rightValue"]?.Value ?? "";
+                presentation.LeftLabel = node.Attributes["leftLabel"]?.Value ?? "";
+                presentation.RightLabel = node.Attributes["rightLabel"]?.Value ?? "";
+                    presentation.Wrap = GetBooleanAttribute(node, "wrap");
+
+                string inlineOptions = node.Attributes["options"]?.Value;
+                if (!string.IsNullOrEmpty(inlineOptions))
+                {
+                    foreach (string value in inlineOptions.Split('|'))
+                    {
+                        AddSettingOption(presentation, value, value);
+                    }
+                }
+
+                foreach (XmlNode childNode in node.ChildNodes)
+                {
+                    if (!childNode.Name.Equals("Option", StringComparison.OrdinalIgnoreCase)) continue;
+                    string value = childNode.Attributes["value"]?.Value;
+                    string label = childNode.Attributes["label"]?.Value ?? value;
+                    AddSettingOption(presentation, value, label);
+                }
+
+                setting.Presentation = presentation;
+            }
+
+            private static bool GetBooleanAttribute(XmlNode node, string attributeName)
+            {
+                bool value;
+                return node.Attributes[attributeName] != null &&
+                    bool.TryParse(node.Attributes[attributeName].Value, out value) && value;
+            }
+
+            private static ModSettingControl ParseSettingControl(string value, ModSetting setting)
+            {
+                if (string.IsNullOrWhiteSpace(value)) return ModSettingControl.Auto;
+
+                switch (value.Trim().ToLowerInvariant())
+                {
+                    case "text": return ModSettingControl.Text;
+                    case "switch": return ModSettingControl.Switch;
+                    case "selector": return ModSettingControl.Selector;
+                    case "slider": return ModSettingControl.Slider;
+                    case "color": return ModSettingControl.Color;
+                    case "auto": return ModSettingControl.Auto;
+                    default:
+                        Logger.Warning($"[ModSettings] '{setting.ModName}.{setting.Name}' uses unknown control '{value}'; using automatic selection.");
+                        return ModSettingControl.Auto;
+                }
+            }
+
+            private static void AddSettingOption(ModSettingPresentation presentation, string value, string label)
+            {
+                if (string.IsNullOrWhiteSpace(value)) return;
+
+                string trimmedValue = value.Trim();
+                if (presentation.Options.Exists(option => option.Value.Equals(trimmedValue, StringComparison.OrdinalIgnoreCase))) return;
+
+                presentation.Options.Add(new ModSettingOption
+                {
+                    Value = trimmedValue,
+                    Label = string.IsNullOrEmpty(label) ? trimmedValue : label.Trim()
+                });
+            }
 
         private static void ApplyDeveloperSettingsOverrides()
         {
@@ -288,13 +655,14 @@ namespace LizziesMod
                             Logger.Info($"[DevSettings] Registered developer setting '{modName}.{settingName}' ({settingType}) with default '{settingValue}'.");
                         }
 
-                        if (!IsValidSettingValue(setting, settingValue))
+                        string normalizedValue;
+                        if (!setting.TryNormalizeValue(settingValue, out normalizedValue))
                         {
                             Logger.Warning($"[DevSettings] Ignored invalid value for '{modName}.{settingName}'.");
                             continue;
                         }
 
-                        setting.ApplyDeveloperOverride(settingValue);
+                        setting.ApplyDeveloperOverride(normalizedValue);
                         appliedCount++;
                     }
                 }
@@ -327,39 +695,15 @@ namespace LizziesMod
             return "string";
         }
 
-        private static bool IsValidSettingValue(ModSetting setting, string value)
-        {
-            if (setting.Type.Equals("bool", StringComparison.OrdinalIgnoreCase))
-            {
-                bool parsedValue;
-                return bool.TryParse(value, out parsedValue);
-            }
-
-            if (setting.Type.Equals("int", StringComparison.OrdinalIgnoreCase))
-            {
-                int parsedValue;
-                return int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out parsedValue);
-            }
-
-            if (setting.Type.Equals("float", StringComparison.OrdinalIgnoreCase))
-            {
-                float parsedValue;
-                return float.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out parsedValue);
-            }
-
-            return true;
-        }
-
-
         private static string GetTargetSaveProfilePath()
         {
 
             Mod lizziesMod = global::ModManager.GetLoadedMods().Find(m => m.Name == "LizziesMod");
             if (lizziesMod != null)
             {
-                return Path.Combine(lizziesMod.Path, "ModProfiles.xml");
+                 return Path.Combine(lizziesMod.Path, "Config", "ModProfiles.xml");
             }
-            return "ModProfiles.xml"; 
+              return Path.Combine("Config", "ModProfiles.xml");
         }
 
         private static List<string> GetAllProfilePaths()
@@ -369,7 +713,7 @@ namespace LizziesMod
 
             foreach (Mod mod in global::ModManager.GetLoadedMods())
             {
-                string path = Path.Combine(mod.Path, "ModProfiles.xml");
+                 string path = Path.Combine(mod.Path, "Config", "ModProfiles.xml");
                 if (File.Exists(path))
                 {
                     if (mod.Name.Equals("LizziesMod", StringComparison.OrdinalIgnoreCase))
@@ -477,6 +821,11 @@ namespace LizziesMod
             if (string.IsNullOrEmpty(profileName)) return;
 
             string path = GetTargetSaveProfilePath();
+                string directory = Path.GetDirectoryName(path);
+                if (!string.IsNullOrEmpty(directory))
+                {
+                    Directory.CreateDirectory(directory);
+                }
             XmlDocument xmlDoc = new XmlDocument();
 
             if (File.Exists(path))
@@ -759,6 +1108,7 @@ namespace LizziesMod
                     Name = settingName,
                     Value = newValueString,
                     PersistedValue = newValueString,
+                    DefaultValue = newValueString,
                     Type = inferredType,
                     requiresRestart = PendingRestart,
                     Hidden = bHidden,
@@ -799,6 +1149,29 @@ namespace LizziesMod
 
    
             return defaultValue;
+        }
+
+        public static Color GetSettingColor(string modName, string settingName, Color defaultValue)
+        {
+            string value = GetSetting<string>(modName, settingName, "");
+            string[] components = value.Split(',');
+            if (components.Length != 3) return defaultValue;
+
+            int red;
+            int green;
+            int blue;
+            if (!int.TryParse(components[0].Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out red) ||
+                !int.TryParse(components[1].Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out green) ||
+                !int.TryParse(components[2].Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out blue))
+            {
+                return defaultValue;
+            }
+
+            return new Color(
+                Mathf.Clamp(red, 0, 255) / 255f,
+                Mathf.Clamp(green, 0, 255) / 255f,
+                Mathf.Clamp(blue, 0, 255) / 255f,
+                1f);
         }
 
         public static bool RegisterCallback(string modName, string settingName, Action<string> callback)
@@ -857,8 +1230,12 @@ namespace LizziesMod
                 node.SetAttribute("value", setting.ValueForPersistence);
                 node.SetAttribute("type", setting.Type);
                 node.SetAttribute("requiresRestart", setting.requiresRestart.ToString().ToLower());
+                    if (!string.IsNullOrEmpty(setting.DefaultValue)) node.SetAttribute("defaultValue", setting.DefaultValue);
                 if (setting.Hidden) node.SetAttribute("hidden", "true");
+                    if (setting.ServerOnly) node.SetAttribute("serverOnly", "true");
+                    if (setting.inMenuOnly) node.SetAttribute("menuOnly", "true");
                 if (setting.Warning) node.SetAttribute("warning", "true");
+                    WriteSettingPresentation(node, setting.Presentation);
 
                 root.AppendChild(node);
             }
@@ -866,5 +1243,43 @@ namespace LizziesMod
             xmlDoc.Save(settingsPath);
             Logger.Info($"Saved changes to Config/ModSettings.xml for {modName}");
         }
+
+            private static void WriteSettingPresentation(XmlElement node, ModSettingPresentation presentation)
+            {
+                if (presentation == null) return;
+
+                if (presentation.Control != ModSettingControl.Auto)
+                {
+                    node.SetAttribute("control", presentation.Control.ToString().ToLowerInvariant());
+                }
+
+                SetOptionalAttribute(node, "displayName", presentation.DisplayName);
+                SetOptionalAttribute(node, "tooltip", presentation.Tooltip);
+                SetOptionalAttribute(node, "min", presentation.Minimum);
+                SetOptionalAttribute(node, "max", presentation.Maximum);
+                SetOptionalAttribute(node, "step", presentation.Step);
+                SetOptionalAttribute(node, "format", presentation.Format);
+                SetOptionalAttribute(node, "leftValue", presentation.LeftValue);
+                SetOptionalAttribute(node, "rightValue", presentation.RightValue);
+                SetOptionalAttribute(node, "leftLabel", presentation.LeftLabel);
+                SetOptionalAttribute(node, "rightLabel", presentation.RightLabel);
+                    if (presentation.Wrap) node.SetAttribute("wrap", "true");
+
+                foreach (ModSettingOption option in presentation.Options)
+                {
+                    XmlElement optionNode = node.OwnerDocument.CreateElement("Option");
+                    optionNode.SetAttribute("value", option.Value);
+                    if (!string.IsNullOrEmpty(option.Label) && !option.Label.Equals(option.Value, StringComparison.Ordinal))
+                    {
+                        optionNode.SetAttribute("label", option.Label);
+                    }
+                    node.AppendChild(optionNode);
+                }
+            }
+
+            private static void SetOptionalAttribute(XmlElement node, string name, string value)
+            {
+                if (!string.IsNullOrEmpty(value)) node.SetAttribute(name, value);
+            }
     }
 }

@@ -1,3 +1,3 @@
 Alpha Test 4
 
-* It seems the game does allow for infinite world sizes, its just the radiation barrier that prevents you from going further.  Add a way to turn this off in dimensions
+* requireRestart in our settings currently requires you to restart the entire game but some settings only require you to restart the world. For all our settings for all our mods, we should distinguish the two.
