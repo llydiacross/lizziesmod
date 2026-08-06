@@ -1,3 +1,5 @@
 Alpha Test 4
 
-* requireRestart in our settings currently requires you to restart the entire game but some settings only require you to restart the world. For all our settings for all our mods, we should distinguish the two.
+* [x] Determine whether every owned setting needs no restart, a world restart, or a game restart.
+* [x] Remove the Mod Input Bindings buttons from the main menu and in-game escape menu.
+* [x] Add an option box for string and numeric settings.

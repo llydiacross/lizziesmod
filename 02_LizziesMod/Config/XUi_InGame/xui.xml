@@ -30,14 +30,15 @@
 
             <panel name="header" height="43" depth="2">
                 <sprite depth="1" name="headerbackground" sprite="ui_game_panel_header" type="sliced" />
-                <label depth="2" name="windowName" pos="15,-8" width="400" height="32" text="RESTART REQUIRED" font_size="28" color="[white]"/>
+                <label depth="2" name="lblRestartTitle" pos="15,-8" width="570" height="32" text="RESTART REQUIRED" font_size="28" color="[white]"/>
             </panel>
             
             <rect name="content" pos="0,-46" width="600" height="217" depth="2">
-                <label depth="2" pos="0,-30" width="600" height="100" justify="center" font_size="24" text="You have changed settings that require a game restart.&#10;&#10;Would you like to quit to desktop now?" color="[white]"/>
+                <label name="lblRestartMessage" depth="2" pos="0,-30" width="600" height="100" justify="center" font_size="24" text="You have changed settings that require a game restart.&#10;&#10;Would you like to quit to desktop now?" color="[white]"/>
                 
-                <simplebutton name="btnYes" depth="3" pos="100,-150" width="180" height="40" font_size="24" caption="YES (QUIT)" />
-                <simplebutton name="btnNo" depth="3" pos="320,-150" width="180" height="40" font_size="24" caption="NO (LATER)" />
+                <simplebutton name="btnRestartGame" depth="3" pos="100,-150" width="180" height="40" font_size="24" caption="YES (QUIT)" />
+                <simplebutton name="btnRestartWorld" depth="3" pos="100,-150" width="180" height="40" font_size="20" caption="LEAVE WORLD" visible="false" />
+                <simplebutton name="btnRestartLater" depth="3" pos="320,-150" width="180" height="40" font_size="24" caption="NO (LATER)" />
             </rect>
         </window>
 
@@ -47,6 +48,9 @@
         </window_group>
         <window_group name="windowModSettingColorPicker" actionset="true" close_comp_on_escape="true">
             <window name="windowModSettingColorPicker" />
+        </window_group>
+        <window_group name="windowModSettingSelector" actionset="true" close_comp_on_escape="true">
+            <window name="windowModSettingSelector" />
         </window_group>
 
         <!-- Flux Teleport Timer -->

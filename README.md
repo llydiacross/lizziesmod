@@ -142,19 +142,23 @@ LizziesMod reads and writes settings from `Config/ModSettings.xml` in each mod p
 					 leftValue="false" rightValue="true" leftLabel="Disabled" rightLabel="Enabled" />
 	<Setting name="LightSpacing" value="5" defaultValue="5" type="int" control="slider"
 					 min="3" max="12" step="1" displayName="Light Spacing" />
-	<Setting name="Difficulty" value="normal" type="string" control="selector" wrap="true">
+	<Setting name="Difficulty" value="normal" type="string" control="selector">
 		<Option value="easy" label="Easy" />
 		<Option value="normal" label="Normal" />
 		<Option value="hard" label="Hard" />
 	</Setting>
+	<Setting name="RealmFloorY" value="32" type="int" restartScope="world"
+					 control="selector" min="16" max="64" step="8" />
 	<Setting name="AccentColor" value="255,180,0" type="color" control="color"
 					 displayName="Accent Color" />
 </ModSettings>
 ```
 
-`control` accepts `text`, `switch`, `selector`, `slider`, `color`, or `auto`. A selector can use child `Option` elements, or an `options="one|two|three"` attribute. Integer and float selectors can instead use `min`, `max`, and `step`; `wrap="true"` cycles their ends. Sliders require an `int` or `float` type and use bounded previous/next controls at the declared step. Their `format` attribute uses a .NET numeric format string, such as `0'%'`.
+`control` accepts `text`, `switch`, `selector`, `slider`, `color`, or `auto`. A selector is a windowed control: clicking its current value opens a modal, scrollable option list with the active value highlighted. Selecting an option applies it immediately and returns to Mod Settings; Cancel leaves the value unchanged. String selectors can use child `Option` elements or an `options="one|two|three"` attribute. Integer and float selectors can instead derive up to 128 values from `min`, `max`, and `step`, which is useful for compact discrete ranges such as a volume level. Sliders require an `int` or `float` type and use bounded previous/next controls at the declared step. Their `format` attribute uses a .NET numeric format string, such as `0'%'`.
 
-Color values use three comma-separated RGB channels from `0` through `255`, for example `255,180,0`. The Mod Settings color control opens the native 7 Days to Die color picker and persists its canonical `R,G,B` value. LizziesMod intentionally has no settings tabs or binding-setting type; declare custom key bindings in `Config/CustomInput.xml` and edit them through **Input Bindings**.
+`restartScope` defaults to `none`; set it to `world` when the setting is read as a world loads, or `game` when it is read while the client initializes. A world-scope change offers to leave the active world and return to the menu; a game-scope change offers to quit the client. From the main menu, world-scope changes apply when the next world starts. The legacy `requiresRestart="true"` attribute remains supported and maps to `restartScope="game"`.
+
+Color values use three comma-separated RGB channels from `0` through `255`, for example `255,180,0`. The Mod Settings color control opens the native 7 Days to Die color picker and persists its canonical `R,G,B` value. LizziesMod intentionally has no settings tabs or binding-setting type; declare custom key bindings in `Config/CustomInput.xml` and edit them from the selected mod's **Edit Inputs** action or the native Controls Mods tab.
 
 Every changed value is normalized and validated against its setting type, selector options, and numeric range before it is applied, saved, used by profiles, or accepted from `DevSettings.xml`. Use the existing typed accessors in code:
 
@@ -205,7 +209,7 @@ Overrides require a loaded mod and validate values against existing setting type
 Settings that can alter save behavior can require confirmation before the player applies a changed value in Mod Settings:
 
 ```xml
-<Setting name="ExperimentalFeatures" value="false" type="bool" requiresRestart="true" warning="true" />
+<Setting name="ExperimentalFeatures" value="false" type="bool" restartScope="game" warning="true" />
 ```
 
 With `warning="true"`, the player is told that the setting can make a save incompatible or unstable and is prompted to back up the save. Selecting Cancel restores the previous value; only confirmation applies the change.

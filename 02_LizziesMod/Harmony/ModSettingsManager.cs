@@ -20,6 +20,7 @@ namespace LizziesMod
             public ModSettingPresentation Presentation = new ModSettingPresentation();
         public Action<string> OnValueChanged;
         public bool requiresRestart;
+        public ModSettingRestartScope RestartScope = ModSettingRestartScope.None;
         public bool Hidden;
         public bool ServerOnly;
         public bool inMenuOnly;
@@ -52,14 +53,40 @@ namespace LizziesMod
             get { return PersistedValue ?? Value; }
         }
 
+            public List<ModSettingOption> GetSelectorOptions()
+            {
+                if (EffectiveControl != ModSettingControl.Selector)
+                {
+                    return new List<ModSettingOption>();
+                }
+
+                if (Presentation.Options.Count > 0)
+                {
+                    return Presentation.Options;
+                }
+
+                if (string.Equals(Type, "int", StringComparison.OrdinalIgnoreCase))
+                {
+                    return GetIntegerSelectorOptions();
+                }
+
+                if (string.Equals(Type, "float", StringComparison.OrdinalIgnoreCase))
+                {
+                    return GetFloatSelectorOptions();
+                }
+
+                return new List<ModSettingOption>();
+            }
+
             public bool TryNormalizeValue(string value, out string normalizedValue)
             {
                 normalizedValue = "";
                 string candidate = value ?? "";
 
-                if (EffectiveControl == ModSettingControl.Selector && Presentation.Options.Count > 0)
+                if (EffectiveControl == ModSettingControl.Selector)
                 {
-                    ModSettingOption matchingOption = Presentation.Options.Find(option =>
+                    List<ModSettingOption> options = GetSelectorOptions();
+                    ModSettingOption matchingOption = options.Find(option =>
                         option.Value.Equals(candidate, StringComparison.OrdinalIgnoreCase));
                     if (matchingOption == null) return false;
                     candidate = matchingOption.Value;
@@ -124,20 +151,23 @@ namespace LizziesMod
                     nextValue = currentValue;
                     if (direction == 0) return false;
 
-                    if (EffectiveControl == ModSettingControl.Selector && Presentation.Options.Count > 0)
+                    if (EffectiveControl == ModSettingControl.Selector)
                     {
-                        int currentIndex = Presentation.Options.FindIndex(option =>
+                        List<ModSettingOption> options = GetSelectorOptions();
+                        if (options.Count == 0) return false;
+
+                        int currentIndex = options.FindIndex(option =>
                             option.Value.Equals(currentValue, StringComparison.OrdinalIgnoreCase));
                         if (currentIndex < 0) currentIndex = 0;
 
                         int nextIndex = currentIndex + (direction < 0 ? -1 : 1);
-                        if (nextIndex < 0 || nextIndex >= Presentation.Options.Count)
+                        if (nextIndex < 0 || nextIndex >= options.Count)
                         {
                             if (!Presentation.Wrap) return false;
-                            nextIndex = nextIndex < 0 ? Presentation.Options.Count - 1 : 0;
+                            nextIndex = nextIndex < 0 ? options.Count - 1 : 0;
                         }
 
-                        nextValue = Presentation.Options[nextIndex].Value;
+                        nextValue = options[nextIndex].Value;
                         return true;
                     }
 
@@ -297,9 +327,12 @@ namespace LizziesMod
                     PersistedValue = normalizedValue;
                     Logger.Info($"Setting '{Name}' for mod '{ModName}' changed to: {normalizedValue} {(OnValueChanged != null ? "INVOKABLE" : "NON-INVOKABLE") }");
  
-                if (requiresRestart || Name.Equals("Enabled", StringComparison.OrdinalIgnoreCase))
+                ModSettingRestartScope restartScope = Name.Equals("Enabled", StringComparison.OrdinalIgnoreCase)
+                    ? ModSettingRestartScope.Game
+                    : RestartScope;
+                if (restartScope != ModSettingRestartScope.None)
                 {
-                    ModSettingsManager.PendingRestart = true;
+                    ModSettingsManager.RequestRestart(restartScope);
                 }
 
                     OnValueChanged?.Invoke(normalizedValue);
@@ -393,6 +426,59 @@ namespace LizziesMod
                     blue.ToString(CultureInfo.InvariantCulture);
                 return true;
             }
+
+            private List<ModSettingOption> GetIntegerSelectorOptions()
+            {
+                int minimum;
+                int maximum;
+                int step;
+                if (!int.TryParse(Presentation.Minimum, NumberStyles.Integer, CultureInfo.InvariantCulture, out minimum) ||
+                    !int.TryParse(Presentation.Maximum, NumberStyles.Integer, CultureInfo.InvariantCulture, out maximum) ||
+                    !int.TryParse(Presentation.Step, NumberStyles.Integer, CultureInfo.InvariantCulture, out step) ||
+                    minimum > maximum || step <= 0)
+                {
+                    return new List<ModSettingOption>();
+                }
+
+                long optionCount = ((long)maximum - minimum) / step + 1;
+                if (optionCount > 128) return new List<ModSettingOption>();
+
+                List<ModSettingOption> options = new List<ModSettingOption>();
+                for (long value = minimum; value <= maximum; value += step)
+                {
+                    string optionValue = value.ToString(CultureInfo.InvariantCulture);
+                    options.Add(new ModSettingOption { Value = optionValue, Label = GetDisplayValue(optionValue) });
+                }
+
+                return options;
+            }
+
+            private List<ModSettingOption> GetFloatSelectorOptions()
+            {
+                float minimum;
+                float maximum;
+                float step;
+                if (!float.TryParse(Presentation.Minimum, NumberStyles.Float, CultureInfo.InvariantCulture, out minimum) ||
+                    !float.TryParse(Presentation.Maximum, NumberStyles.Float, CultureInfo.InvariantCulture, out maximum) ||
+                    !float.TryParse(Presentation.Step, NumberStyles.Float, CultureInfo.InvariantCulture, out step) ||
+                    minimum > maximum || step <= 0f)
+                {
+                    return new List<ModSettingOption>();
+                }
+
+                int optionCount = Mathf.FloorToInt((maximum - minimum) / step) + 1;
+                if (optionCount <= 0 || optionCount > 128) return new List<ModSettingOption>();
+
+                List<ModSettingOption> options = new List<ModSettingOption>();
+                for (int index = 0; index < optionCount; index++)
+                {
+                    float value = minimum + index * step;
+                    string optionValue = value.ToString("0.########", CultureInfo.InvariantCulture);
+                    options.Add(new ModSettingOption { Value = optionValue, Label = GetDisplayValue(optionValue) });
+                }
+
+                return options;
+            }
     }
 
     public class ModProfileInfo
@@ -416,8 +502,26 @@ namespace LizziesMod
            private const string ModSettingsFileName = "ModSettings.xml";
            private const string ModSettingsConfigDirectoryName = "Config";
         public static Dictionary<string, List<ModSetting>> AllModSettings = new Dictionary<string, List<ModSetting>>();
-        public static bool PendingRestart = false;
+        public static ModSettingRestartScope PendingRestartScope { get; private set; } = ModSettingRestartScope.None;
+        public static bool PendingRestart
+        {
+            get { return PendingRestartScope != ModSettingRestartScope.None; }
+            set { PendingRestartScope = value ? ModSettingRestartScope.Game : ModSettingRestartScope.None; }
+        }
         public static List<MissingProfileModInfo> LastMissingProfileMods = new List<MissingProfileModInfo>();
+
+        public static void RequestRestart(ModSettingRestartScope restartScope)
+        {
+            if (restartScope > PendingRestartScope)
+            {
+                PendingRestartScope = restartScope;
+            }
+        }
+
+        public static void RestorePendingRestartScope(ModSettingRestartScope restartScope)
+        {
+            PendingRestartScope = restartScope;
+        }
 
         public static bool IsDeveloperMode
         {
@@ -506,7 +610,8 @@ namespace LizziesMod
             private static void ConfigureSettingFromXml(ModSetting setting, XmlNode node)
             {
                 setting.Type = node.Attributes["type"]?.Value ?? "string";
-                setting.requiresRestart = GetBooleanAttribute(node, "requiresRestart");
+                setting.RestartScope = ParseRestartScope(node);
+                setting.requiresRestart = setting.RestartScope != ModSettingRestartScope.None;
                 setting.Hidden = GetBooleanAttribute(node, "hidden");
                 setting.ServerOnly = GetBooleanAttribute(node, "serverOnly");
                 setting.inMenuOnly = GetBooleanAttribute(node, "menuOnly");
@@ -551,6 +656,27 @@ namespace LizziesMod
                 bool value;
                 return node.Attributes[attributeName] != null &&
                     bool.TryParse(node.Attributes[attributeName].Value, out value) && value;
+            }
+
+            private static ModSettingRestartScope ParseRestartScope(XmlNode node)
+            {
+                string value = node.Attributes["restartScope"]?.Value;
+                if (!string.IsNullOrWhiteSpace(value))
+                {
+                    switch (value.Trim().ToLowerInvariant())
+                    {
+                        case "world": return ModSettingRestartScope.World;
+                        case "game": return ModSettingRestartScope.Game;
+                        case "none": return ModSettingRestartScope.None;
+                        default:
+                            Logger.Warning("[ModSettings] Unknown restart scope '" + value + "'; using none.");
+                            return ModSettingRestartScope.None;
+                    }
+                }
+
+                return GetBooleanAttribute(node, "requiresRestart")
+                    ? ModSettingRestartScope.Game
+                    : ModSettingRestartScope.None;
             }
 
             private static ModSettingControl ParseSettingControl(string value, ModSetting setting)
@@ -971,9 +1097,7 @@ namespace LizziesMod
                                 if (settingNode.Attributes["serverOnly"] != null)
                                     bool.TryParse(settingNode.Attributes["serverOnly"].Value, out bServerOnly);
 
-                                bool bRequiresRestart = false;
-                                if (settingNode.Attributes["requiresRestart"] != null)
-                                    bool.TryParse(settingNode.Attributes["requiresRestart"].Value, out bRequiresRestart);
+                                ModSettingRestartScope restartScope = ParseRestartScope(settingNode);
 
                                 bool bHidden = false;
                                 if (settingNode.Attributes["hidden"] != null)
@@ -994,7 +1118,8 @@ namespace LizziesMod
                                     Value = sValue ?? "",
                                     PersistedValue = sValue ?? "",
                                     Type = sType,
-                                    requiresRestart = bRequiresRestart,
+                                    RestartScope = restartScope,
+                                    requiresRestart = restartScope != ModSettingRestartScope.None,
                                     Hidden = bHidden,
                                     ServerOnly = bServerOnly,
                                     inMenuOnly = bMenuOnly,
@@ -1098,7 +1223,7 @@ namespace LizziesMod
 
                 if (settingName.Equals("Enabled", StringComparison.OrdinalIgnoreCase) && newValueString == "false")
                 {
-                    PendingRestart = true;
+                    RequestRestart(ModSettingRestartScope.Game);
                     bHidden = true;
                 }
 
@@ -1110,7 +1235,10 @@ namespace LizziesMod
                     PersistedValue = newValueString,
                     DefaultValue = newValueString,
                     Type = inferredType,
-                    requiresRestart = PendingRestart,
+                    RestartScope = settingName.Equals("Enabled", StringComparison.OrdinalIgnoreCase)
+                        ? ModSettingRestartScope.Game
+                        : ModSettingRestartScope.None,
+                    requiresRestart = settingName.Equals("Enabled", StringComparison.OrdinalIgnoreCase),
                     Hidden = bHidden,
                     ServerOnly = isServerOnly
                 };
@@ -1229,7 +1357,10 @@ namespace LizziesMod
                 node.SetAttribute("name", setting.Name);
                 node.SetAttribute("value", setting.ValueForPersistence);
                 node.SetAttribute("type", setting.Type);
-                node.SetAttribute("requiresRestart", setting.requiresRestart.ToString().ToLower());
+                if (setting.RestartScope != ModSettingRestartScope.None)
+                {
+                    node.SetAttribute("restartScope", setting.RestartScope.ToString().ToLowerInvariant());
+                }
                     if (!string.IsNullOrEmpty(setting.DefaultValue)) node.SetAttribute("defaultValue", setting.DefaultValue);
                 if (setting.Hidden) node.SetAttribute("hidden", "true");
                     if (setting.ServerOnly) node.SetAttribute("serverOnly", "true");

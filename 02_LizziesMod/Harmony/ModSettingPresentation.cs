@@ -3,6 +3,13 @@ using System.Collections.Generic;
 
 namespace LizziesMod
 {
+    public enum ModSettingRestartScope
+    {
+        None,
+        World,
+        Game
+    }
+
     public enum ModSettingControl
     {
         Auto,

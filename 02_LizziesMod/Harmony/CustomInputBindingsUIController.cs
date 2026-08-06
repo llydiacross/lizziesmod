@@ -373,44 +373,6 @@ namespace LizziesMod
         }
     }
 
-    [HarmonyPatch(typeof(XUiC_InGameMenuWindow), "Init")]
-    public class CustomInputPauseMenuPatch
-    {
-        public static void Postfix(XUiC_InGameMenuWindow __instance)
-        {
-            XUiController button = __instance.GetChildById("btnCustomInputs");
-            if (button == null) return;
-
-            XUiController clickable = button.GetChildById("clickable") ?? button;
-            clickable.OnPress += (sender, mouseButton) =>
-            {
-                CustomInputBindingsUIController.PreviousMenu = __instance.WindowGroup.Id;
-                CustomInputBindingsUIController.RequestedModName = "";
-                __instance.xui.playerUI.windowManager.Close(__instance.WindowGroup.Id);
-                __instance.xui.playerUI.windowManager.Open(CustomInputBindingsUIController.WindowName, true);
-            };
-        }
-    }
-
-    [HarmonyPatch(typeof(XUiC_MainMenuButtons), "Init")]
-    public class CustomInputMainMenuPatch
-    {
-        public static void Postfix(XUiC_MainMenuButtons __instance)
-        {
-            XUiController button = __instance.GetChildById("btnCustomInputs");
-            if (button == null) return;
-
-            XUiController clickable = button.GetChildById("clickable") ?? button;
-            clickable.OnPress += (sender, mouseButton) =>
-            {
-                CustomInputBindingsUIController.PreviousMenu = "mainMenu";
-                CustomInputBindingsUIController.RequestedModName = "";
-                __instance.xui.playerUI.windowManager.Close("mainMenu");
-                __instance.xui.playerUI.windowManager.Open(CustomInputBindingsUIController.WindowName, true);
-            };
-        }
-    }
-
     [HarmonyPatch(typeof(XUiC_OptionsControls), "Init")]
     public class CustomInputOptionsControlsPatch
     {
