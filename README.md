@@ -79,20 +79,16 @@ The launch and stop scripts are designed for repeatable development loops. Autom
 & '.\02_LizziesMod\Launch-Playtest.ps1' -DevMode
 ```
 
-## Mod Packager
+## Mod Zip Packager
 
 Easily package the mod to be released on Nexus or other places.
 
 
 Dry-run (list files that would be included)
 ```powershell
-    powershell -NoProfile -ExecutionPolicy Bypass -File .\Create-ReleaseZip.ps1 -Source "..\" -IncludeAllMods -WhatIf
+    powershell -NoProfile -ExecutionPolicy Bypass -File .\Create-ReleaseZip.ps1 -Source "..\" -IncludeAllMods -ModPattern LizziesMod -WhatIf
 ```
 
-Create combined ZIP of all mod folders under the parent Mods folder, skipping the Backrooms mod
-```powershell
-    powershell -NoProfile -ExecutionPolicy Bypass -File .\Create-ReleaseZip.ps1 -Source "..\02_LizziesMod" -IncludeAllMods -SkipMods LizziesMod_Backrooms
-```
   - Important defaults: excludes `.ps1`, `.pdb`, `.user`, `.suo`, `.log`, `.tmp`, `.cache`, `.bak` and directories like `obj`, `.vs`, `bin`, `packages`, `ConsoleCommandInbox`.
 
 Package only the explicitly named mod
@@ -100,7 +96,7 @@ Package only the explicitly named mod
     powershell -NoProfile -ExecutionPolicy Bypass -File ..\Create-ReleaseZip.ps1 -Source "..\.." -ModName LizziesMod_DynamicStacks
 ```
 
-Package only related mods whose folder names contain LizziesMod
+Package only related mods whose folder names contain LizziesMod by using the -ModPattern flag.
 ```powershell
     powershell -NoProfile -ExecutionPolicy Bypass -File ..\Create-ReleaseZip.ps1 -Source "..\.." -IncludeAllMods -ModPattern LizziesMod -SkipMods LizziesMod_Backrooms
 ```
