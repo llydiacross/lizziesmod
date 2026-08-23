@@ -38,7 +38,7 @@ namespace LizziesMod
                
                 if (!ModManualManager.AllBooks.ContainsKey(this.bookId))
                 {
-                    Logger.Error($"[ItemActionOpenModManual] Could not find a loaded book matching ID '{this.bookId}'. Check your ModManual.xml!");
+                    Logger.Error($"[ItemActionOpenModManual] Could not find a loaded book matching ID '{this.bookId}'. Check Config/ModManual.xml!");
                     playerLocal.PlayOneShot("ui_denied");
                     return;
                 }

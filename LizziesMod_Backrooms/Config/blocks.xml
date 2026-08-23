@@ -1,0 +1,23 @@
+<configs>
+  <append xpath="/blocks">
+    <block name="backroomsAccessTerminal">
+      <property name="Extends" value="controlPanelBase01" />
+      <property name="Class" value="LizziesMod.Backrooms.BlockBackroomsPortal, LizziesMod_Backrooms" />
+      <property name="Material" value="Mmetal" />
+      <property name="Shape" value="ModelEntity" />
+      <property name="Model" value="@:Entities/Industrial/controlPanelBase_01Prefab.prefab" />
+      <property name="Place" value="TowardsPlacerInverted" />
+      <property name="Collide" value="movement,melee,bullet,arrow,rocket" />
+      <property name="Path" value="solid" />
+      <property name="CreativeMode" value="Player" />
+      <property name="DescriptionKey" value="backroomsAccessTerminalDesc" />
+      <property name="CustomIcon" value="backroomsAccessTerminal" />
+      <property name="Group" value="Science,TCScience" />
+      <property name="FilterTags" value="MC_playerBlocks,SC_electrical" />
+      <property name="Collide" value="movement,melee,bullet,arrow,rocket" />
+      <property name="StabilitySupport" value="false" />
+      <property name="MaxDamage" value="800" />
+      <property name="EconomicValue" value="1200" />
+    </block>
+  </append>
+</configs>

@@ -100,7 +100,7 @@ namespace LizziesMod
 
             foreach (Mod mod in allMods)
             {
-                string manualPath = Path.Combine(mod.Path, "ModManual.xml");
+                 string manualPath = Path.Combine(mod.Path, "Config", "ModManual.xml");
                 if (!File.Exists(manualPath)) continue;
 
                 try
@@ -168,7 +168,7 @@ namespace LizziesMod
                 }
                 catch (Exception e)
                 {
-                    Logger.Error($"[ModManualManager] Failed to parse ModManual.xml for {mod.Name}: {e.Message}");
+                    Logger.Error($"[ModManualManager] Failed to parse Config/ModManual.xml for {mod.Name}: {e.Message}");
                 }
             }
         }

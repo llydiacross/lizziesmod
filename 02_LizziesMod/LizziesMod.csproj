@@ -35,15 +35,23 @@
   <ItemGroup>
     <Compile Include="Harmony\BlockDimensionPortal.cs" />
     <Compile Include="Harmony\ConsoleCmdGetPosition.cs" />
+    <Compile Include="Harmony\ConsoleCmdLizziesDebug.cs" />
+    <Compile Include="Harmony\ConsoleCmdLizziesGame.cs" />
+    <Compile Include="Harmony\ConsoleCmdRegenerateDimension.cs" />
+    <Compile Include="Harmony\ConsoleCommandInbox.cs" />
     <Compile Include="Harmony\DimensionGeneratorRegistry.cs" />
+    <Compile Include="Harmony\GeneratedDimensionGeneratorBase.cs" />
     <Compile Include="Harmony\DimensionManager.cs" />
     <Compile Include="Harmony\DimensionRegistry.cs" />
     <Compile Include="Harmony\DimensionStorage.cs" />
+    <Compile Include="Harmony\DimensionWorldBoundaryPatches.cs" />
     <Compile Include="Harmony\EntityPhysicsProp.cs" />
     <Compile Include="Harmony\ItemActionOpenModManual.cs" />
     <Compile Include="Harmony\ModSaveManager.cs" />
     <Compile Include="Harmony\ModErrorHandler.cs" />
     <Compile Include="Harmony\ModPatcher.cs" />
+    <Compile Include="Harmony\ModPortalManager.cs" />
+    <Compile Include="Harmony\ModPortalUIController.cs" />
     <Compile Include="Harmony\BlockJukebox.cs" />
     <Compile Include="Harmony\CustomAudioManager.cs" />
     <Compile Include="Harmony\CustomInputBindingsUIController.cs" />
@@ -68,6 +76,7 @@
     <Compile Include="Harmony\ModManualManager.cs" />
     <Compile Include="Harmony\ModManualUIController.cs" />
     <Compile Include="Harmony\ModSettingsManager.cs" />
+    <Compile Include="Harmony\ModSettingPresentation.cs" />
     <Compile Include="Harmony\ModSettingsUIController.cs" />
     <Compile Include="Harmony\NetPackageJukeboxCommand.cs" />
     <Compile Include="Harmony\NetPackageJukeboxFeedback.cs" />
@@ -81,6 +90,8 @@
     <Compile Include="Harmony\SavePatcher.cs" />
     <Compile Include="Harmony\TeleportUIController.cs" />
     <Compile Include="Harmony\TimeManager.cs" />
+    <Compile Include="Harmony\UserXmlContentManager.cs" />
+    <Compile Include="Harmony\XmlEditorUIController.cs" />
     <Compile Include="Harmony\XmlTokenReplacer.cs" />
     <Compile Include="Harmony\XmlValidationRunner.cs" />
     <Compile Include="Harmony\NetPackagePhysicsPropCommand.cs" />

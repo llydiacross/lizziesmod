@@ -1,0 +1,24 @@
+<configs>
+  <append xpath="/blocks">
+    <block name="pocketDimensionPortal">
+      <property name="Extends" value="tvCRT_PlayerOff" />
+      <property name="Class" value="LizziesMod.PocketDimension.BlockPocketDimensionPortal, LizziesMod_PocketDimension" />
+      <property name="Material" value="Mmetal" />
+      <property name="Shape" value="ModelEntity" />
+      <property name="Model" value="@:Entities/Electrical/tvCRTPlayerOffPrefab.prefab" />
+      <property name="ModelOffset" value="0,0,0" />
+      <property name="GndAlign" value="1" />
+      <property name="WaterFlow" value="permitted" />
+      <property name="Place" value="TowardsPlacerInverted" />
+      <property name="Collide" value="movement,melee,bullet,arrow,rocket" />
+      <property name="Path" value="solid" />
+      <property name="IsTerrainDecoration" value="true" />
+      <property name="StabilitySupport" value="false" />
+      <property name="DescriptionKey" value="pocketDimensionPortalDesc" />
+      <property name="CustomIcon" value="pocketDimensionPortal" />
+      <property name="Group" value="Science,TCScience" />
+      <property name="FilterTags" value="MC_playerBlocks,SC_electrical" />
+      <property name="EconomicValue" value="800" />
+    </block>
+  </append>
+</configs>

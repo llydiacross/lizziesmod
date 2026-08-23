@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ModManual>
+  <Book id="readme_pocket_dimension" is_readme="true" title="Pocket Dimension" author="llydia" icon="ui_game_symbol_book"
+        default_background="menu_empty" default_font="UIFontSmall" default_text_color="255,255,255,255">
+    <Page title="Overview"><![CDATA[
+LizziesMod_PocketDimension is a small generated-dimension companion and a reference implementation for the shared dimension-generator API.
+
+It registers the pocket-dimension generator, maps it to PocketDimension in Config/Dimensions.xml, and provides a direct portal block. The generator creates terrain support beneath a flat concrete floor and stores the realm separately from the Overworld.
+
+Dimension travel is experimental, single-player only, and requires ExperimentalFeatures to be enabled.
+    ]]></Page>
+
+    <Page title="Pocket Television"><![CDATA[
+The Pocket Dimension Television directly targets PocketDimension. Craft it at a workbench with 2 Flux Cells, 8 Electrical Parts, 6 Mechanical Parts, and 4 Forged Steel.
+
+Place and use it in a normal Overworld save to enter the flat realm. A matching return television is generated at the Pocket Dimension origin, eight blocks from the entry point. Use that return television to return to the Overworld.
+
+Use a disposable save while testing experimental dimensions, and make a backup before changing realm data.
+    ]]></Page>
+
+    <Page title="Floor Configuration"><![CDATA[
+FloorY controls the concrete floor height. It defaults to 32 and is clamped between 16 and 240. The setting requires a client restart.
+
+The generator fills concrete terrain support through the block below the configured floor, clears the space above it, and places a concrete floor at FloorY. Existing chunks retain their old geometry after a setting change.
+
+The setting is available under LizziesMod_PocketDimension in Mod Settings.
+    ]]></Page>
+
+    <Page title="Regenerating Terrain"><![CDATA[
+After changing generator code or FloorY, restart the client and regenerate the realm before testing. Pocket Dimension data is stored below <save>_LizziesMod/Dimensions/PocketDimension.
+
+While in the Overworld, run lizziesregendimension PocketDimension. It creates an Overworld backup, archives the old Pocket Dimension Region directory, and creates an empty Region directory for fresh chunks. Do not run it while inside the Pocket Dimension.
+
+Return to the Overworld before closing the game to keep ordinary save maintenance straightforward.
+    ]]></Page>
+  </Book>
+</ModManual>

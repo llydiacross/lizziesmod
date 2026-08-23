@@ -17,9 +17,13 @@ namespace LizziesMod
 
         private static string activeDimensionId = OverworldDimensionId;
         private static bool transitionInProgress;
+        private static volatile bool regionStorageRebindInProgress;
         private static ChunkProviderGenerateWorld storageBindingProvider;
+        private static volatile RegionFileManager activeGeneratedRegionFileManager;
+        private static readonly object chunkGenerationGate = new object();
         private static readonly Dictionary<string, RegionStorageBinding> regionStorageBindings =
             new Dictionary<string, RegionStorageBinding>(StringComparer.OrdinalIgnoreCase);
+            private static string loggedWorldBoundaryOverrideDimensionId = "";
 
         public static string ActiveDimensionId
         {
@@ -36,17 +40,79 @@ namespace LizziesMod
             get { return transitionInProgress; }
         }
 
+        public static bool TryEnterChunkGeneration()
+        {
+            System.Threading.Monitor.Enter(chunkGenerationGate);
+            if (!regionStorageRebindInProgress) return true;
+
+            System.Threading.Monitor.Exit(chunkGenerationGate);
+            return false;
+        }
+
+        public static void ExitChunkGeneration()
+        {
+            System.Threading.Monitor.Exit(chunkGenerationGate);
+        }
+
         public static bool IsActiveGenerator(string generatorId)
         {
             return !IsOverworld(activeDimensionId) && DimensionRegistry.UsesGenerator(activeDimensionId, generatorId);
         }
 
+            public static bool IsWorldBoundaryDisabledForActiveDimension()
+            {
+                if (IsOverworld(activeDimensionId)) return false;
+
+                DimensionDefinition definition;
+                if (!DimensionRegistry.TryGet(activeDimensionId, out definition) || !definition.DisableWorldBoundary)
+                {
+                    return false;
+                }
+
+                if (!loggedWorldBoundaryOverrideDimensionId.Equals(activeDimensionId, StringComparison.OrdinalIgnoreCase))
+                {
+                    loggedWorldBoundaryOverrideDimensionId = activeDimensionId;
+                    Logger.Info($"[DimensionManager] World boundary and biome radiation are disabled for '{activeDimensionId}'.");
+                }
+
+                return true;
+            }
+
+            public static float FilterWorldBoundsPercent(float worldBoundsPercent)
+            {
+                return IsWorldBoundaryDisabledForActiveDimension() ? 1f : worldBoundsPercent;
+            }
+
+            public static bool FilterWorldBoundsAdjustment(bool needsBoundsAdjustment)
+            {
+                return IsWorldBoundaryDisabledForActiveDimension() ? false : needsBoundsAdjustment;
+            }
+
+            public static float FilterBiomeRadiation(float radiation)
+            {
+                return IsWorldBoundaryDisabledForActiveDimension() ? 0f : radiation;
+            }
+
+        public static bool IsProviderBoundToActiveGeneratedDimension(ChunkProviderGenerateWorld provider)
+        {
+            return provider != null && IsActiveGeneratedDimension() &&
+                ReferenceEquals(provider.m_RegionFileManager, activeGeneratedRegionFileManager);
+        }
+
         public static string GetPortalActivationText()
         {
+            return GetDimensionActivationText(DimensionRegistry.DefaultDimensionId);
+        }
+
+        public static string GetDimensionActivationText(string dimensionId)
+        {
             if (transitionInProgress) return "Dimension Transition In Progress";
-            return IsOverworld(activeDimensionId)
-                ? "Enter " + DimensionRegistry.GetDefaultDefinition().DisplayName
-                : "Return to Overworld";
+            if (!IsOverworld(activeDimensionId)) return "Return to Overworld";
+
+            DimensionDefinition definition;
+            return !string.IsNullOrEmpty(dimensionId) && DimensionRegistry.TryGet(dimensionId, out definition)
+                ? "Enter " + definition.DisplayName
+                : "Enter Dimension";
         }
 
         public static bool TrySetActiveDimension(string dimensionId)
@@ -58,12 +124,24 @@ namespace LizziesMod
                 return false;
             }
 
-            activeDimensionId = IsOverworld(dimensionId) ? OverworldDimensionId : dimensionId;
+            string nextDimensionId = IsOverworld(dimensionId) ? OverworldDimensionId : dimensionId;
+            if (string.Equals(activeDimensionId, nextDimensionId, StringComparison.OrdinalIgnoreCase)) return true;
+
+            string previousDimensionId = activeDimensionId;
+            DimensionGeneratorRegistry.NotifyDimensionDeactivated(previousDimensionId);
+            activeDimensionId = nextDimensionId;
+                loggedWorldBoundaryOverrideDimensionId = "";
             Logger.Info($"[DimensionManager] Active dimension set to '{activeDimensionId}'.");
+            DimensionGeneratorRegistry.NotifyDimensionActivated(activeDimensionId);
             return true;
         }
 
         public static bool TryStartConfiguredDimension(EntityPlayerLocal player)
+        {
+            return TryStartDimension(player, DimensionRegistry.DefaultDimensionId);
+        }
+
+        public static bool TryStartDimension(EntityPlayerLocal player, string dimensionId)
         {
             if (player == null) return false;
 
@@ -89,16 +167,19 @@ namespace LizziesMod
                 return false;
             }
 
-            DimensionDefinition defaultDefinition = DimensionRegistry.GetDefaultDefinition();
-            if (!defaultDefinition.IsSupported)
+            bool enteringDimension = IsOverworld(activeDimensionId);
+            DimensionDefinition definition = null;
+            if (enteringDimension &&
+                (string.IsNullOrEmpty(dimensionId) || !DimensionRegistry.TryGet(dimensionId, out definition) || !definition.IsSupported))
             {
-                GameManager.ShowTooltip(player, $"The '{defaultDefinition.DisplayName}' generator is not implemented yet.");
+                string displayName = definition != null ? definition.DisplayName : dimensionId;
+                GameManager.ShowTooltip(player, $"The '{displayName}' generator is not implemented yet.");
                 player.PlayOneShot("ui_denied");
                 return false;
             }
 
-            string targetDimension = IsOverworld(activeDimensionId)
-                ? defaultDefinition.Id
+            string targetDimension = enteringDimension
+                ? definition.Id
                 : OverworldDimensionId;
 
             GameManager.Instance.StartCoroutine(SwitchDimension(player, player.position, targetDimension));
@@ -199,6 +280,7 @@ namespace LizziesMod
                     }
                     player.SetControllable(false);
 
+                    BeginRegionStorageRebind();
                     if (!TryUnloadActiveChunks(chunkCache, out error))
                     {
                     }
@@ -264,12 +346,13 @@ namespace LizziesMod
                 else
                 {
                     timeoutAt = Time.realtimeSinceStartup + ChunkCollisionTimeoutSeconds;
-                    while (!destinationChunk.IsCollisionMeshGenerated && Time.realtimeSinceStartup < timeoutAt)
+                    while ((!destinationChunk.IsCollisionMeshGenerated || destinationChunk.NeedsRegeneration) &&
+                           Time.realtimeSinceStartup < timeoutAt)
                     {
                         yield return null;
                     }
 
-                    if (!destinationChunk.IsCollisionMeshGenerated)
+                    if (!destinationChunk.IsCollisionMeshGenerated || destinationChunk.NeedsRegeneration)
                     {
                         error = "The destination chunk did not build collision before the timeout.";
                     }
@@ -320,6 +403,11 @@ namespace LizziesMod
                 }
             }
 
+            if (!changedDimension && regionStorageRebindInProgress)
+            {
+                CompleteRegionStorageRebind();
+            }
+
             if (playerController != null) playerController.enabled = playerControllerWasEnabled;
             player.SetControllable(true);
             player.Buffs.RemoveBuff("buffFluxTeleporting");
@@ -362,6 +450,7 @@ namespace LizziesMod
             {
                 regionStorageBindings.Clear();
                 storageBindingProvider = generatedWorldProvider;
+                activeGeneratedRegionFileManager = null;
             }
 
             regionStorageBindings[activeDimensionId] = new RegionStorageBinding(
@@ -404,9 +493,13 @@ namespace LizziesMod
                 rebuildContext.GeneratedWorldProvider.m_RegionFileManager = storageBinding.RegionFileManager;
                 rebuildContext.GeneratedWorldProvider.eventPrefabs = storageBinding.EventPrefabs;
                 rebuildContext.GeneratedWorldProvider.bDecorationsEnabled = !IsActiveGeneratedDimension();
+                activeGeneratedRegionFileManager = IsActiveGeneratedDimension()
+                    ? storageBinding.RegionFileManager
+                    : null;
                 MultiBlockManager.Instance.Initialize(storageBinding.RegionFileManager);
                 rebuildContext.GeneratedWorldProvider.ReloadAllChunks();
                 rebuildContext.ChunkProvider = rebuildContext.GeneratedWorldProvider;
+                CompleteRegionStorageRebind();
                 Logger.Info($"[DimensionManager] Rebound region storage for '{activeDimensionId}' through '{rebuildContext.ChunkProvider.GetType().Name}'.");
             }
             catch (Exception exception)
@@ -545,6 +638,21 @@ namespace LizziesMod
 
             regionStorageBindings.Clear();
             storageBindingProvider = null;
+            activeGeneratedRegionFileManager = null;
+            regionStorageRebindInProgress = false;
+        }
+
+        private static void BeginRegionStorageRebind()
+        {
+            regionStorageRebindInProgress = true;
+            lock (chunkGenerationGate)
+            {
+            }
+        }
+
+        private static void CompleteRegionStorageRebind()
+        {
+            regionStorageRebindInProgress = false;
         }
 
         private static void RequestChunk(IChunkProvider chunkProvider, int chunkX, int chunkZ)

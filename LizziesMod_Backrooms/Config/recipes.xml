@@ -1,0 +1,10 @@
+<configs>
+  <append xpath="/recipes">
+    <recipe name="backroomsAccessTerminal" count="1" craft_area="workbench" craft_time="35">
+      <ingredient name="resourceFluxCell" count="3" />
+      <ingredient name="resourceElectricParts" count="12" />
+      <ingredient name="resourceMechanicalParts" count="8" />
+      <ingredient name="resourceForgedSteel" count="6" />
+    </recipe>
+  </append>
+</configs>

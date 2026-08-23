@@ -2,6 +2,7 @@
 using HarmonyLib;
 using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace LizziesMod
 {
@@ -58,9 +59,31 @@ namespace LizziesMod
         private XUiController btnLoadProfile;
         private XUiController btnSaveProfile;
         private XUiController btnEditInputs;
+        private XUiController btnOpenReadme;
+        private XUiController btnOpenModPortal;
+        private readonly List<SettingSessionValue> originalSettingValues = new List<SettingSessionValue>();
         public static string LastLoadedProfile = "";
         private bool isTransitioning = false;
+        private bool isDiscardingSettings = false;
+        private bool hasSettingsSession = false;
         private bool ownsGamePause;
+        private string originalProfileName = "";
+        private string originalLastLoadedProfile = "";
+        private ModSettingRestartScope originalPendingRestartScope = ModSettingRestartScope.None;
+
+        private sealed class PendingSettingChange
+        {
+            public SettingEntryController Entry;
+            public ModSetting Setting;
+            public string Value;
+        }
+
+        private sealed class SettingSessionValue
+        {
+            public ModSetting Setting;
+            public string Value;
+            public string PersistedValue;
+        }
 
         public override void Init()
         {
@@ -94,8 +117,8 @@ namespace LizziesMod
                 {
                     if (txtProfileName != null && !string.IsNullOrEmpty(txtProfileName.Text))
                     {
-                        SaveCurrentSettingsUI();
-                        ModSettingsManager.SaveProfile(txtProfileName.Text);
+                        string profileName = txtProfileName.Text;
+                        SaveCurrentSettingsUI(() => ModSettingsManager.SaveProfile(profileName));
                     }
                 };
             }
@@ -105,11 +128,30 @@ namespace LizziesMod
                 XUiController clickable = btnEditInputs.GetChildById("clickable") ?? btnEditInputs;
                 clickable.OnPress += (s, e) => OpenSelectedModInputs();
             }
+            btnOpenReadme = GetChildById("btnOpenReadme");
+            if (btnOpenReadme != null)
+            {
+                XUiController clickable = btnOpenReadme.GetChildById("clickable") ?? btnOpenReadme;
+                clickable.OnPress += (s, e) => OpenSelectedModReadme();
+            }
+            btnOpenModPortal = GetChildById("btnOpenModPortal");
+            if (btnOpenModPortal != null)
+            {
+                XUiController clickable = btnOpenModPortal.GetChildById("clickable") ?? btnOpenModPortal;
+                clickable.OnPress += (s, e) => OpenModPortal();
+            }
             XUiController closeBtn = GetChildById("btnClose");
             if (closeBtn != null)
             {
                 XUiController clickable = closeBtn.GetChildById("clickable") ?? closeBtn;
                 clickable.OnPress += (s, e) => xui.playerUI.windowManager.Close("windowModSettings");
+            }
+
+            XUiController cancelBtn = GetChildById("btnCancel");
+            if (cancelBtn != null)
+            {
+                XUiController clickable = cancelBtn.GetChildById("clickable") ?? cancelBtn;
+                clickable.OnPress += (s, e) => CancelSettings();
             }
         }
 
@@ -125,30 +167,16 @@ namespace LizziesMod
                 return;
             }
 
-            ModPatcher.ShowDisabledMods = true;
-            SaveCurrentSettingsUI();
-
-            if (txtProfileName != null && !string.IsNullOrEmpty(txtProfileName.Text))
+            if (isDiscardingSettings)
             {
-                ModSettingsManager.SetSetting("LizziesMod", "LastProfileName", txtProfileName.Text, true);
+                isDiscardingSettings = false;
+                EndSettingsSession();
+                ReturnToPreviousMenu();
+                return;
             }
 
-            foreach (var mod in ModSettingsManager.AllModSettings.Keys)
-            {
-                ModSettingsManager.SaveModSettings(mod);
-            }
-
-            ModPatcher.ShowDisabledMods = false;
-
-            if (ModSettingsManager.PendingRestart)
-            {
-                xui.playerUI.windowManager.Open("windowModSettingsRestartPrompt", true);
-            }
-            else
-            {
-                if (!string.IsNullOrEmpty(PreviousMenu))
-                    xui.playerUI.windowManager.Open(PreviousMenu, true);
-            }
+            string profileName = txtProfileName != null ? txtProfileName.Text : "";
+            SaveCurrentSettingsUI(() => FinalizeSettingsClose(profileName));
         }
 
         public override void OnOpen()
@@ -176,6 +204,11 @@ namespace LizziesMod
             if (txtProfileName != null && !string.IsNullOrEmpty(LastLoadedProfile))
             {
                 txtProfileName.Text = LastLoadedProfile;
+            }
+
+            if (!hasSettingsSession)
+            {
+                BeginSettingsSession();
             }
 
             string requestedModName = RequestedModName;
@@ -217,7 +250,11 @@ namespace LizziesMod
 
         public void SelectMod(string modName)
         {
-            SaveCurrentSettingsUI();
+            SaveCurrentSettingsUI(() => SelectModAfterSaving(modName));
+        }
+
+        private void SelectModAfterSaving(string modName)
+        {
             selectedMod = modName;
 
             ModPatcher.ShowDisabledMods = true;
@@ -294,6 +331,7 @@ namespace LizziesMod
 
             PopulateSettingsList();
             UpdateEditInputsButton();
+            UpdateReadmeButton();
         }
 
         public void PopulateSettingsList()
@@ -320,7 +358,7 @@ namespace LizziesMod
                 if (child is SettingEntryController entry)
                 {
                     if (i < visibleSettings.Count)
-                        entry.SetSetting(visibleSettings[i]);
+                            entry.SetSetting(visibleSettings[i], this);
                     else
                         entry.Clear();
                     i++;
@@ -328,16 +366,239 @@ namespace LizziesMod
             }
         }
 
-        private void SaveCurrentSettingsUI()
+        private void SaveCurrentSettingsUI(Action onComplete = null)
         {
-            if (string.IsNullOrEmpty(selectedMod)) return;
-            foreach (var child in settingsGrid.Children)
+            List<PendingSettingChange> changes = new List<PendingSettingChange>();
+            if (!string.IsNullOrEmpty(selectedMod))
             {
-                if (child is SettingEntryController entry && entry.CurrentSetting != null)
+                foreach (var child in settingsGrid.Children)
                 {
-                    entry.CurrentSetting.SetValue(entry.GetValue());
+                    if (child is SettingEntryController entry && entry.CurrentSetting != null)
+                    {
+                            string value;
+                            if (!entry.TryGetValue(out value)) continue;
+
+                        changes.Add(new PendingSettingChange
+                        {
+                            Entry = entry,
+                            Setting = entry.CurrentSetting,
+                                Value = value
+                        });
+                    }
                 }
             }
+
+            ApplySettingChanges(changes, 0, onComplete);
+        }
+
+        private void ApplySettingChanges(List<PendingSettingChange> changes, int index, Action onComplete)
+        {
+            if (index >= changes.Count)
+            {
+                onComplete?.Invoke();
+                return;
+            }
+
+            PendingSettingChange change = changes[index];
+            if (string.Equals(change.Setting.Value, change.Value, StringComparison.Ordinal))
+            {
+                ApplySettingChanges(changes, index + 1, onComplete);
+                return;
+            }
+
+            if (!change.Setting.Warning)
+            {
+                change.Setting.SetValue(change.Value);
+                ApplySettingChanges(changes, index + 1, onComplete);
+                return;
+            }
+
+            string warningText = "Changing '" + change.Setting.Name + "' for '" + change.Setting.ModName +
+                "' can make your save incompatible or unstable.\n\nBack up your save before continuing. Do you want to apply this setting?";
+            XUiC_MessageBoxWindowGroup.ShowOkCancel(
+                xui,
+                "SETTING WARNING",
+                warningText,
+                "",
+                () =>
+                {
+                    change.Setting.SetValue(change.Value);
+                    ApplySettingChanges(changes, index + 1, onComplete);
+                },
+                () =>
+                {
+                    change.Entry.SetSetting(change.Setting);
+                    ApplySettingChanges(changes, index + 1, onComplete);
+                });
+        }
+
+        private void FinalizeSettingsClose(string profileName)
+        {
+            ModPatcher.ShowDisabledMods = true;
+
+            if (!string.IsNullOrEmpty(profileName))
+            {
+                ModSettingsManager.SetSetting("LizziesMod", "LastProfileName", profileName, true);
+            }
+
+            foreach (var mod in ModSettingsManager.AllModSettings.Keys)
+            {
+                ModSettingsManager.SaveModSettings(mod);
+            }
+
+            ModPatcher.ShowDisabledMods = false;
+            EndSettingsSession();
+
+            ModSettingRestartScope restartScope = ModSettingsManager.PendingRestartScope;
+            if (restartScope == ModSettingRestartScope.Game ||
+                (restartScope == ModSettingRestartScope.World && Main.IsPlayerInGame()))
+            {
+                xui.playerUI.windowManager.Open("windowModSettingsRestartPrompt", true);
+            }
+            else
+            {
+                ModSettingsManager.PendingRestart = false;
+                string returnMenu = ConsumeReturnMenu();
+                if (!string.IsNullOrEmpty(returnMenu))
+                {
+                    xui.playerUI.windowManager.Open(returnMenu, true);
+                }
+            }
+        }
+
+        private void BeginSettingsSession()
+        {
+            originalSettingValues.Clear();
+            foreach (List<ModSetting> settings in ModSettingsManager.AllModSettings.Values)
+            {
+                foreach (ModSetting setting in settings)
+                {
+                    originalSettingValues.Add(new SettingSessionValue
+                    {
+                        Setting = setting,
+                        Value = setting.Value,
+                        PersistedValue = setting.PersistedValue
+                    });
+                }
+            }
+
+            originalProfileName = txtProfileName == null ? "" : txtProfileName.Text ?? "";
+            originalLastLoadedProfile = LastLoadedProfile;
+            originalPendingRestartScope = ModSettingsManager.PendingRestartScope;
+            hasSettingsSession = true;
+        }
+
+        private void EndSettingsSession()
+        {
+            originalSettingValues.Clear();
+            originalProfileName = "";
+            originalLastLoadedProfile = "";
+            originalPendingRestartScope = ModSettingRestartScope.None;
+            hasSettingsSession = false;
+        }
+
+        private void CancelSettings()
+        {
+            if (!HasSettingsChanges())
+            {
+                DiscardSettingsAndClose();
+                return;
+            }
+
+            XUiC_MessageBoxWindowGroup.ShowOkCancel(
+                xui,
+                "DISCARD CHANGES?",
+                "You have unsaved mod settings changes.\n\nDiscard them and return without saving?",
+                "",
+                DiscardSettingsAndClose,
+                () => { });
+        }
+
+        private bool HasSettingsChanges()
+        {
+            if (!hasSettingsSession) return false;
+
+            foreach (SettingSessionValue original in originalSettingValues)
+            {
+                if (!string.Equals(original.Setting.Value, original.Value, StringComparison.Ordinal) ||
+                    !string.Equals(original.Setting.PersistedValue, original.PersistedValue, StringComparison.Ordinal))
+                {
+                    return true;
+                }
+            }
+
+            if (txtProfileName != null &&
+                !string.Equals(txtProfileName.Text ?? "", originalProfileName, StringComparison.Ordinal))
+            {
+                return true;
+            }
+
+            if (ModSettingsManager.PendingRestartScope != originalPendingRestartScope) return true;
+
+            foreach (XUiController child in settingsGrid.Children)
+            {
+                SettingEntryController entry = child as SettingEntryController;
+                if (entry == null || entry.CurrentSetting == null) continue;
+
+                string pendingValue;
+                if (entry.TryGetValue(out pendingValue) &&
+                    !string.Equals(entry.CurrentSetting.Value, pendingValue, StringComparison.Ordinal))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private void DiscardSettingsAndClose()
+        {
+            HashSet<string> modsToSave = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (SettingSessionValue original in originalSettingValues)
+            {
+                ModSetting setting = original.Setting;
+                if (string.Equals(setting.Value, original.Value, StringComparison.Ordinal) &&
+                    string.Equals(setting.PersistedValue, original.PersistedValue, StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
+                setting.Value = original.Value;
+                setting.PersistedValue = original.PersistedValue;
+                setting.OnValueChanged?.Invoke(setting.Value);
+                modsToSave.Add(setting.ModName);
+            }
+
+            foreach (string modName in modsToSave)
+            {
+                ModSettingsManager.SaveModSettings(modName);
+            }
+
+            LastLoadedProfile = originalLastLoadedProfile;
+            ModSettingsManager.RestorePendingRestartScope(originalPendingRestartScope);
+            isDiscardingSettings = true;
+            xui.playerUI.windowManager.Close("windowModSettings");
+        }
+
+        private void ReturnToPreviousMenu()
+        {
+            string returnMenu = ConsumeReturnMenu();
+            if (!string.IsNullOrEmpty(returnMenu))
+            {
+                xui.playerUI.windowManager.Open(returnMenu, true);
+            }
+        }
+
+        internal static string ConsumeReturnMenu()
+        {
+            string previousMenu = PreviousMenu;
+            PreviousMenu = "";
+            if (string.IsNullOrEmpty(previousMenu) && !Main.IsPlayerInGame())
+            {
+                return "mainMenu";
+            }
+
+            return previousMenu;
         }
 
         private void UpdateEditInputsButton()
@@ -348,42 +609,145 @@ namespace LizziesMod
                 CustomInputManager.GetInputsForMod(selectedMod).Count > 0;
         }
 
+        private void UpdateReadmeButton()
+        {
+            if (btnOpenReadme?.viewComponent == null) return;
+
+            btnOpenReadme.viewComponent.IsVisible = GetSelectedReadme() != null;
+        }
+
+        private ModBook GetSelectedReadme()
+        {
+            if (string.IsNullOrEmpty(selectedMod)) return null;
+
+            foreach (ModBook book in ModManualManager.AllBooks.Values)
+            {
+                if (book.IsReadme && string.Equals(book.ModSource, selectedMod, StringComparison.OrdinalIgnoreCase))
+                {
+                    return book;
+                }
+            }
+
+            return null;
+        }
+
         private void OpenSelectedModInputs()
         {
             if (string.IsNullOrEmpty(selectedMod) || CustomInputManager.GetInputsForMod(selectedMod).Count == 0) return;
 
-            SaveCurrentSettingsUI();
-            isTransitioning = true;
-            RequestedModName = selectedMod;
-            CustomInputBindingsUIController.RequestedModName = selectedMod;
-            CustomInputBindingsUIController.PreviousMenu = "windowModSettings";
-            xui.playerUI.windowManager.Close("windowModSettings");
-            xui.playerUI.windowManager.Open(CustomInputBindingsUIController.WindowName, true);
+            SaveCurrentSettingsUI(() =>
+            {
+                isTransitioning = true;
+                RequestedModName = selectedMod;
+                CustomInputBindingsUIController.RequestedModName = selectedMod;
+                CustomInputBindingsUIController.PreviousMenu = "windowModSettings";
+                xui.playerUI.windowManager.Close("windowModSettings");
+                xui.playerUI.windowManager.Open(CustomInputBindingsUIController.WindowName, true);
+            });
+        }
+
+        private void OpenSelectedModReadme()
+        {
+            ModBook readme = GetSelectedReadme();
+            if (readme == null) return;
+
+            SaveCurrentSettingsUI(() =>
+            {
+                isTransitioning = true;
+                ModLibraryUIController.PreviousMenu = "windowModSettings";
+                ModLibraryUIController.RequestedBookId = readme.ID;
+                xui.playerUI.windowManager.Close("windowModSettings");
+                xui.playerUI.windowManager.Open("windowModLibrary", true);
+            });
+        }
+
+        internal void OpenSelector(SettingEntryController entry)
+        {
+            if (entry == null || entry.CurrentSetting == null) return;
+
+            SaveCurrentSettingsUI(() =>
+            {
+                isTransitioning = true;
+                ModSettingSelectorUIController.Request(entry.CurrentSetting, selectedMod);
+                xui.playerUI.windowManager.Close("windowModSettings");
+                xui.playerUI.windowManager.Open(ModSettingSelectorUIController.WindowName, true);
+            });
+        }
+
+            internal void OpenColorPicker(SettingEntryController entry)
+            {
+                if (entry == null || entry.CurrentSetting == null) return;
+
+                SaveCurrentSettingsUI(() =>
+                {
+                    isTransitioning = true;
+                    ModSettingColorPickerUIController.Request(
+                        entry.CurrentSetting,
+                        entry.GetPendingValue(),
+                        selectedMod);
+                    xui.playerUI.windowManager.Close("windowModSettings");
+                    xui.playerUI.windowManager.Open(ModSettingColorPickerUIController.WindowName, true);
+                });
+            }
+
+        private void OpenModPortal()
+        {
+            SaveCurrentSettingsUI(() =>
+            {
+                isTransitioning = true;
+                ModPortalUIController.PreviousMenu = "windowModSettings";
+                ModPortalUIController.RequestedPackageId = "";
+                ModPortalUIController.RequestedPackageVersion = "";
+                xui.playerUI.windowManager.Close("windowModSettings");
+                xui.playerUI.windowManager.Open(ModPortalUIController.WindowName, true);
+            });
         }
     }
 
     public class RestartPromptUIController : XUiController
     {
-        private bool isQuitting = false;
+        private XUiV_Label restartTitleLabel;
+        private XUiV_Label restartMessageLabel;
+        private XUiController restartGameButton;
+        private XUiController restartWorldButton;
+        private bool isRestarting = false;
         private bool ownsGamePause;
 
         public override void Init()
         {
             base.Init();
-            XUiController btnYes = GetChildById("btnYes");
-            if (btnYes != null)
+            restartTitleLabel = GetChildById("lblRestartTitle")?.viewComponent as XUiV_Label;
+            restartMessageLabel = GetChildById("lblRestartMessage")?.viewComponent as XUiV_Label;
+            restartGameButton = GetChildById("btnRestartGame");
+            restartWorldButton = GetChildById("btnRestartWorld");
+
+            if (restartGameButton != null)
             {
-                XUiController clickable = btnYes.GetChildById("clickable") ?? btnYes;
+                XUiController clickable = restartGameButton.GetChildById("clickable") ?? restartGameButton;
                 clickable.OnPress += (s, e) =>
                 {
-                    isQuitting = true;
+                    isRestarting = true;
+                    ModSettingsManager.PendingRestart = false;
                     UnityEngine.Application.Quit();
                 };
             }
-            XUiController btnNo = GetChildById("btnNo");
-            if (btnNo != null)
+
+            if (restartWorldButton != null)
             {
-                XUiController clickable = btnNo.GetChildById("clickable") ?? btnNo;
+                XUiController clickable = restartWorldButton.GetChildById("clickable") ?? restartWorldButton;
+                clickable.OnPress += (s, e) =>
+                {
+                    isRestarting = true;
+                    ModSettingsManager.PendingRestart = false;
+                    xui.playerUI.windowManager.Close("windowModSettingsRestartPrompt");
+                    SingletonMonoBehaviour<ConnectionManager>.Instance.Disconnect();
+                };
+            }
+
+            XUiController laterButton = GetChildById("btnRestartLater");
+            if (laterButton != null)
+            {
+                XUiController clickable = laterButton.GetChildById("clickable") ?? laterButton;
                 clickable.OnPress += (s, e) => xui.playerUI.windowManager.Close("windowModSettingsRestartPrompt");
             }
         }
@@ -393,17 +757,40 @@ namespace LizziesMod
             base.OnClose();
             InGameUiPause.Release(ownsGamePause);
             ownsGamePause = false;
-            if (isQuitting) return;
+            if (isRestarting) return;
 
             ModSettingsManager.PendingRestart = false;
-            if (!string.IsNullOrEmpty(ModSettingsUIController.PreviousMenu))
-                xui.playerUI.windowManager.Open(ModSettingsUIController.PreviousMenu, true);
+            string returnMenu = ModSettingsUIController.ConsumeReturnMenu();
+            if (!string.IsNullOrEmpty(returnMenu))
+                xui.playerUI.windowManager.Open(returnMenu, true);
         }
 
         public override void OnOpen()
         {
             base.OnOpen();
+            isRestarting = false;
             ownsGamePause = InGameUiPause.Acquire();
+
+            bool restartWorld = ModSettingsManager.PendingRestartScope == ModSettingRestartScope.World;
+            if (restartTitleLabel != null)
+            {
+                restartTitleLabel.Text = restartWorld ? "WORLD RESTART REQUIRED" : "GAME RESTART REQUIRED";
+            }
+
+            if (restartMessageLabel != null)
+            {
+                restartMessageLabel.Text = restartWorld
+                    ? "You changed settings that apply when a world loads.\n\nLeave this world now to reload it with the new settings?"
+                    : "You changed settings that require a game restart.\n\nWould you like to quit to desktop now?";
+            }
+
+            SetVisible(restartWorldButton, restartWorld);
+            SetVisible(restartGameButton, !restartWorld);
+        }
+
+        private static void SetVisible(XUiController controller, bool visible)
+        {
+            if (controller?.viewComponent != null) controller.viewComponent.IsVisible = visible;
         }
     }
 
@@ -412,6 +799,7 @@ namespace LizziesMod
         private string modName;
         private ModSettingsUIController mainController;
         private XUiV_Label lblModName;
+            private XUiV_Label lblModVersion;
         private XUiV_Texture imgModIcon;
         private XUiController btnEnableToggle;
         private XUiV_Sprite sprEnableCheck;
@@ -420,6 +808,7 @@ namespace LizziesMod
         {
             base.Init();
             lblModName = GetChildById("lblModName")?.viewComponent as XUiV_Label;
+                lblModVersion = GetChildById("lblModVersion")?.viewComponent as XUiV_Label;
             imgModIcon = GetChildById("imgModIcon")?.viewComponent as XUiV_Texture;
             btnEnableToggle = GetChildById("btnEnableToggle");
             sprEnableCheck = GetChildById("sprEnableCheck")?.viewComponent as XUiV_Sprite;
@@ -438,21 +827,27 @@ namespace LizziesMod
             modName = name;
             mainController = main;
 
-            if (lblModName != null)
-            {
-                string displayTitle = name;
-                int separatorIdx = name.IndexOfAny(new char[] { '_', '-' });
+                Mod targetMod = global::ModManager.GetLoadedMods().Find(mod => mod.Name == name);
+                string displayTitle = targetMod?.DisplayName ?? name;
+                int separatorIdx = name.IndexOf('_');
                 if (separatorIdx > 0 && separatorIdx < name.Length - 1)
                 {
-                    string extensionKey = name.Substring(0, separatorIdx);
-                    string actualModName = name.Substring(separatorIdx + 1);
-                    displayTitle = $"{actualModName} [a252ff]({extensionKey})[-]";
+                    string modPackName = name.Substring(0, separatorIdx);
+                    displayTitle += $" [a252ff]({modPackName})[-]";
                 }
 
+            if (lblModName != null)
+            {
                 lblModName.Text = displayTitle;
                 bool hasSettings = ModSettingsManager.AllModSettings.ContainsKey(name) && ModSettingsManager.AllModSettings[name].Count > 0;
                 lblModName.Color = hasSettings ? UnityEngine.Color.white : new UnityEngine.Color(0.5f, 0.5f, 0.5f, 1f);
             }
+
+                if (lblModVersion != null)
+                {
+                    string version = targetMod?.VersionString;
+                    lblModVersion.Text = "Version " + (string.IsNullOrEmpty(version) ? "Unknown" : version);
+                }
 
             bool isProtectedMod = name.Equals("TFP_Harmony", System.StringComparison.OrdinalIgnoreCase) || name.Equals("LizziesMod", System.StringComparison.OrdinalIgnoreCase);
 
@@ -461,16 +856,10 @@ namespace LizziesMod
                 sprEnableCheck.IsVisible = ModSettingsManager.GetSetting(this.modName, "Enabled", true);
             }
 
-            btnEnableToggle.viewComponent.IsVisible = !isProtectedMod;
+            if (btnEnableToggle?.viewComponent != null) btnEnableToggle.viewComponent.IsVisible = !isProtectedMod;
 
             if (imgModIcon != null)
             {
-                Mod targetMod = null;
-                foreach (var m in global::ModManager.GetLoadedMods())
-                {
-                    if (m.Name == name) { targetMod = m; break; }
-                }
-
                 if (targetMod != null)
                 {
                     string iconPath = System.IO.Path.Combine(targetMod.Path, "atlas.png");
@@ -499,6 +888,10 @@ namespace LizziesMod
                     {
                         imgModIcon.IsVisible = false;
                     }
+                }
+                else
+                {
+                    imgModIcon.IsVisible = false;
                 }
             }
             viewComponent.IsVisible = true;
@@ -543,11 +936,24 @@ namespace LizziesMod
     public class SettingEntryController : XUiController
     {
         private ModSetting setting;
+        private ModSettingsUIController mainController;
         private XUiV_Label lblSettingName;
         private XUiC_TextInput txtSettingValue;
-        private XUiController chkSettingValue;
-        private XUiV_Sprite sprCheck;
-        private bool isLocked = false;
+        private XUiController switchSettingValue;
+        private XUiV_Label lblSwitchValue;
+        private XUiV_Sprite sprSwitchTrackOn;
+        private XUiV_Sprite sprSwitchTrackOff;
+        private XUiV_Sprite sprSwitchKnobOn;
+        private XUiV_Sprite sprSwitchKnobOff;
+        private XUiController selectorSettingValue;
+        private XUiV_Label lblSelectorValue;
+        private XUiController sliderSettingValue;
+        private XUiV_Label lblSliderValue;
+        private XUiController colorSettingValue;
+        private XUiV_Label lblColorValue;
+        private XUiV_Sprite sprColorSwatch;
+        private bool isLocked;
+        private string pendingValue = "";
 
         public ModSetting CurrentSetting => setting;
 
@@ -556,64 +962,83 @@ namespace LizziesMod
             base.Init();
             lblSettingName = GetChildById("lblSettingName")?.viewComponent as XUiV_Label;
             txtSettingValue = GetChildById("txtSettingValue") as XUiC_TextInput;
-            chkSettingValue = GetChildById("chkSettingValue");
+            switchSettingValue = GetChildById("switchSettingValue");
+            lblSwitchValue = GetChildById("lblSwitchValue")?.viewComponent as XUiV_Label;
+            sprSwitchTrackOn = GetChildById("sprSwitchTrackOn")?.viewComponent as XUiV_Sprite;
+            sprSwitchTrackOff = GetChildById("sprSwitchTrackOff")?.viewComponent as XUiV_Sprite;
+            sprSwitchKnobOn = GetChildById("sprSwitchKnobOn")?.viewComponent as XUiV_Sprite;
+            sprSwitchKnobOff = GetChildById("sprSwitchKnobOff")?.viewComponent as XUiV_Sprite;
+            selectorSettingValue = GetChildById("selectorSettingValue");
+            lblSelectorValue = GetChildById("lblSelectorValue")?.viewComponent as XUiV_Label;
+            sliderSettingValue = GetChildById("sliderSettingValue");
+            lblSliderValue = GetChildById("lblSliderValue")?.viewComponent as XUiV_Label;
+            colorSettingValue = GetChildById("colorSettingValue");
+            lblColorValue = GetChildById("lblColorValue")?.viewComponent as XUiV_Label;
+            sprColorSwatch = GetChildById("sprColorSwatch")?.viewComponent as XUiV_Sprite;
 
-            if (chkSettingValue != null)
-            {
-                sprCheck = chkSettingValue.GetChildById("sprCheck")?.viewComponent as XUiV_Sprite;
-                XUiController clickable = chkSettingValue.GetChildById("clickable") ?? chkSettingValue;
-                clickable.OnPress += (s, e) =>
-                {
-                    if (isLocked)
-                    {
-                        Manager.PlayInsidePlayerHead("ui_denied");
-                        return;
-                    }
-                    if (setting != null && setting.Type == "bool")
-                    {
-                        bool currentValue = sprCheck.IsVisible;
-                        sprCheck.IsVisible = !currentValue;
-                    }
-                };
-            }
+            BindPress("btnSwitchValue", HandleSwitchPress);
+            BindPress("btnSelectorValue", HandleSelectorPress);
+            BindPress("btnSliderPrevious", (sender, mouseButton) => HandleAdjacentPress(-1));
+            BindPress("btnSliderNext", (sender, mouseButton) => HandleAdjacentPress(1));
+            BindPress("btnColorValue", HandleColorPress);
         }
 
         public void SetSetting(ModSetting _setting)
         {
+            SetSetting(_setting, mainController);
+        }
+
+        public void SetSetting(ModSetting _setting, ModSettingsUIController owner)
+        {
             setting = _setting;
+            mainController = owner;
             if (setting == null)
             {
                 Clear();
                 return;
             }
 
-            bool inMultiplayerAsClient = SingletonMonoBehaviour<ConnectionManager>.Instance.IsClient &&
-                                        !SingletonMonoBehaviour<ConnectionManager>.Instance.IsServer;
-            isLocked = setting.ServerOnly && inMultiplayerAsClient;
+            ConnectionManager connectionManager = SingletonMonoBehaviour<ConnectionManager>.Instance;
+            bool inMultiplayerAsClient = connectionManager != null && connectionManager.IsClient && !connectionManager.IsServer;
+            isLocked = setting.IsDeveloperOverridden || (setting.ServerOnly && inMultiplayerAsClient);
+            pendingValue = setting.Value;
 
             if (lblSettingName != null)
             {
-                string label = setting.Name;
-                if (isLocked) label += " [FF3333](Locked)[-]";
+                string label = setting.DisplayName;
+                if (setting.IsDeveloperOverridden) label += " [F8C45A](Dev Override)[-]";
+                else if (isLocked) label += " [FF3333](Locked)[-]";
                 else if (setting.inMenuOnly) label += " [FF3333](Menu Only)[-]";
                 lblSettingName.Text = label;
             }
 
-            if (setting.Type == "bool")
+            SetControlVisible(txtSettingValue, false);
+            SetControlVisible(switchSettingValue, false);
+            SetControlVisible(selectorSettingValue, false);
+            SetControlVisible(sliderSettingValue, false);
+            SetControlVisible(colorSettingValue, false);
+
+            switch (setting.EffectiveControl)
             {
-                if (txtSettingValue != null) txtSettingValue.viewComponent.IsVisible = false;
-                if (chkSettingValue != null) chkSettingValue.viewComponent.IsVisible = true;
-                if (sprCheck != null) sprCheck.IsVisible = setting.Value.Equals("true", StringComparison.OrdinalIgnoreCase);
+                case ModSettingControl.Switch:
+                    SetControlVisible(switchSettingValue, true);
+                    break;
+                case ModSettingControl.Selector:
+                    SetControlVisible(selectorSettingValue, true);
+                    break;
+                case ModSettingControl.Slider:
+                    SetControlVisible(sliderSettingValue, true);
+                    break;
+                case ModSettingControl.Color:
+                    SetControlVisible(colorSettingValue, true);
+                    break;
+                default:
+                    SetControlVisible(txtSettingValue, true);
+                    if (txtSettingValue != null) txtSettingValue.Text = pendingValue;
+                    break;
             }
-            else
-            {
-                if (chkSettingValue != null) chkSettingValue.viewComponent.IsVisible = false;
-                if (txtSettingValue != null)
-                {
-                    txtSettingValue.viewComponent.IsVisible = true;
-                    txtSettingValue.Text = setting.Value;
-                }
-            }
+
+            RefreshControlValue();
             viewComponent.IsVisible = !setting.Hidden;
         }
 
@@ -621,16 +1046,628 @@ namespace LizziesMod
         {
             setting = null;
             isLocked = false;
+            pendingValue = "";
             viewComponent.IsVisible = false;
         }
 
         public string GetValue()
         {
-            if (setting == null) return "";
-            if (isLocked) return setting.Value;
+            string value;
+            return TryGetValue(out value) ? value : setting?.Value ?? "";
+        }
 
-            if (setting.Type == "bool") return sprCheck != null && sprCheck.IsVisible ? "true" : "false";
-            return txtSettingValue != null ? txtSettingValue.Text : "";
+        public bool TryGetValue(out string value)
+        {
+            value = "";
+            if (setting == null) return false;
+            if (isLocked)
+            {
+                value = setting.Value;
+                return true;
+            }
+
+            string rawValue = setting.EffectiveControl == ModSettingControl.Text && txtSettingValue != null
+                ? txtSettingValue.Text
+                : pendingValue;
+            if (setting.TryNormalizeValue(rawValue, out value)) return true;
+
+            Logger.Warning($"[ModSettings] Restored invalid input for '{setting.ModName}.{setting.Name}'.");
+            SetSetting(setting);
+            return false;
+        }
+
+        internal string GetPendingValue()
+        {
+            return pendingValue;
+        }
+
+        internal void SetColorValue(string value)
+        {
+            SetPendingValue(value);
+        }
+
+        private void BindPress(string controlName, XUiEvent_OnPressEventHandler handler)
+        {
+            XUiController control = GetChildById(controlName);
+            if (control == null) return;
+
+            XUiController clickable = control.GetChildById("clickable") ?? control;
+            clickable.OnPress += handler;
+        }
+
+        private void HandleSwitchPress(XUiController sender, int mouseButton)
+        {
+            if (!CanEdit()) return;
+
+            string nextValue;
+            if (setting.TryGetToggledValue(pendingValue, out nextValue)) SetPendingValue(nextValue);
+        }
+
+        private void HandleAdjacentPress(int direction)
+        {
+            if (!CanEdit()) return;
+
+            string nextValue;
+            if (setting.TryGetAdjacentValue(pendingValue, direction, out nextValue)) SetPendingValue(nextValue);
+        }
+
+        private void HandleSelectorPress(XUiController sender, int mouseButton)
+        {
+            if (!CanEdit() || mainController == null) return;
+
+            mainController.OpenSelector(this);
+        }
+
+        private void HandleColorPress(XUiController sender, int mouseButton)
+        {
+            if (!CanEdit()) return;
+
+            if (mainController != null)
+            {
+                mainController.OpenColorPicker(this);
+            }
+        }
+
+        private bool CanEdit()
+        {
+            if (setting == null || !isLocked) return setting != null;
+
+            Manager.PlayInsidePlayerHead("ui_denied");
+            return false;
+        }
+
+        private void SetPendingValue(string value)
+        {
+            if (setting == null) return;
+
+            string normalizedValue;
+            if (!setting.TryNormalizeValue(value, out normalizedValue)) return;
+
+            pendingValue = normalizedValue;
+            RefreshControlValue();
+        }
+
+        private void RefreshControlValue()
+        {
+            if (setting == null) return;
+
+            string displayValue = setting.GetDisplayValue(pendingValue);
+            if (lblSwitchValue != null) lblSwitchValue.Text = displayValue;
+            if (lblSelectorValue != null) lblSelectorValue.Text = displayValue;
+            if (lblSliderValue != null) lblSliderValue.Text = displayValue;
+            if (lblColorValue != null) lblColorValue.Text = displayValue;
+
+            RefreshSwitchPresentation();
+
+            if (sprColorSwatch != null)
+            {
+                Color color;
+                if (TryParseColor(pendingValue, out color))
+                {
+                    sprColorSwatch.Color = color;
+                }
+            }
+        }
+
+        private void RefreshSwitchPresentation()
+        {
+            if (setting == null || setting.EffectiveControl != ModSettingControl.Switch) return;
+
+            bool isOn = IsSwitchOn();
+            SetSpriteVisible(sprSwitchTrackOn, isOn);
+            SetSpriteVisible(sprSwitchKnobOn, isOn);
+            SetSpriteVisible(sprSwitchTrackOff, !isOn);
+            SetSpriteVisible(sprSwitchKnobOff, !isOn);
+        }
+
+        private bool IsSwitchOn()
+        {
+            if (!string.IsNullOrEmpty(setting.Presentation.RightValue))
+            {
+                return pendingValue.Equals(setting.Presentation.RightValue, StringComparison.OrdinalIgnoreCase);
+            }
+
+            bool boolValue;
+            return bool.TryParse(pendingValue, out boolValue) && boolValue;
+        }
+
+        private static void SetControlVisible(XUiController control, bool visible)
+        {
+            if (control?.viewComponent != null) control.viewComponent.IsVisible = visible;
+        }
+
+        private static void SetSpriteVisible(XUiV_Sprite sprite, bool visible)
+        {
+            if (sprite != null) sprite.IsVisible = visible;
+        }
+
+        private static bool TryParseColor(string value, out Color color)
+        {
+            color = Color.white;
+            string[] components = (value ?? "").Split(',');
+            if (components.Length != 3) return false;
+
+            int red;
+            int green;
+            int blue;
+            if (!int.TryParse(components[0].Trim(), out red) ||
+                !int.TryParse(components[1].Trim(), out green) ||
+                !int.TryParse(components[2].Trim(), out blue))
+            {
+                return false;
+            }
+
+            color = new Color(Mathf.Clamp(red, 0, 255) / 255f, Mathf.Clamp(green, 0, 255) / 255f, Mathf.Clamp(blue, 0, 255) / 255f, 1f);
+            return true;
+        }
+    }
+
+    public class ModSettingSelectorUIController : XUiController
+    {
+        public const string WindowName = "windowModSettingSelector";
+        private static ModSetting requestedSetting;
+        private static string requestedModName = "";
+
+        private ModSetting targetSetting;
+        private string returnModName = "";
+        private XUiController optionsGrid;
+        private XUiV_Label titleLabel;
+        private XUiV_Label emptyLabel;
+        private readonly List<ModSettingOption> options = new List<ModSettingOption>();
+
+        public static void Request(ModSetting setting, string modName)
+        {
+            requestedSetting = setting;
+            requestedModName = modName ?? "";
+        }
+
+        public override void Init()
+        {
+            base.Init();
+            optionsGrid = GetChildById("selectorOptionsGrid");
+            titleLabel = GetChildById("lblSelectorTitle")?.viewComponent as XUiV_Label;
+            emptyLabel = GetChildById("lblSelectorEmpty")?.viewComponent as XUiV_Label;
+
+            XUiController cancelButton = GetChildById("btnSelectorCancel");
+            if (cancelButton != null)
+            {
+                XUiController clickable = cancelButton.GetChildById("clickable") ?? cancelButton;
+                clickable.OnPress += (sender, mouseButton) => ReturnToSettings();
+            }
+        }
+
+        public override void OnOpen()
+        {
+            base.OnOpen();
+            targetSetting = requestedSetting;
+            returnModName = requestedModName;
+            requestedSetting = null;
+            requestedModName = "";
+
+            options.Clear();
+            if (targetSetting != null) options.AddRange(targetSetting.GetSelectorOptions());
+            if (titleLabel != null)
+            {
+                titleLabel.Text = targetSetting == null ? "SELECT VALUE" : targetSetting.DisplayName.ToUpperInvariant();
+            }
+
+            if (emptyLabel != null) emptyLabel.IsVisible = options.Count == 0;
+            PopulateOptions();
+        }
+
+        public override void OnClose()
+        {
+            base.OnClose();
+            targetSetting = null;
+            options.Clear();
+        }
+
+        public void SelectOption(ModSettingOption option)
+        {
+            if (targetSetting == null || option == null) return;
+
+            if (!targetSetting.Warning)
+            {
+                ApplySelection(option.Value);
+                return;
+            }
+
+            string value = option.Value;
+            string warningText = "Changing '" + targetSetting.Name + "' for '" + targetSetting.ModName +
+                "' can make your save incompatible or unstable.\n\nBack up your save before continuing. Do you want to apply this setting?";
+            XUiC_MessageBoxWindowGroup.ShowOkCancel(
+                xui,
+                "SETTING WARNING",
+                warningText,
+                "",
+                () => ApplySelection(value),
+                () => { });
+        }
+
+        private void PopulateOptions()
+        {
+            if (optionsGrid == null) return;
+
+            int index = 0;
+            foreach (XUiController child in optionsGrid.Children)
+            {
+                ModSettingSelectorOptionEntryController entry = child as ModSettingSelectorOptionEntryController;
+                if (entry == null) continue;
+
+                if (index < options.Count)
+                {
+                    ModSettingOption option = options[index++];
+                    entry.SetOption(option, this, targetSetting != null &&
+                        option.Value.Equals(targetSetting.Value, StringComparison.OrdinalIgnoreCase));
+                }
+                else
+                {
+                    entry.Clear();
+                }
+            }
+        }
+
+        private void ApplySelection(string value)
+        {
+            if (targetSetting != null)
+            {
+                targetSetting.SetValue(value);
+                ModSettingsManager.SaveModSettings(targetSetting.ModName);
+            }
+
+            ReturnToSettings();
+        }
+
+        private void ReturnToSettings()
+        {
+            ModSettingsUIController.RequestedModName = returnModName;
+            xui.playerUI.windowManager.Close(WindowName);
+            xui.playerUI.windowManager.Open("windowModSettings", true);
+        }
+    }
+
+    public class ModSettingSelectorOptionEntryController : XUiController
+    {
+        private ModSettingOption option;
+        private ModSettingSelectorUIController owner;
+        private XUiV_Label optionLabel;
+        private XUiV_Sprite selectedSprite;
+
+        public override void Init()
+        {
+            base.Init();
+            optionLabel = GetChildById("lblSelectorOption")?.viewComponent as XUiV_Label;
+            selectedSprite = GetChildById("sprSelectorOptionSelected")?.viewComponent as XUiV_Sprite;
+
+            XUiController clickable = GetChildById("clickable") ?? this;
+            clickable.OnPress += (sender, mouseButton) => owner?.SelectOption(option);
+        }
+
+        public void SetOption(ModSettingOption value, ModSettingSelectorUIController controller, bool selected)
+        {
+            option = value;
+            owner = controller;
+            if (optionLabel != null) optionLabel.Text = value.Label;
+            if (selectedSprite != null) selectedSprite.IsVisible = selected;
+            viewComponent.IsVisible = true;
+        }
+
+        public void Clear()
+        {
+            option = null;
+            owner = null;
+            viewComponent.IsVisible = false;
+        }
+    }
+
+    public class ModSettingColorPickerUIController : XUiController
+    {
+        public const string WindowName = "windowModSettingColorPicker";
+        private const int ColorGridResolution = 192;
+        private const int HueStripResolution = 192;
+        private static ModSetting requestedSetting;
+        private static string requestedValue = "";
+        private static string requestedModName = "";
+
+        private ModSetting targetSetting;
+        private string returnModName = "";
+        private XUiV_Texture colorGrid;
+        private XUiV_Texture hueStrip;
+        private XUiV_Sprite selectedColorSprite;
+        private XUiV_Label rgbLabel;
+        private XUiV_Label hexLabel;
+        private Texture2D colorGridTexture;
+        private Texture2D hueStripTexture;
+        private Color pendingColor = Color.white;
+        private float hue;
+        private float saturation;
+        private float brightness;
+        private bool refreshPickerVisuals;
+
+        public static void Request(ModSetting setting, string value, string modName)
+        {
+            requestedSetting = setting;
+            requestedValue = value ?? "";
+            requestedModName = modName ?? "";
+        }
+
+        public override void Init()
+        {
+            base.Init();
+            colorGrid = GetChildById("texColorGrid")?.viewComponent as XUiV_Texture;
+            hueStrip = GetChildById("texHueStrip")?.viewComponent as XUiV_Texture;
+            selectedColorSprite = GetChildById("sprSelectedColor")?.viewComponent as XUiV_Sprite;
+            rgbLabel = GetChildById("lblColorRgb")?.viewComponent as XUiV_Label;
+            hexLabel = GetChildById("lblColorHex")?.viewComponent as XUiV_Label;
+
+            BindPress("btnApply", HandleApply);
+            BindPress("btnCancel", HandleCancel);
+            BindPickerInput("texColorGrid", UpdateColorGridFromMouse);
+            BindPickerInput("texHueStrip", UpdateHueFromMouse);
+        }
+
+        public override void OnOpen()
+        {
+            base.OnOpen();
+            targetSetting = requestedSetting;
+            returnModName = requestedModName;
+            pendingColor = ParseColor(requestedValue);
+            Color.RGBToHSV(pendingColor, out hue, out saturation, out brightness);
+            requestedSetting = null;
+            requestedValue = "";
+            requestedModName = "";
+            refreshPickerVisuals = true;
+        }
+
+        public override void Update(float deltaTime)
+        {
+            base.Update(deltaTime);
+            if (!refreshPickerVisuals) return;
+
+            EnsurePickerTextures();
+            RefreshPickerVisuals();
+            refreshPickerVisuals = false;
+        }
+
+        public override void OnClose()
+        {
+            base.OnClose();
+            targetSetting = null;
+            refreshPickerVisuals = false;
+            DestroyPickerTextures();
+        }
+
+        private void BindPress(string controlName, XUiEvent_OnPressEventHandler handler)
+        {
+            XUiController control = GetChildById(controlName);
+            if (control == null) return;
+
+            XUiController clickable = control.GetChildById("clickable") ?? control;
+            clickable.OnPress += handler;
+        }
+
+        private void BindPickerInput(string controlName, Action update)
+        {
+            XUiController control = GetChildById(controlName);
+            if (control == null) return;
+
+            control.OnPress += (sender, mouseButton) => update();
+            control.OnDrag += (sender, dragType, mousePositionDelta) => update();
+        }
+
+        private void UpdateColorGridFromMouse()
+        {
+            Vector2 relativePosition;
+            if (!TryGetRelativeMousePosition(colorGrid, out relativePosition)) return;
+
+            saturation = Mathf.Clamp01(relativePosition.x);
+            brightness = Mathf.Clamp01(relativePosition.y);
+            pendingColor = Color.HSVToRGB(hue, saturation, brightness);
+            RefreshPickerVisuals();
+        }
+
+        private void UpdateHueFromMouse()
+        {
+            Vector2 relativePosition;
+            if (!TryGetRelativeMousePosition(hueStrip, out relativePosition)) return;
+
+            hue = Mathf.Clamp01(relativePosition.x);
+            pendingColor = Color.HSVToRGB(hue, saturation, brightness);
+            RefreshPickerVisuals();
+        }
+
+        private bool TryGetRelativeMousePosition(XUiV_Texture texture, out Vector2 relativePosition)
+        {
+            relativePosition = Vector2.zero;
+            if (texture == null) return false;
+
+            Rect textureRect = texture.GetXUiRect();
+            if (textureRect.width <= 0f || textureRect.height <= 0f) return false;
+
+            Vector2 mousePosition = xui.GetMouseXUiPosition().AsVector2();
+            relativePosition = (mousePosition - textureRect.min) / textureRect.size;
+            return true;
+        }
+
+        private void EnsurePickerTextures()
+        {
+            if (colorGridTexture == null)
+            {
+                colorGridTexture = CreatePickerTexture(ColorGridResolution, ColorGridResolution);
+            }
+
+            if (hueStripTexture == null)
+            {
+                hueStripTexture = CreatePickerTexture(HueStripResolution, 24);
+            }
+
+            if (colorGrid != null) colorGrid.Texture = colorGridTexture;
+            if (hueStrip != null) hueStrip.Texture = hueStripTexture;
+        }
+
+        private static Texture2D CreatePickerTexture(int width, int height)
+        {
+            Texture2D texture = new Texture2D(width, height, TextureFormat.RGBA32, false);
+            texture.wrapMode = TextureWrapMode.Clamp;
+            texture.filterMode = FilterMode.Bilinear;
+            return texture;
+        }
+
+        private void RefreshPickerVisuals()
+        {
+            RenderColorGrid();
+            RenderHueStrip();
+
+            if (selectedColorSprite != null) selectedColorSprite.Color = pendingColor;
+
+            int red = Mathf.Clamp(Mathf.RoundToInt(pendingColor.r * 255f), 0, 255);
+            int green = Mathf.Clamp(Mathf.RoundToInt(pendingColor.g * 255f), 0, 255);
+            int blue = Mathf.Clamp(Mathf.RoundToInt(pendingColor.b * 255f), 0, 255);
+            if (rgbLabel != null) rgbLabel.Text = "R " + red + "   G " + green + "   B " + blue;
+            if (hexLabel != null) hexLabel.Text = "#" + red.ToString("X2") + green.ToString("X2") + blue.ToString("X2");
+        }
+
+        private void RenderColorGrid()
+        {
+            if (colorGridTexture == null) return;
+
+            Color[] pixels = new Color[ColorGridResolution * ColorGridResolution];
+            for (int y = 0; y < ColorGridResolution; y++)
+            {
+                float valueAtRow = (float)y / (ColorGridResolution - 1);
+                for (int x = 0; x < ColorGridResolution; x++)
+                {
+                    float saturationAtColumn = (float)x / (ColorGridResolution - 1);
+                    pixels[y * ColorGridResolution + x] = Color.HSVToRGB(hue, saturationAtColumn, valueAtRow);
+                }
+            }
+
+            colorGridTexture.SetPixels(pixels);
+            colorGridTexture.Apply(false, false);
+        }
+
+        private void RenderHueStrip()
+        {
+            if (hueStripTexture == null) return;
+
+            Color[] pixels = new Color[HueStripResolution * hueStripTexture.height];
+            for (int y = 0; y < hueStripTexture.height; y++)
+            {
+                for (int x = 0; x < HueStripResolution; x++)
+                {
+                    pixels[y * HueStripResolution + x] = Color.HSVToRGB((float)x / (HueStripResolution - 1), 1f, 1f);
+                }
+            }
+
+            hueStripTexture.SetPixels(pixels);
+            hueStripTexture.Apply(false, false);
+        }
+
+        private void DestroyPickerTextures()
+        {
+            if (colorGridTexture != null)
+            {
+                UnityEngine.Object.Destroy(colorGridTexture);
+                colorGridTexture = null;
+            }
+
+            if (hueStripTexture != null)
+            {
+                UnityEngine.Object.Destroy(hueStripTexture);
+                hueStripTexture = null;
+            }
+        }
+
+        private void HandleApply(XUiController sender, int mouseButton)
+        {
+            if (targetSetting == null)
+            {
+                ReturnToSettings();
+                return;
+            }
+
+            if (!targetSetting.Warning)
+            {
+                ApplyColorAndReturn();
+                return;
+            }
+
+            string warningText = "Changing '" + targetSetting.Name + "' for '" + targetSetting.ModName +
+                "' can make your save incompatible or unstable.\n\nBack up your save before continuing. Do you want to apply this setting?";
+            XUiC_MessageBoxWindowGroup.ShowOkCancel(
+                xui,
+                "SETTING WARNING",
+                warningText,
+                "",
+                ApplyColorAndReturn,
+                () => { });
+        }
+
+        private void HandleCancel(XUiController sender, int mouseButton)
+        {
+            ReturnToSettings();
+        }
+
+        private void ApplyColorAndReturn()
+        {
+            if (targetSetting != null)
+            {
+                targetSetting.SetValue(ToRgbValue(pendingColor));
+                ModSettingsManager.SaveModSettings(targetSetting.ModName);
+            }
+
+            ReturnToSettings();
+        }
+
+        private void ReturnToSettings()
+        {
+            ModSettingsUIController.RequestedModName = returnModName;
+            xui.playerUI.windowManager.Close(WindowName);
+            xui.playerUI.windowManager.Open("windowModSettings", true);
+        }
+
+        private static Color ParseColor(string value)
+        {
+            string[] components = (value ?? "").Split(',');
+            int red;
+            int green;
+            int blue;
+            if (components.Length != 3 ||
+                !int.TryParse(components[0].Trim(), out red) ||
+                !int.TryParse(components[1].Trim(), out green) ||
+                !int.TryParse(components[2].Trim(), out blue))
+            {
+                return Color.white;
+            }
+
+            return new Color(Mathf.Clamp(red, 0, 255) / 255f, Mathf.Clamp(green, 0, 255) / 255f, Mathf.Clamp(blue, 0, 255) / 255f, 1f);
+        }
+
+        private static string ToRgbValue(Color color)
+        {
+            return Mathf.Clamp(Mathf.RoundToInt(color.r * 255f), 0, 255) + "," +
+                Mathf.Clamp(Mathf.RoundToInt(color.g * 255f), 0, 255) + "," +
+                Mathf.Clamp(Mathf.RoundToInt(color.b * 255f), 0, 255);
         }
     }
 

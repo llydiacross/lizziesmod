@@ -27,7 +27,7 @@ C:\Program Files (x86)\Steam\steamapps\common\7 Days To Die\Mods\
 ~/Library/steam/steamapps/common/7 Days To Die/Mods
  ```
 
-## Developer Playtest Launcher
+## Launch 7 Days to Die for fast playtesting
 
 `02_LizziesMod/Launch-Playtest.ps1` rebuilds the shared DLL and starts the local
 client with the game's native `-loadsavegame=true` quick-continue preference.
@@ -39,6 +39,18 @@ The game uses its last selected local save for quick-continue. Select
 
 ```powershell
 & '.\02_LizziesMod\Launch-Playtest.ps1'
+```
+
+By default, the launcher looks for the game in `C:\Program Files (x86)\Steam\steamapps\common\7 Days To Die`. If Steam is installed on another drive or in a custom library, provide `-GameRoot` with the folder that contains `7DaysToDie.exe`:
+
+```powershell
+& '.\02_LizziesMod\Launch-Playtest.ps1' -GameRoot 'D:\SteamLibrary\steamapps\common\7 Days To Die'
+```
+
+The launcher uses this folder as the client's working directory as well. It validates the executable before building or starting the game, so a missing or incorrect path produces a direct error instead of launching from the wrong location. `-GameRoot` can be combined with any other launcher switch:
+
+```powershell
+& '.\02_LizziesMod\Launch-Playtest.ps1' -GameRoot 'E:\Games\Steam\steamapps\common\7 Days To Die' -DevMode
 ```
 
 Use PowerShell's dry-run support to verify the command and paths without
@@ -54,6 +66,195 @@ Use `-MainMenu` when a save needs to be selected or created manually:
 & '.\02_LizziesMod\Launch-Playtest.ps1' -MainMenu
 ```
 
+Use the companion stop script before a fresh launch when the client is still running. It force-stops `7DaysToDie` and its Easy Anti-Cheat helper, so save and exit normally when game progress matters:
+
+```powershell
+& '.\02_LizziesMod\Stop-Playtest.ps1'
+```
+
+The launch and stop scripts are designed for repeatable development loops. Automated tools, including AI coding agents, can stop a disposable client non-interactively, make and build changes, then start a new playtest:
+
+```powershell
+& '.\02_LizziesMod\Stop-Playtest.ps1' -Confirm:$false
+& '.\02_LizziesMod\Launch-Playtest.ps1' -DevMode
+```
+
+### Send client console commands
+
+`02_LizziesMod/Invoke-ConsoleCommand.ps1` queues a command through a file-backed developer console queue system. The running client atomically claims the request, executes it through its native console dispatcher on the main thread, removes the request file, and writes a result receipt. It does not require the game window, F1 console, or focus to be available:
+
+```powershell
+& '.\02_LizziesMod\Invoke-ConsoleCommand.ps1' 'lizziesdebug diagnostics' -WaitForResult
+```
+
+The inbox is available only when the client starts with `-DevMode`. Requests live under `02_LizziesMod/ConsoleCommandInbox/Pending`; completed result receipts are written to `Results`. `-WaitForResult` prints the exact console output and fails after `-TimeoutSeconds` if the client has not processed the request. A client restart recovers any request that was claimed during a shutdown.
+
+When the loading screen shows **Ready to Spawn in the World**, use the native, focus-free spawn shortcut instead of clicking the button:
+
+```powershell
+& '.\02_LizziesMod\Invoke-ConsoleCommand.ps1' -SpawnWorld -WaitForResult
+```
+
+It queues a developer-only inbox spawn request; the receipt reports `queued` until the game reaches its native spawn-ready state, when it invokes the same `GameManager.DoSpawn()` action as the loading-screen button. `lizziesgame spawnstatus` reports whether a spawn request is queued and ready after the world has started.
+
+`-KeyboardFallback` retains the former F1-keyboard path for testing an older core DLL. It requires a visible, foregroundable `7DaysToDie` window; `-ConsoleAlreadyOpen` and `-ConsoleOpenDelayMilliseconds` apply only to that fallback. `-WhatIf` never writes a request or sends keyboard input.
+
+### LizziesMod debug commands
+
+Run `lizziesdebug help` in the native console for the current command list. `lizziesdev` is an alias.
+
+- `lizziesdebug dimensions` lists registered dimensions and generators, including supported and active state.
+- `lizziesdebug status [dimension-id]` reports a dimension's generator, transition state, save location, and Region/archive counts.
+- `lizziesdebug region [dimension-id]` reports only the generated terrain storage state.
+- `lizziesdebug position` and `lizziesdebug chunk [chunk-x chunk-z]` report player coordinates and loaded chunk collision/regeneration flags.
+- `getpos` is the compact standalone coordinate command. Use it to copy the local player's world and block position; use `lizziesdebug position` when dimension and chunk details are also needed.
+- `lizziesdebug settings [mod-name]` lists loaded setting groups or effective values, including developer overrides and restart requirements.
+- `lizziesdebug diagnostics` prints captured XML error and warning details.
+- `lizziesdebug enter <dimension-id>` and `lizziesdebug return` request the normal guarded dimension transition. They use the same single-player and Experimental Features checks as the portal.
+- `lizziesregendimension <dimension-id>` remains the intentional terrain-reset command. It can only run in the Overworld and takes an Overworld backup before archiving the old Region directory.
+
+### Gameplay QA commands
+
+Run `lizziesgame help` for the gameplay test command family. `lizziesqa` is an alias.
+
+- `lizziesgame player`, `world`, `time`, `block [x y z]`, and `entities [radius]` inspect the current local state without changing it.
+- `lizziesgame give|take|count <item-or-block> [count]` manages test inventory items. `give` and `take` validate names and report the actual result.
+- `lizziesgame teleport <x> <y> <z>` moves the local player, while `lizziesgame buff add|remove|has <buff-id>` exercises buff state.
+- `lizziesgame spawnworld` requests the native world-spawn action without using the loading-screen button. `lizziesgame spawnstatus` reports whether that request is waiting or ready to run.
+- `lizziesgame spawn list [props|entities|ragdolls] [filter]` searches the Prop Spawner catalogue. `spawn <entry-id>`, `spawn grant <prop-id>`, `spawn undo`, and `spawn clear` retain the existing admin, ownership, and enabled-setting checks.
+- `lizziesgame inputs [filter]`, `textures [filter]`, `xml [items|blocks|recipes] [filter]`, and `portal` inspect the corresponding LizziesMod systems.
+- `lizziesgame ui <window-name>` opens a named XUi window for local UI testing, such as `windowModSettings`, `windowModLibrary`, or `windowSpawnMenu`.
+
+## Gears Compatibility
+
+LizziesMod settings use `Config/ModSettings.xml` inside each LizziesMod package. This leaves the root-level `ModSettings.xml` available for [Gears - A Mod Settings Manager](https://www.nexusmods.com/7daystodie/mods/4017?tab=description), which uses that root file for its own settings definitions.
+
+LizziesMod does not load, save, or modify root-level `ModSettings.xml` files. Mods that define their settings for Gears therefore still require Gears; LizziesMod only manages settings declared in `Config/ModSettings.xml`.
+
+## Settings
+
+LizziesMod reads and writes settings from `Config/ModSettings.xml` in each mod package. A declaration always has a `name`, `value`, and `type`; `defaultValue` is used only when the configured value is invalid. Existing declarations remain compatible: booleans render as switches, while strings and numbers without a `control` render as text fields.
+
+```xml
+<ModSettings>
+	<Setting name="DisplayName" value="Service Wing" type="string" displayName="Display Name" />
+	<Setting name="Enabled" value="true" type="bool" control="switch"
+					 leftValue="false" rightValue="true" leftLabel="Disabled" rightLabel="Enabled" />
+	<Setting name="LightSpacing" value="5" defaultValue="5" type="int" control="slider"
+					 min="3" max="12" step="1" displayName="Light Spacing" />
+	<Setting name="Difficulty" value="normal" type="string" control="selector">
+		<Option value="easy" label="Easy" />
+		<Option value="normal" label="Normal" />
+		<Option value="hard" label="Hard" />
+	</Setting>
+	<Setting name="RealmFloorY" value="32" type="int" restartScope="world"
+					 control="selector" min="16" max="64" step="8" />
+	<Setting name="AccentColor" value="255,180,0" type="color" control="color"
+					 displayName="Accent Color" />
+</ModSettings>
+```
+
+`control` accepts `text`, `switch`, `selector`, `slider`, `color`, or `auto`. A selector is a windowed control: clicking its current value opens a modal, scrollable option list with the active value highlighted. Selecting an option applies it immediately and returns to Mod Settings; Cancel leaves the value unchanged. String selectors can use child `Option` elements or an `options="one|two|three"` attribute. Integer and float selectors can instead derive up to 128 values from `min`, `max`, and `step`, which is useful for compact discrete ranges such as a volume level. Sliders require an `int` or `float` type and use bounded previous/next controls at the declared step. Their `format` attribute uses a .NET numeric format string, such as `0'%'`.
+
+`restartScope` defaults to `none`; set it to `world` when the setting is read as a world loads, or `game` when it is read while the client initializes. A world-scope change offers to leave the active world and return to the menu; a game-scope change offers to quit the client. From the main menu, world-scope changes apply when the next world starts. The legacy `requiresRestart="true"` attribute remains supported and maps to `restartScope="game"`.
+
+Color values use three comma-separated RGB channels from `0` through `255`, for example `255,180,0`. The Mod Settings color control opens the native 7 Days to Die color picker and persists its canonical `R,G,B` value. LizziesMod intentionally has no settings tabs or binding-setting type; declare custom key bindings in `Config/CustomInput.xml` and edit them from the selected mod's **Edit Inputs** action or the native Controls Mods tab.
+
+Every changed value is normalized and validated against its setting type, selector options, and numeric range before it is applied, saved, used by profiles, or accepted from `DevSettings.xml`. Use the existing typed accessors in code:
+
+```csharp
+int spacing = ModSettingsManager.GetSetting<int>("ExampleMod", "LightSpacing", 5);
+string difficulty = ModSettingsManager.GetSetting<string>("ExampleMod", "Difficulty", "normal");
+Color accent = ModSettingsManager.GetSettingColor(
+		"ExampleMod",
+		"AccentColor",
+		new Color(1f, 180f / 255f, 0f, 1f));
+
+ModSettingsManager.RegisterCallback("ExampleMod", "AccentColor", value =>
+{
+		// Refresh live client state from the new persisted value.
+});
+```
+
+## Developer Settings
+
+Committed `Config/ModSettings.xml` files use player-safe defaults. Local development overrides live in the ignored `02_LizziesMod/DevSettings.xml` file and apply only when the client starts in developer mode:
+
+```xml
+<DevSettings>
+	<Mod name="LizziesMod">
+		<Setting name="ExperimentalFeatures" value="true" />
+	</Mod>
+	<Mod name="LizziesMod_Backrooms">
+		<Setting name="MainFloorY" value="59" />
+	</Mod>
+	<Mod name="LizziesMod_PocketDimension">
+		<Setting name="EnableExperimentalLayout" value="true" type="bool" />
+	</Mod>
+</DevSettings>
+```
+
+Create DevSettings.xml inside of the 02_LizziesMod folder and put this inside to test this feature.
+
+Run the playtest launcher with `-DevMode` to enable the overrides for that client process:
+
+```powershell
+& '.\02_LizziesMod\Launch-Playtest.ps1' -DevMode
+```
+
+Overrides require a loaded mod and validate values against existing setting types. A setting name not declared by the mod is registered for that developer session using its `value` as the default; types are inferred as `bool`, `int`, `float`, or `string`, or can be declared explicitly with `type`. Developer-defined settings are locked in the Mod Settings UI and never enter `ModSettings.xml` or saved profiles. Closing that UI or changing regular settings does not write developer values back to committed configuration.
+
+## Setting Warnings
+
+Settings that can alter save behavior can require confirmation before the player applies a changed value in Mod Settings:
+
+```xml
+<Setting name="ExperimentalFeatures" value="false" type="bool" restartScope="game" warning="true" />
+```
+
+With `warning="true"`, the player is told that the setting can make a save incompatible or unstable and is prompted to back up the save. Selecting Cancel restores the previous value; only confirmation applies the change.
+
+## XML Definition Editor
+
+The **XML Editor** is available from the main menu and escape menu. It lists the loaded item, block, and recipe definitions with search and paging, then creates small valid generated definitions without rewriting any mod's raw `Config/*.xml` file.
+
+Generated definitions are stored locally in the ignored `02_LizziesMod/UserXmlDefinitions.xml` file and are injected into the final item, block, or recipe XML while the game loads. A restart is required after creating or removing a definition. The editor normalizes generated names under `lizziesUser_`, so entering `exampleHammer` creates `lizziesUser_exampleHammer`.
+
+Items inherit a selected existing item, blocks inherit a selected existing block, and recipes require an existing generated output item plus an existing item ingredient. The editor verifies those references before saving. Removing a generated definition only changes the local user file; it never modifies a downloaded or installed mod.
+
+Selecting a definition also shows its supported fields in a table. Items and blocks expose direct `property` `name`/`value` pairs while their `Extends` value remains the base-definition field. Recipes expose `ingredient` `name`/`count` pairs and their output count. Loaded definitions are templates: creating from one writes a separate generated definition. Selecting a generated definition enables saving changes to its base, properties, or ingredients. The editor supports up to 24 editable rows and validates property names, item/block bases, recipe outputs, ingredient references, and numeric counts before writing XML.
+
+## Mod Portal
+
+The **Mod Portal** is available from the main menu, escape menu, and Mod Settings. It is intentionally inactive until a local endpoint is configured in the ignored `02_LizziesMod/ModPortalSettings.xml` file:
+
+```xml
+<ModPortal endpoint="https://mods.example.invalid/catalog.xml" />
+```
+
+The endpoint must use HTTPS. Refreshing the catalog is a user action; a successful catalog is cached locally as `ModPortalCatalog.cache.xml`. Portal packages are limited to XML files below `Config/`, downloaded into a staging directory, parsed, checked against their SHA-256 hashes, and then installed with a generated `ModInfo.xml`. Existing folders are never overwritten unless they were previously installed by the portal.
+
+The catalog contract is:
+
+```xml
+<ModPortalCatalog version="1">
+	<Package id="ExampleXmlMod"
+					 display_name="Example XML Mod"
+					 version="1.0.0"
+					 description="A config-only mod."
+					 author="Example Author"
+					 website="https://mods.example.invalid/example"
+					 game_version="3.1">
+		<File path="Config/items.xml"
+					url="https://mods.example.invalid/files/ExampleXmlMod/items.xml"
+					sha256="0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+					size="1234" />
+	</Package>
+</ModPortalCatalog>
+```
+
+`id`, `version`, every file `path`, `url`, and `sha256` are required. Paths must stay under `Config/` and end in `.xml`; URLs must use HTTPS; SHA-256 values must contain 64 hexadecimal characters. DLLs, asset bundles, scripts, and arbitrary archives are rejected. After a successful install, restart the client. When a loaded profile has a missing mod with an exact cached portal ID and version match, its missing-mods screen exposes the matching portal package.
+
 ## Dimensions
 
 Dimensions are a single-player experimental feature. The game supports one active region directory, chunk provider, and chunk cache, so entering a dimension moves the whole local session between the Overworld and one selected realm; separate per-player realms are not supported.
@@ -62,24 +263,49 @@ Enable `ExperimentalFeatures` in **Mod Settings**, use a disposable normal gener
 
 Each realm has isolated region-backed terrain, blocks, tile entities, dropped items, and spawned non-player entities. Player inventory, quests, profile data, and character state remain shared. Return to the Overworld before exiting the game.
 
-The core mod owns transitions and save storage. Companion mods add dimensions by registering a generator and a definition during `IModApi.InitMod`:
+The core mod owns transitions and save storage. Companion mods add dimensions by implementing `IDimensionGenerator` and registering it during `IModApi.InitMod`. Inherit `GeneratedDimensionGeneratorBase` for generated realms: it handles one-time initialization, required-block caching, clamped integer settings, terrain-column helpers, stability columns, and final chunk state.
 
 ```csharp
-DimensionGeneratorRegistry.Register(new DimensionGeneratorDefinition(
-	"example-generated",
-	DimensionSaveMode.Generated,
-	GetEntryPosition,
-	GenerateChunk));
-DimensionRegistry.LoadDefinitions(modInstance);
+public sealed class ExampleDimensionGenerator : GeneratedDimensionGeneratorBase
+{
+	public override string Id { get { return "example-generated"; } }
+
+	protected override void Initialize()
+	{
+		// Read settings and prepare generator state once.
+	}
+
+	protected override Vector3 GetEntryPositionCore(DimensionDefinition definition, Vector3 defaultPosition)
+	{
+		return defaultPosition;
+	}
+
+	protected override bool GenerateChunk(Chunk chunk)
+	{
+		// Write the complete chunk, then call FinalizeGeneratedChunk(chunk).
+		return true;
+	}
+}
+
+// Then, in your Main.cs
+private static readonly ExampleDimensionGenerator generator = new ExampleDimensionGenerator();
+
+// and inside of your ModInit function
+if (!DimensionGeneratorRegistry.RegisterAndLoadDefinitions(modInstance, generator))
+{
+	Logger.Error("[ExampleDimension] Generator registration failed.");
+}
 ```
 
-`GenerateChunk` receives each new `Chunk`; return `true` after fully writing it to suppress normal terrain, or `false` to use the normal generator. Existing saved chunks are loaded instead of regenerated. Definitions belong to the companion mod:
+`GenerateChunk` receives each new `Chunk`; return `true` after fully writing it to suppress normal terrain, or `false` to use the normal generator. Override `HasMainThreadWork` and `ProcessMainThread()` only when the generator needs main-thread work after chunk generation. Existing saved chunks are loaded instead of regenerated. Definitions belong to the companion mod:
 
 ```xml
 <Dimensions default="ExampleDimension" defaultPriority="100">
-	<Dimension id="ExampleDimension" displayName="Example Dimension" generator="example-generated" />
+	<Dimension id="ExampleDimension" displayName="Example Dimension" generator="example-generated" disableWorldBoundary="true" />
 </Dimensions>
 ```
+
+`disableWorldBoundary` defaults to `false`. When enabled for the active generated dimension, it prevents the vanilla player pushback/end-of-world message, vehicle bounds correction, and biome-radiation value from applying in that dimension. It never changes the Overworld. The game can still have practical chunk-streaming, memory, and disk limits, so treat this as an extended exploration setting rather than a guarantee of unlimited world capacity.
 
 When several mods declare defaults, the highest `defaultPriority` wins. The included `LizziesMod_Backrooms` add-on provides the stable `backrooms` generator and `Backrooms` dimension. Its layout settings apply only to new generated chunks, so restart and recreate its realm after changing them.
 
@@ -268,21 +494,30 @@ The physics prop uses each `MeshFilter` in the resolved model to create a convex
 
 ## Manuals
 
-Books in `ModManual.xml` with `is_readme="true"` appear in the Mod README library, available from the main menu and in-game. Legacy pages with only text and an optional `image` attribute remain supported. For a free-form scrollable layout, give a README page a `canvas_size` and add positioned `TextArea` and `Image` elements:
+Books in `ModManual.xml` with `is_readme="true"` are technical readmes and appear in the Mod README library, available from the main menu and in-game. Legacy pages with only text and an optional `image` attribute remain supported. For a free-form scrollable layout, give a README page a `canvas_size` and add positioned `TextArea` and `Image` elements:
 
 ```xml
 <Page title="Getting Started" canvas_size="1030,720">
-	<TextArea id="intro" pos="0,0" size="1010,100"><![CDATA[
+	<TextArea id="intro" pos="20,0" size="855,100"><![CDATA[
 Welcome to the mod.
 	]]></TextArea>
-	<Image id="controls" source="controls.png" pos="0,-125" size="600,338" />
-	<TextArea id="notes" pos="625,-125" size="385,338"><![CDATA[
+	<Image id="controls" source="controls.png" pos="20,-125" size="600,338" />
+	<TextArea id="notes" pos="640,-125" size="235,338"><![CDATA[
 Explain the controls beside the image.
 	]]></TextArea>
 </Page>
 ```
 
-`pos` uses XUi coordinates: positive `x` moves right and negative `y` moves down. Every element needs a unique `id`, `pos`, and positive `size`. Images must be `.png`, `.jpg`, or `.jpeg` files under the owning mod's `ManualResources` folder. The shipped reader provides up to 32 text areas and 32 images per page; extra elements are reported in the game log. The page scrolls as one canvas, and its scrollbar is hidden until the content exceeds the reading viewport.
+`pos` uses XUi coordinates: positive `x` moves right and negative `y` moves down. Every element needs a unique `id`, `pos`, and positive `size`. The reader has a fixed 1030px canvas with a visible authoring area from `x="20"` through `x="875"`, so full-width content should use `pos="20,..."` and a maximum width of `855`; wider or out-of-bounds content is automatically contained instead of overflowing or clipping at the reader pane's right edge. `canvas_size` may extend the page vertically, but not horizontally. Images must be `.png`, `.jpg`, or `.jpeg` files under the owning mod's `ManualResources` folder. The shipped reader provides up to 32 text areas and 32 images per page; extra elements are reported in the game log. The page scrolls as one canvas, and its scrollbar is hidden until the content exceeds the reading viewport.
+
+For lore or in-world guides, omit `is_readme="true"` from the book and bind its ID to a craftable item with `ItemActionOpenModManual`. Non-readme books stay out of the menu library and open only through that item:
+
+```xml
+<property class="Action0">
+	<property name="Class" value="LizziesMod.ItemActionOpenModManual, LizziesMod" />
+	<property name="BookId" value="guide_example_lore" />
+</property>
+```
 
 ## Custom Block Paints
 

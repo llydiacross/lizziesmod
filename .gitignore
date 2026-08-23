@@ -39,9 +39,25 @@
 !LizziesMod_Backrooms/Harmony/*.cs
 !LizziesMod_Backrooms/Properties/
 !LizziesMod_Backrooms/Properties/*.cs
+!LizziesMod_PocketDimension/
+!LizziesMod_PocketDimension/*.csproj
+!LizziesMod_PocketDimension/*.xml
+!LizziesMod_PocketDimension/*.md
+!LizziesMod_PocketDimension/*.dll
+!LizziesMod_PocketDimension/Config/
+!LizziesMod_PocketDimension/Config/*.xml
+!LizziesMod_PocketDimension/Config/*.txt
+!LizziesMod_PocketDimension/Harmony/
+!LizziesMod_PocketDimension/Harmony/*.cs
+!LizziesMod_PocketDimension/Properties/
+!LizziesMod_PocketDimension/Properties/*.cs
 !LizziesMod_DynamicBackpacks
 !LizziesMod_DynamicStacks
-!LizziesMod_JukeboxAndWallpapers
+!LizziesMod_JukeboxAndWalkman/
+!LizziesMod_JukeboxAndWalkman/*.xml
+!LizziesMod_JukeboxAndWalkman/Config/
+!LizziesMod_JukeboxAndWalkman/Config/*.xml
+!LizziesMod_JukeboxAndWalkman/Config/*.csv
 !LizziesMod_Physgun
 !LizziesMod_PropSpawner
 !ManualResources
@@ -50,6 +66,10 @@
 
 # Developer build stuff
 /0_TFP_Harmony
+/02_LizziesMod/DevSettings.xml
+/02_LizziesMod/UserXmlDefinitions.xml
+/02_LizziesMod/ModPortalSettings.xml
+/02_LizziesMod/ModPortalCatalog.cache.xml
 obj
 .vs
 /package*.json*

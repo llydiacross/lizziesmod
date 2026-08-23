@@ -1,0 +1,10 @@
+<ModSettings>
+  <Setting name="StartingYear" value="1986" type="int" defaultValue="1986" control="slider" displayName="Starting Year" min="1900" max="2200" step="1" />
+  <Setting name="EnableMechanicalPress" value="true" type="bool" defaultValue="true" control="switch" displayName="Mechanical Press" leftValue="false" rightValue="true" leftLabel="Disabled" rightLabel="Enabled" />
+  <Setting name="BrassScrapMaxDamage" value="1700" type="int" restartScope="game" defaultValue="1650" control="slider" displayName="Brass Scrap Durability" min="100" max="5000" step="50" />
+  <Setting name="BrassScrapStabilityGlue" value="70" type="int" restartScope="game" defaultValue="70" control="slider" displayName="Brass Scrap Stability" min="0" max="100" step="5" />
+  <Setting name="ExperimentalFeatures" value="false" type="bool" restartScope="game" defaultValue="false" warning="true" control="switch" displayName="Experimental Features" leftValue="false" rightValue="true" leftLabel="Off" rightLabel="On" />
+  <Setting name="YearDisplayColor" value="255,255,255" type="color" defaultValue="255,180,0" control="color" displayName="Year Display Color" tooltip="Controls the HUD color used when the current game year appears." />
+  <Setting name="Enabled" value="true" type="bool" restartScope="game" defaultValue="true" hidden="true" />
+  <Setting name="LastProfileName" value="Default" type="string" defaultValue="Default" hidden="true" />
+</ModSettings>

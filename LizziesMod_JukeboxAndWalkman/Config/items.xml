@@ -6,6 +6,16 @@
             <property name="Stacknumber" value="1" />
         </item>
 
+        <item name="manualJukebox">
+            <property name="Extends" value="resourcePaper" />
+            <property name="CustomIconTint" value="255,180,0" />
+            <property name="Stacknumber" value="1" />
+            <property class="Action1">
+                <property name="Class" value="LizziesMod.ItemActionOpenModManual, LizziesMod" />
+                <property name="BookId" value="guide_jukebox" />
+            </property>
+        </item>
+
         <item name="cassette_ExplanationOfAnEntity">
             <property name="Extends" value="resourcePaper" />
             <property name="CustomIcon" value="track" />

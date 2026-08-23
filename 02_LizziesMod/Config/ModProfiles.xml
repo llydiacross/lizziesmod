@@ -187,14 +187,27 @@
     <Mod name="TFP_Harmony" version="1.1.0.4">
       <Setting name="Enabled" value="true" type="bool" hidden="true" />
     </Mod>
-    <Mod name="LizziesMod" version="0.0.1">
+    <Mod name="LizziesMod" version="0.0.4">
       <Setting name="StartingYear" value="1986" type="int" />
       <Setting name="EnableMechanicalPress" value="true" type="bool" />
-      <Setting name="BrassScrapMaxDamage" value="1650" type="int" />
+      <Setting name="BrassScrapMaxDamage" value="1700" type="int" />
       <Setting name="BrassScrapStabilityGlue" value="70" type="int" />
-      <Setting name="ExperimentalFeatures" value="true" type="bool" />
+      <Setting name="ExperimentalFeatures" value="false" type="bool" warning="true" />
+      <Setting name="YearDisplayColor" value="255,255,255" type="color" />
       <Setting name="Enabled" value="true" type="bool" hidden="true" />
       <Setting name="LastProfileName" value="Default" type="string" hidden="true" />
+    </Mod>
+    <Mod name="LizziesMod_Backrooms" version="0.0.1">
+      <Setting name="MainFloorY" value="59" type="int" />
+      <Setting name="StoreyHeight" value="8" type="int" />
+      <Setting name="PitDepth" value="5" type="int" />
+      <Setting name="BasementCorridorHeight" value="4" type="int" />
+      <Setting name="SplitLevelDepth" value="4" type="int" />
+      <Setting name="LayoutSeed" value="0" type="int" />
+      <Setting name="AmbientPropDensity" value="2" type="int" />
+      <Setting name="CeilingLightSpacing" value="5" type="int" />
+      <Setting name="BasementLightSpacing" value="6" type="int" />
+      <Setting name="Enabled" value="true" type="bool" hidden="true" />
     </Mod>
     <Mod name="LizziesMod_DynamicBackpacks" version="0.0.1">
       <Setting name="BackpackGridSizeX" value="17" type="int" />
@@ -210,12 +223,16 @@
     </Mod>
     <Mod name="LizziesMod_JukeboxAndWalkman" version="0.0.1">
       <Setting name="VolumeLevel" value="10" type="int" />
-      <Setting name="MinJukeboxDistance" value="10" type="int" />
+      <Setting name="MinJukeboxDistance" value="14" type="int" />
       <Setting name="MaxJukeboxDistance" value="30" type="int" />
       <Setting name="Enabled" value="true" type="bool" hidden="true" />
     </Mod>
     <Mod name="LizziesMod_Physgun" version="0.0.1">
       <Setting name="AdminOnly" value="false" type="bool" />
+      <Setting name="Enabled" value="true" type="bool" hidden="true" />
+    </Mod>
+    <Mod name="LizziesMod_PocketDimension" version="1.0.0">
+      <Setting name="FloorY" value="32" type="int" />
       <Setting name="Enabled" value="true" type="bool" hidden="true" />
     </Mod>
     <Mod name="LizziesMod_PropSpawner" version="0.0.1">

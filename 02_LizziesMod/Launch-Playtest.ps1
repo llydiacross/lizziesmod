@@ -14,13 +14,15 @@ param(
     [string]$WorldName = 'Limbo',
     [string]$SaveName = 'test',
     [switch]$SkipBuild,
-    [switch]$MainMenu
+    [switch]$MainMenu,
+    [switch]$DevMode
 )
 
 $ErrorActionPreference = 'Stop'
 
 $projectPath = Join-Path $PSScriptRoot 'LizziesMod.csproj'
 $backroomsProjectPath = Join-Path (Join-Path $PSScriptRoot '..\LizziesMod_Backrooms') 'LizziesMod_Backrooms.csproj'
+$pocketDimensionProjectPath = Join-Path (Join-Path $PSScriptRoot '..\LizziesMod_PocketDimension') 'LizziesMod_PocketDimension.csproj'
 $gameExecutable = Join-Path $GameRoot '7DaysToDie.exe'
 $saveDirectory = Join-Path (Join-Path (Join-Path $env:APPDATA '7DaysToDie\Saves') $WorldName) $SaveName
 $saveMarker = Join-Path $saveDirectory 'main.ttw'
@@ -32,7 +34,7 @@ if (-not (Test-Path -LiteralPath $gameExecutable -PathType Leaf)) {
     throw "7 Days To Die was not found at '$gameExecutable'. Use -GameRoot to provide its install folder."
 }
 
-if (-not (Test-Path -LiteralPath $saveMarker -PathType Leaf)) {
+if (-not $MainMenu -and -not (Test-Path -LiteralPath $saveMarker -PathType Leaf)) {
     throw "The requested test save '$WorldName/$SaveName' does not contain main.ttw at '$saveDirectory'."
 }
 
@@ -51,6 +53,13 @@ if (-not $SkipBuild -and $PSCmdlet.ShouldProcess($projectPath, 'Build LizziesMod
         & dotnet msbuild $backroomsProjectPath /t:Build /p:Configuration=Debug /p:Platform=AnyCPU
         if ($LASTEXITCODE -ne 0) {
             throw "LizziesMod_Backrooms build failed with exit code $LASTEXITCODE."
+        }
+    }
+
+    if (Test-Path -LiteralPath $pocketDimensionProjectPath -PathType Leaf) {
+        & dotnet msbuild $pocketDimensionProjectPath /t:Build /p:Configuration=Debug /p:Platform=AnyCPU
+        if ($LASTEXITCODE -ne 0) {
+            throw "LizziesMod_PocketDimension build failed with exit code $LASTEXITCODE."
         }
     }
 }
@@ -79,10 +88,31 @@ $arguments += '-logfile'
 $arguments += ('"{0}"' -f $logPath)
 
 Write-Host "Client log: $logPath"
+if ($DevMode) {
+    Write-Host 'Developer settings overrides are enabled for this client.'
+}
 if (-not $MainMenu) {
     Write-Host "The game loads the last selected local save; select '$WorldName/$SaveName' once in Continue if this is the first launch."
 }
 
 if ($PSCmdlet.ShouldProcess($gameExecutable, $(if ($MainMenu) { 'Launch main menu' } else { "Launch $WorldName/$SaveName with native quick-continue" }))) {
-    Start-Process -FilePath $gameExecutable -ArgumentList $arguments -WorkingDirectory $GameRoot
+    $previousDevMode = $env:LIZZIESMOD_DEV_MODE
+    try {
+        if ($DevMode) {
+            $env:LIZZIESMOD_DEV_MODE = '1'
+        }
+        else {
+            Remove-Item Env:LIZZIESMOD_DEV_MODE -ErrorAction SilentlyContinue
+        }
+
+        Start-Process -FilePath $gameExecutable -ArgumentList $arguments -WorkingDirectory $GameRoot
+    }
+    finally {
+        if ($null -eq $previousDevMode) {
+            Remove-Item Env:LIZZIESMOD_DEV_MODE -ErrorAction SilentlyContinue
+        }
+        else {
+            $env:LIZZIESMOD_DEV_MODE = $previousDevMode
+        }
+    }
 }

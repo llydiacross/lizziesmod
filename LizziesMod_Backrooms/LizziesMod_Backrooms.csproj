@@ -25,6 +25,7 @@
     <DefineConstants>TRACE</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Harmony\BlockBackroomsPortal.cs" />
     <Compile Include="Harmony\BackroomsChunkGenerator.cs" />
     <Compile Include="Harmony\Main.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

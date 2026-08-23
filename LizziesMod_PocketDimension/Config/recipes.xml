@@ -1,0 +1,10 @@
+<configs>
+  <append xpath="/recipes">
+    <recipe name="pocketDimensionPortal" count="1" craft_area="workbench" craft_time="30">
+      <ingredient name="resourceFluxCell" count="2" />
+      <ingredient name="resourceElectricParts" count="8" />
+      <ingredient name="resourceMechanicalParts" count="6" />
+      <ingredient name="resourceForgedSteel" count="4" />
+    </recipe>
+  </append>
+</configs>

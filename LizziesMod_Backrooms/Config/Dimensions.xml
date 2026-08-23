@@ -1,4 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Dimensions default="Backrooms" defaultPriority="100">
-  <Dimension id="Backrooms" displayName="The Backrooms" generator="backrooms" />
+  <Dimension id="Backrooms" displayName="The Backrooms" generator="backrooms" disableWorldBoundary="true" />
 </Dimensions>

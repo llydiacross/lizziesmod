@@ -1,0 +1,12 @@
+<ModSettings>
+  <Setting name="MainFloorY" value="59" type="int" restartScope="world" defaultValue="59" control="slider" displayName="Main Floor Height" min="16" max="200" step="1" />
+  <Setting name="StoreyHeight" value="8" type="int" restartScope="world" defaultValue="8" control="slider" displayName="Storey Height" min="4" max="8" step="1" />
+  <Setting name="PitDepth" value="5" type="int" restartScope="world" defaultValue="5" control="slider" displayName="Pit Depth" min="4" max="12" step="1" />
+  <Setting name="BasementCorridorHeight" value="4" type="int" restartScope="world" defaultValue="4" control="slider" displayName="Basement Clearance" min="3" max="11" step="1" />
+  <Setting name="SplitLevelDepth" value="4" type="int" restartScope="world" defaultValue="4" control="slider" displayName="Split-Level Depth" min="1" max="4" step="1" />
+  <Setting name="LayoutSeed" value="0" type="int" restartScope="world" defaultValue="0" />
+  <Setting name="AmbientPropDensity" value="2" type="int" restartScope="world" defaultValue="2" control="slider" displayName="Ambient Prop Density" min="0" max="20" step="1" format="0'%'" />
+  <Setting name="CeilingLightSpacing" value="5" type="int" restartScope="world" defaultValue="5" control="slider" displayName="Ceiling Light Spacing" min="3" max="12" step="1" />
+  <Setting name="BasementLightSpacing" value="6" type="int" restartScope="world" defaultValue="6" control="slider" displayName="Basement Light Spacing" min="3" max="12" step="1" />
+  <Setting name="Enabled" value="true" type="bool" restartScope="game" defaultValue="true" hidden="true" />
+</ModSettings>

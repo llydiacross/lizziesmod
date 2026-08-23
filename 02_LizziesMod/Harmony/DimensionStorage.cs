@@ -50,6 +50,64 @@ namespace LizziesMod
                 out error);
         }
 
+        public static bool TryRegenerateGeneratedDimensionTerrain(
+            string overworldSaveDirectory,
+            string dimensionId,
+            out string archivedRegionDirectory,
+            out string error)
+        {
+            archivedRegionDirectory = "";
+            error = "";
+            if (!IsValidDimensionId(dimensionId) || DimensionManager.IsOverworld(dimensionId))
+            {
+                error = "The dimension ID is invalid.";
+                return false;
+            }
+
+            try
+            {
+                string sourceDirectory = Path.GetFullPath(overworldSaveDirectory)
+                    .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+                string saveDirectory = GetDimensionRoot(sourceDirectory, dimensionId);
+                if (!Directory.Exists(saveDirectory) || !File.Exists(Path.Combine(saveDirectory, SaveMarkerFileName)))
+                {
+                    error = "The generated dimension save does not exist yet.";
+                    return false;
+                }
+
+                string regionDirectory = Path.Combine(saveDirectory, "Region");
+                string archiveRoot = Path.Combine(saveDirectory, "GeneratedTerrainBackups");
+                string archiveDirectory = Path.Combine(
+                    archiveRoot,
+                    DateTime.UtcNow.ToString("yyyyMMdd_HHmmss") + "_" + Guid.NewGuid().ToString("N"));
+
+                lock (storageLock)
+                {
+                    Directory.CreateDirectory(archiveDirectory);
+                    if (Directory.Exists(regionDirectory))
+                    {
+                        archivedRegionDirectory = Path.Combine(archiveDirectory, "Region");
+                        Directory.Move(regionDirectory, archivedRegionDirectory);
+                    }
+
+                    PrepareGeneratedDimensionDirectory(saveDirectory);
+                }
+
+                Logger.Info(
+                    $"[DimensionManager] Regenerated terrain for '{dimensionId}'. " +
+                    (string.IsNullOrEmpty(archivedRegionDirectory)
+                        ? "No prior Region directory was present."
+                        : $"Archived Region to '{archivedRegionDirectory}'."));
+                return true;
+            }
+            catch (Exception exception)
+            {
+                error = exception.Message;
+                Logger.Error($"[DimensionManager] Failed to regenerate terrain for '{dimensionId}': {exception.Message}");
+                return false;
+            }
+        }
+
         private static bool TryCreateDimensionSave(
             string overworldSaveDirectory,
             string dimensionId,

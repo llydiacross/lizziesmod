@@ -43,6 +43,7 @@ txGroupCustom,,,,,Custom Paints
 xuiModSettings,UI,XUI,,,"Mod Settings"
 xuiModLibrary,UI,XUI,,,"Mod Readme"
 xuiModInputBindings,UI,XUI,,,"Mod Input Bindings"
+xuiXmlEditor,UI,XUI,,,"XML Editor"
 xuiOptionsControlsMods,UI,XUI,,,Mods
 dimensionalPortal,blocks,Block,,"Flux Portal"
 dimensionalPortalDesc,blocks,Block,,"An unstable artifact emitting heavy dimensional radiation. Place it in a safe location and use it to travel to other dimensions. Requires Flux Cells to operate."

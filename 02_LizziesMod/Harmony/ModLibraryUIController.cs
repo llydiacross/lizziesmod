@@ -11,11 +11,16 @@ namespace LizziesMod
         private const int ReadmeViewportWidth = 1030;
         private const int ReadmeViewportHeight = 570;
         private const int ReadmeContentPadding = 20;
+        // The XUi scroll view offsets dynamically positioned child views left of its visible origin.
+        private const int ReadmeRenderOriginOffsetX = 135;
+        private const int ReadmeContentWidth = ReadmeViewportWidth - (ReadmeContentPadding * 2) - ReadmeRenderOriginOffsetX;
         private const int ReadmeScrollEndPadding = 100;
         private const int ReadmeTextAreaPoolSize = 32;
         private const int ReadmeImagePoolSize = 32;
+        private const string MainMenuWindow = "mainMenu";
 
         public static string PreviousMenu = "";
+        public static string RequestedBookId = "";
 
         private XUiController bookListGrid;
         private string selectedBookId = "";
@@ -121,7 +126,13 @@ namespace LizziesMod
             ownsGamePause = InGameUiPause.Acquire();
 
             var readmes = ModManualManager.AllBooks.Values.Where(b => b.IsReadme).ToList();
-            if (readmes.Count > 0)
+            string requestedBookId = RequestedBookId;
+            RequestedBookId = "";
+            if (!string.IsNullOrEmpty(requestedBookId) && ModManualManager.AllBooks.TryGetValue(requestedBookId, out ModBook requestedBook) && requestedBook.IsReadme)
+            {
+                SelectBook(requestedBook.ID);
+            }
+            else if (readmes.Count > 0)
             {
                 SelectBook(readmes[0].ID);
             }
@@ -172,7 +183,7 @@ namespace LizziesMod
             if (lblBookTitle != null) lblBookTitle.Text = "NO READMES FOUND";
             if (lblPageTitle != null) lblPageTitle.Text = "";
             ClearReadmeCanvas();
-            RenderTextArea(0, "Install mods containing a ModManual.xml to view their documentation here.", new Vector2i(0, 0), new Vector2i(ReadmeViewportWidth, 100), Color.white);
+                RenderTextArea(0, "Install mods containing Config/ModManual.xml to view their documentation here.", new Vector2i(0, 0), new Vector2i(ReadmeViewportWidth, 100), Color.white);
             SetCanvasSize(ReadmeViewportWidth, ReadmeViewportHeight);
             if (btnPrevPage != null) btnPrevPage.viewComponent.IsVisible = false;
             if (btnNextPage != null) btnNextPage.viewComponent.IsVisible = false;
@@ -184,8 +195,16 @@ namespace LizziesMod
             InGameUiPause.Release(ownsGamePause);
             ownsGamePause = false;
             ReleaseLoadedImages();
-            if (!string.IsNullOrEmpty(PreviousMenu))
-                xui.playerUI.windowManager.Open(PreviousMenu, true);
+
+            string previousMenu = PreviousMenu;
+            PreviousMenu = "";
+            if (string.IsNullOrEmpty(previousMenu) && !Main.IsPlayerInGame())
+            {
+                previousMenu = MainMenuWindow;
+            }
+
+            if (!string.IsNullOrEmpty(previousMenu))
+                xui.playerUI.windowManager.Open(previousMenu, true);
         }
 
         private void HandleClose(XUiController _sender, int _mouseButton)
@@ -227,9 +246,7 @@ namespace LizziesMod
         {
             ClearReadmeCanvas();
 
-            int contentWidth = page.CanvasSize.HasValue
-                ? Math.Max(ReadmeViewportWidth, page.CanvasSize.Value.x)
-                : ReadmeViewportWidth;
+            int contentWidth = ReadmeViewportWidth;
             int contentHeight = page.CanvasSize.HasValue
                 ? Math.Max(0, page.CanvasSize.Value.y)
                 : 0;
@@ -276,8 +293,8 @@ namespace LizziesMod
         private void RenderLegacyPage(ModBook book, ModPage page, ref int contentHeight)
         {
             bool hasImage = !string.IsNullOrEmpty(page.ImageName);
-            Vector2i textPosition = page.TextPos ?? new Vector2i(0, 0);
-            Vector2i textSize = page.TextSize ?? new Vector2i(ReadmeViewportWidth, hasImage ? 170 : 440);
+            Vector2i textPosition = page.TextPos ?? new Vector2i(ReadmeContentPadding, 0);
+            Vector2i textSize = page.TextSize ?? new Vector2i(ReadmeContentWidth, hasImage ? 170 : 440);
             if (!string.IsNullOrEmpty(page.Text))
             {
                 RenderTextArea(0, page.Text, textPosition, textSize, ParseColor(page.TextColor, Color.white));
@@ -286,8 +303,8 @@ namespace LizziesMod
 
             if (hasImage)
             {
-                Vector2i imagePosition = page.ImagePos ?? new Vector2i(0, -(textSize.y + ReadmeContentPadding));
-                Vector2i imageSize = page.ImageSize ?? new Vector2i(ReadmeViewportWidth, 280);
+                Vector2i imagePosition = page.ImagePos ?? new Vector2i(ReadmeContentPadding, -(textSize.y + ReadmeContentPadding));
+                Vector2i imageSize = page.ImageSize ?? new Vector2i(ReadmeContentWidth, 280);
                 if (RenderImage(book, 0, page.ImageName, imagePosition, imageSize))
                 {
                     contentHeight = Math.Max(contentHeight, GetElementBottom(imagePosition, imageSize));
@@ -314,10 +331,11 @@ namespace LizziesMod
         {
             if (index < 0 || index >= readmeTextAreaViews.Count) return;
 
+            GetContainedReadmeBounds(position, size, out Vector2i containedPosition, out Vector2i containedSize);
             XUiV_Label textArea = readmeTextAreaViews[index];
             textArea.Text = text ?? "";
-            textArea.Position = position;
-            textArea.Size = size;
+            textArea.Position = GetRenderedReadmePosition(containedPosition);
+            textArea.Size = containedSize;
             textArea.Color = color;
             textArea.Overflow = UILabel.Overflow.ClampContent;
             textArea.IsVisible = true;
@@ -327,12 +345,33 @@ namespace LizziesMod
         {
             if (index < 0 || index >= readmeImageViews.Count || !TryLoadImage(book, source, out Texture2D texture)) return false;
 
+            GetContainedReadmeBounds(position, size, out Vector2i containedPosition, out Vector2i containedSize);
             XUiV_Texture image = readmeImageViews[index];
             image.Texture = texture;
-            image.Position = position;
-            image.Size = size;
+            image.Position = GetRenderedReadmePosition(containedPosition);
+            image.Size = containedSize;
             image.IsVisible = true;
             return true;
+        }
+
+        private static void GetContainedReadmeBounds(
+            Vector2i requestedPosition,
+            Vector2i requestedSize,
+            out Vector2i containedPosition,
+            out Vector2i containedSize)
+        {
+            int width = Math.Max(1, Math.Min(requestedSize.x, ReadmeContentWidth));
+            int height = Math.Max(1, requestedSize.y);
+            int maximumX = ReadmeViewportWidth - ReadmeContentPadding - width;
+            int x = Math.Max(ReadmeContentPadding, Math.Min(requestedPosition.x, maximumX));
+
+            containedPosition = new Vector2i(x, requestedPosition.y);
+            containedSize = new Vector2i(width, height);
+        }
+
+        private static Vector2i GetRenderedReadmePosition(Vector2i containedPosition)
+        {
+            return new Vector2i(containedPosition.x + ReadmeRenderOriginOffsetX, containedPosition.y);
         }
 
         private bool TryLoadImage(ModBook book, string source, out Texture2D texture)

@@ -1,5 +1,5 @@
 Alpha Test 4
 
-* A basic in game XML Editor, accessible via the main menu. Allows you to create new blocks, items, recipies, inside of the game. These edits, are saved to a special configuration file, which we then inject into the main game. Instead of modifying the raw config files of a mod or anything
-* Lay the foundations for the beginning of the download a mod feature. Theorise how we would allow users to download XML only based mods in game from a web service we will create which will turn into a mod portal. 
-* Integrate the download a mod feature into many areas of the project, such as when we load a profile, if we can any uninstalled mods on our server at that correct version, offer to download them. Or, in the mod settings window, a button to find and install new mods in a new window pop up
+* [x] Determine whether every owned setting needs no restart, a world restart, or a game restart.
+* [x] Remove the Mod Input Bindings buttons from the main menu and in-game escape menu.
+* [x] Add an option box for string and numeric settings.

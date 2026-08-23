@@ -3,14 +3,14 @@
 - Added new custom input system
 - Added custom paints/texture system
 - Added a spawn menu
-    - Mods can add spawnable props into the game
+- Added custom dimension system (new addon LizziesMod_Backrooms to show off its capabilities)
+- Mods can add spawnable props into the game
     - You can undo spawned props (works on multiplayer)
 - Added detailed error in-game logging for mods
 - Fixes to the mod profile system
 - Fixes to the custom audio system
 - World saves should now back up correctly
-- Removed Flux time travel and its year-based save redirection while the dimension system is redesigned.
-- Disabled the unfinished dimensional portal transition until region and entity isolation are proven.
+- Removed Flux time travel and its year-based save redirection.
 
 # Alpha Test 2
 
