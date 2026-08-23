@@ -88,12 +88,15 @@ Easily package the mod to be released on Nexus or other places.
   - Location: `02_LizziesMod\Create-ReleaseZip.ps1` (run from the mod root or provide `-Source`).
   - Examples:
 
-    # Dry-run (list files that would be included)
+ Dry-run (list files that would be included)
+ ```powershell
     powershell -NoProfile -ExecutionPolicy Bypass -File .\Create-ReleaseZip.ps1 -Source "..\" -IncludeAllMods -WhatIf
+```
 
-    # Create combined ZIP of all mod folders under the parent Mods folder, skipping the Backrooms mod
+Create combined ZIP of all mod folders under the parent Mods folder, skipping the Backrooms mod
+```
     powershell -NoProfile -ExecutionPolicy Bypass -File .\Create-ReleaseZip.ps1 -Source "..\02_LizziesMod" -IncludeAllMods -SkipMods LizziesMod_Backrooms
-
+```
   - Important defaults: excludes `.ps1`, `.pdb`, `.user`, `.suo`, `.log`, `.tmp`, `.cache`, `.bak` and directories like `obj`, `.vs`, `bin`, `packages`, `ConsoleCommandInbox`.
 
 Things to note
