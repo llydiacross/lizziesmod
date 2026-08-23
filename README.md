@@ -79,6 +79,28 @@ The launch and stop scripts are designed for repeatable development loops. Autom
 & '.\02_LizziesMod\Launch-Playtest.ps1' -DevMode
 ```
 
+### Release packaging
+
+Easily package the mod to be released on Nexus or other places.
+
+- Create-ReleaseZip.ps1
+  - Packages the mod folder (or multiple mods) into a ZIP while excluding dev artifacts and PowerShell scripts.
+  - Location: `02_LizziesMod\Create-ReleaseZip.ps1` (run from the mod root or provide `-Source`).
+  - Examples:
+
+    # Dry-run (list files that would be included)
+    powershell -NoProfile -ExecutionPolicy Bypass -File .\Create-ReleaseZip.ps1 -Source "..\" -IncludeAllMods -WhatIf
+
+    # Create combined ZIP of all mod folders under the parent Mods folder, skipping the Backrooms mod
+    powershell -NoProfile -ExecutionPolicy Bypass -File .\Create-ReleaseZip.ps1 -Source "..\02_LizziesMod" -IncludeAllMods -SkipMods LizziesMod_Backrooms
+
+  - Important defaults: excludes `.ps1`, `.pdb`, `.user`, `.suo`, `.log`, `.tmp`, `.cache`, `.bak` and directories like `obj`, `.vs`, `bin`, `packages`, `ConsoleCommandInbox`.
+
+Things to note
+
+- Nexus flags `.ps1` files; the default excludes ensure PowerShell scripts do not end up in the packaged ZIP.
+- Adjust `-ExcludeExtensions` and `-ExcludeDirNames` when calling `Create-ReleaseZip.ps1` if you need to include or exclude additional files.
+
 ### Send client console commands
 
 `02_LizziesMod/Invoke-ConsoleCommand.ps1` queues a command through a file-backed developer console queue system. The running client atomically claims the request, executes it through its native console dispatcher on the main thread, removes the request file, and writes a result receipt. It does not require the game window, F1 console, or focus to be available:
