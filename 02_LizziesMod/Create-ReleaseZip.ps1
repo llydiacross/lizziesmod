@@ -17,7 +17,6 @@
     Optional full path for the output ZIP. If omitted, a Releases folder
     will be created next to the source and the ZIP will be named using
     the mod name and version from ModInfo.xml when available.
-
 .PARAMETER ExcludeExtensions
     Array of file extensions (including the leading dot) to exclude.
     Defaults to '.ps1' to avoid Nexus flagging.
@@ -25,6 +24,20 @@
 .PARAMETER ExcludeDirNames
     Array of directory names to exclude anywhere in the tree (case-insensitive).
     Defaults to 'obj' and '.vs'.
+
+.PARAMETER SkipMods
+    Array of exact mod folder names to skip when packaging multiple mods.
+
+.PARAMETER ModName
+    Exact mod folder name to package. This packages only that mod.
+
+.PARAMETER ModPattern
+    Text or wildcard pattern matched against mod folder names when packaging
+    multiple mods. Only matching mods are included.
+
+.PARAMETER IncludeAllMods
+    Package all mod folders under the source folder. Use ModPattern or
+    SkipMods to narrow the set.
 
 .PARAMETER WhatIf
     When specified, the script only prints which files would be included
@@ -52,6 +65,10 @@ param(
 
     [string[]]$SkipMods = @(),
 
+    [string]$ModName = '',
+
+    [string]$ModPattern = '',
+
     [switch]$IncludeAllMods,
 
     [switch]$WhatIf
@@ -76,27 +93,28 @@ try {
 }
 
 $sourcePath = $sourcePath.TrimEnd([IO.Path]::DirectorySeparatorChar)
+$selectMods = $IncludeAllMods -or -not [string]::IsNullOrWhiteSpace($ModName) -or -not [string]::IsNullOrWhiteSpace($ModPattern)
 
 # Read ModInfo.xml when available to pick a friendly mod name/version for the ZIP
-$modName = [IO.Path]::GetFileName($sourcePath)
+$detectedName = [IO.Path]::GetFileName($sourcePath)
 $modVersion = '0.0.0'
 
 # If IncludeAllMods is specified and the provided source is a single mod folder,
 # move up to the parent folder so we can package all mods under it.
-if ($IncludeAllMods) {
+if ($selectMods) {
     $maybeModInfo = Join-Path $sourcePath 'ModInfo.xml'
     if (Test-Path $maybeModInfo) {
         $sourcePath = Split-Path -Parent $sourcePath
-        $modName = [IO.Path]::GetFileName($sourcePath)
+        $detectedName = [IO.Path]::GetFileName($sourcePath)
     }
 }
 
 $modInfoPath = Join-Path $sourcePath 'ModInfo.xml'
-if (Test-Path $modInfoPath) {
+if (-not $selectMods -and (Test-Path $modInfoPath)) {
     try {
         $xml = [xml](Get-Content -Path $modInfoPath -Raw)
         $nameNode = $xml.SelectSingleNode('//Name')
-        if ($nameNode -and $nameNode.Attributes['value']) { $modName = $nameNode.Attributes['value'].Value }
+        if ($nameNode -and $nameNode.Attributes['value']) { $detectedName = $nameNode.Attributes['value'].Value }
         $verNode = $xml.SelectSingleNode('//Version')
         if ($verNode -and $verNode.Attributes['value']) { $modVersion = $verNode.Attributes['value'].Value }
     } catch {
@@ -104,12 +122,18 @@ if (Test-Path $modInfoPath) {
     }
 }
 
+if ($selectMods) {
+    $archiveName = if ($ModName) { $ModName } elseif ($ModPattern) { $ModPattern } else { 'Mods' }
+} else {
+    $archiveName = $detectedName
+}
+
 # Determine output path and filename
 if ([string]::IsNullOrWhiteSpace($Output)) {
     $date = (Get-Date).ToString('yyyyMMdd')
     $outDir = Join-Path $sourcePath 'Releases'
     if (-not (Test-Path $outDir)) { New-Item -ItemType Directory -Path $outDir -Force | Out-Null }
-    $Output = Join-Path $outDir ("$($modName)-$($modVersion)-$date.zip")
+    $Output = Join-Path $outDir ("$($archiveName)-$($modVersion)-$date.zip")
 } else {
     $Output = (Resolve-Path -Path $Output).ProviderPath
 }
@@ -122,15 +146,22 @@ Write-Host "Output: $Output"
 Write-Host "Excluding extensions: $($ExcludeExtensions -join ', ')"
 Write-Host "Excluding directories: $($ExcludeDirNames -join ', ')"
 if ($SkipMods -and $SkipMods.Count -gt 0) { Write-Host "Skipping mods: $($SkipMods -join ', ')" }
+if ($ModName) { Write-Host "Selected mod: $ModName" }
+if ($ModPattern) { Write-Host "Mod pattern: $ModPattern" }
 
 # Gather files
 $filesToInclude = New-Object System.Collections.Generic.List[System.IO.FileInfo]
 
-if ($IncludeAllMods) {
+if ($selectMods) {
     $skipLower = $SkipMods | ForEach-Object { $_.ToLower() }
     $modDirs = Get-ChildItem -Path $sourcePath -Directory | Where-Object { Test-Path (Join-Path $_.FullName 'ModInfo.xml') }
     foreach ($md in $modDirs) {
         if ($skipLower -contains $md.Name.ToLower()) { continue }
+        if ($ModName -and $md.Name -ine $ModName) { continue }
+        if ($ModPattern) {
+            $pattern = if ($ModPattern -match '[*?\[\]]') { $ModPattern } else { "*$ModPattern*" }
+            if ($md.Name -notlike $pattern) { continue }
+        }
         $allFiles = Get-ChildItem -Path $md.FullName -Recurse -File -Force
         foreach ($f in $allFiles) {
             $ext = $f.Extension.ToLower()
@@ -179,7 +210,7 @@ if (Test-Path $Output) {
 
 # Use a temp folder to stage the files and Compress-Archive to create a reliable ZIP
 $tempRoot = Join-Path ([IO.Path]::GetTempPath()) ("lizziesmod_pack_{0}" -f ([guid]::NewGuid().ToString()))
-$stagingRoot = Join-Path $tempRoot $modName
+$stagingRoot = Join-Path $tempRoot $archiveName
 New-Item -ItemType Directory -Path $stagingRoot -Force | Out-Null
 
 foreach ($f in $filesToInclude) {

@@ -83,23 +83,29 @@ The launch and stop scripts are designed for repeatable development loops. Autom
 
 Easily package the mod to be released on Nexus or other places.
 
-- Create-ReleaseZip.ps1
-  - Packages the mod folder (or multiple mods) into a ZIP while excluding dev artifacts and PowerShell scripts.
-  - Location: `02_LizziesMod\Create-ReleaseZip.ps1` (run from the mod root or provide `-Source`).
-  - Examples:
 
- Dry-run (list files that would be included)
- ```powershell
+Dry-run (list files that would be included)
+```powershell
     powershell -NoProfile -ExecutionPolicy Bypass -File .\Create-ReleaseZip.ps1 -Source "..\" -IncludeAllMods -WhatIf
 ```
 
 Create combined ZIP of all mod folders under the parent Mods folder, skipping the Backrooms mod
-```
+```powershell
     powershell -NoProfile -ExecutionPolicy Bypass -File .\Create-ReleaseZip.ps1 -Source "..\02_LizziesMod" -IncludeAllMods -SkipMods LizziesMod_Backrooms
 ```
   - Important defaults: excludes `.ps1`, `.pdb`, `.user`, `.suo`, `.log`, `.tmp`, `.cache`, `.bak` and directories like `obj`, `.vs`, `bin`, `packages`, `ConsoleCommandInbox`.
 
-Things to note
+Package only the explicitly named mod
+```powershell
+    powershell -NoProfile -ExecutionPolicy Bypass -File ..\Create-ReleaseZip.ps1 -Source "..\.." -ModName LizziesMod_DynamicStacks
+```
+
+Package only related mods whose folder names contain LizziesMod
+```powershell
+    powershell -NoProfile -ExecutionPolicy Bypass -File ..\Create-ReleaseZip.ps1 -Source "..\.." -IncludeAllMods -ModPattern LizziesMod -SkipMods LizziesMod_Backrooms
+```
+
+Important things to note...
 
 - Nexus flags `.ps1` files; the default excludes ensure PowerShell scripts do not end up in the packaged ZIP.
 - Adjust `-ExcludeExtensions` and `-ExcludeDirNames` when calling `Create-ReleaseZip.ps1` if you need to include or exclude additional files.
