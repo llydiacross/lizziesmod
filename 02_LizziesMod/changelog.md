@@ -1,3 +1,13 @@
+# Alpha Test 4
+
+- Added experimental mod portals into the game (download mods inside of the game)
+- Added experimental XML Definition Editor into the game
+- Compatability with mods such as gears
+- Fixes to the dimension manager
+- Improvements to the settings system
+- Dimensions can now be infinite worlds, going beyond the games max limits
+- Many other bug fixes and improvements
+
 # Alpha Test 3
 
 - Added new custom input system
