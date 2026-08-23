@@ -79,7 +79,7 @@ The launch and stop scripts are designed for repeatable development loops. Autom
 & '.\02_LizziesMod\Launch-Playtest.ps1' -DevMode
 ```
 
-### Release packaging
+## Mod Packager
 
 Easily package the mod to be released on Nexus or other places.
 
@@ -104,7 +104,7 @@ Things to note
 - Nexus flags `.ps1` files; the default excludes ensure PowerShell scripts do not end up in the packaged ZIP.
 - Adjust `-ExcludeExtensions` and `-ExcludeDirNames` when calling `Create-ReleaseZip.ps1` if you need to include or exclude additional files.
 
-### Send client console commands
+## Send client console commands
 
 `02_LizziesMod/Invoke-ConsoleCommand.ps1` queues a command through a file-backed developer console queue system. The running client atomically claims the request, executes it through its native console dispatcher on the main thread, removes the request file, and writes a result receipt. It does not require the game window, F1 console, or focus to be available:
 
@@ -124,7 +124,7 @@ It queues a developer-only inbox spawn request; the receipt reports `queued` unt
 
 `-KeyboardFallback` retains the former F1-keyboard path for testing an older core DLL. It requires a visible, foregroundable `7DaysToDie` window; `-ConsoleAlreadyOpen` and `-ConsoleOpenDelayMilliseconds` apply only to that fallback. `-WhatIf` never writes a request or sends keyboard input.
 
-### LizziesMod debug commands
+## LizziesMod debug commands
 
 Run `lizziesdebug help` in the native console for the current command list. `lizziesdev` is an alias.
 
@@ -138,7 +138,7 @@ Run `lizziesdebug help` in the native console for the current command list. `liz
 - `lizziesdebug enter <dimension-id>` and `lizziesdebug return` request the normal guarded dimension transition. They use the same single-player and Experimental Features checks as the portal.
 - `lizziesregendimension <dimension-id>` remains the intentional terrain-reset command. It can only run in the Overworld and takes an Overworld backup before archiving the old Region directory.
 
-### Gameplay QA commands
+## Gameplay QA commands
 
 Run `lizziesgame help` for the gameplay test command family. `lizziesqa` is an alias.
 
