@@ -1,0 +1,7 @@
+<ModSettings>
+  <Setting name="BackpackGridSizeX" value="17" type="int" restartScope="game" defaultValue="17" />
+  <Setting name="BackpackGridSizeY" value="15" type="int" restartScope="game" defaultValue="15" />
+  <Setting name="BackpackMaxSize" value="456" type="int" defaultValue="456" />
+  <Setting name="DisableEncumbrance" value="false" type="bool" defaultValue="false" />
+  <Setting name="Enabled" value="true" type="bool" restartScope="game" defaultValue="true" hidden="true" />
+</ModSettings>

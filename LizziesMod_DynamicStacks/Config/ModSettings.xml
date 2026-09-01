@@ -1,0 +1,5 @@
+<ModSettings>
+  <Setting name="StackNumber" value="16000" type="int" restartScope="game" defaultValue="16000" />
+  <Setting name="AmmoStackNumber" value="600" type="int" restartScope="game" defaultValue="600" />
+  <Setting name="Enabled" value="true" type="bool" restartScope="game" defaultValue="true" hidden="true" />
+</ModSettings>
