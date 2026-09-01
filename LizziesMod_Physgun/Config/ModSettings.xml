@@ -1,0 +1,4 @@
+<ModSettings>
+  <Setting name="AdminOnly" value="false" type="bool" defaultValue="false" />
+  <Setting name="Enabled" value="true" type="bool" restartScope="game" defaultValue="true" hidden="true" />
+</ModSettings>
